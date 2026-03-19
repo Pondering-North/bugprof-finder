@@ -217,29 +217,6 @@
     background: #fffbe6; border: 2px solid #888;
     padding: 4px 8px; color: #333; margin-top: 4px;
   }
-  /* Modal */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.5); z-index: 100;
-    align-items: center; justify-content: center;
-  }
-  .modal-overlay.show { display: flex; }
-  .modal-box {
-    background: var(--bg);
-    border-top: 3px solid #fff; border-left: 3px solid #fff;
-    border-right: 3px solid #444; border-bottom: 3px solid #444;
-    max-width: 400px; width: 95%;
-  }
-  .modal-body { padding: 12px; }
-  .modal-body p { margin-bottom: 8px; font-size: 13px; }
-  .win-input {
-    width: 100%; font-family: 'VT323', monospace; font-size: 17px;
-    background: #fff;
-    border-top: 2px solid #444; border-left: 2px solid #444;
-    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
-    padding: 4px 6px;
-  }
-  .modal-footer { display: flex; gap: 6px; margin-top: 10px; justify-content: flex-end; }
   .tag-research {
     display: inline-block;
     background: #e8e8ff; border: 2px solid #000080;
@@ -250,25 +227,7 @@
 </head>
 <body>
 
-<!-- API KEY MODAL -->
-<div class="modal-overlay" id="apiModal">
-  <div class="modal-box win">
-    <div class="win-title">
-      <span>🔑 Enter API Key</span>
-      <div class="btns"><div class="win-btn" onclick="document.getElementById('apiModal').classList.remove('show')">✕</div></div>
-    </div>
-    <div class="modal-body">
-      <p><b>Anthropic API Key Required</b></p>
-      <p style="font-size:11px;color:#555;">Your key is stored only in this browser session and never sent anywhere except api.anthropic.com.</p>
-      <input type="password" id="apiKeyInput" class="win-input" placeholder="sk-ant-..."
-             onkeydown="if(event.key==='Enter') saveApiKey()"/>
-      <div class="modal-footer">
-        <button class="btn btn-primary" onclick="saveApiKey()">✔ OK</button>
-        <button class="btn" onclick="document.getElementById('apiModal').classList.remove('show')">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <!-- MARQUEE -->
 <marquee scrollamount="4">🐛 WELCOME TO ENTO-PROFESSO SEARCH 3000 🐝 AN APP FOR ALL YOUR GRADUATE-RESEARCH NEEDS 🦋 BOOKMARK THIS PAGE!! 🐜 BEST VIEWED IN NETSCAPE NAVIGATOR 4.0 AT 800x600 🪲</marquee>
@@ -436,16 +395,6 @@ function setStatus(msg) {
   if (te) te.textContent = new Date().toLocaleTimeString();
 }
 
-// ═══════════════════════════════════════════
-//  API KEY
-// ═══════════════════════════════════════════
-function saveApiKey() {
-  apiKey = document.getElementById("apiKeyInput").value.trim();
-  if (!apiKey) { alert("Please enter an API key."); return; }
-  sessionStorage.setItem("entoprofesso_apikey", apiKey);
-  document.getElementById("apiModal").classList.remove("show");
-  log("🔑 API key saved for this session.");
-}
 
 // ═══════════════════════════════════════════
 //  SEARCH / FILTER  (NEW)
@@ -625,11 +574,6 @@ async function updateHitCounter() {
 // ═══════════════════════════════════════════
 async function scrapeAll() {
   if (isRunning) return;
-  if (!apiKey) {
-    document.getElementById("apiModal").classList.add("show");
-    log("⚠ Please enter your API key first.");
-    return;
-  }
   isRunning = true;
   document.getElementById("scrapeAllBtn").disabled = true;
   setStatus("🔍 Searching all schools...");
@@ -921,8 +865,6 @@ function escapeHtml(str) {
 //  INIT
 // ═══════════════════════════════════════════
 window.addEventListener("DOMContentLoaded", async () => {
-  if (apiKey) log("🔑 API key loaded from session.");
-  else log("⚠ No API key found. Click 🔑 API Key to set one.");
   await renderAll();
   log("🐛 Ento-Professo Search 3000 initialized. " + SCHOOLS.length + " schools loaded.");
 });
