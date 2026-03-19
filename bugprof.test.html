@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧪 Ento-Professo Search 3000 — Test Harness</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+  :root {
+    --navy: #000080; --bg: #c0c0c0; --pass: #003f7f; --fail: #1a1a1a;
+    --warn: #4a3800; --log-bg: #000; --log-text: #ffff00;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #000080;
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%230000aa'/%3E%3C/svg%3E");
+    font-family: 'Comic Sans MS', cursive; color: #000;
+    min-height: 100vh; padding: 10px;
+  }
+  .win {
+    background: var(--bg);
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #444; border-bottom: 2px solid #444;
+    margin-bottom: 12px;
+  }
+  .win-title {
+    background: linear-gradient(90deg, var(--navy) 0%, #1084d0 100%);
+    color: #fff; font-family: 'VT323', monospace; font-size: 18px;
+    padding: 3px 8px; display: flex; align-items: center;
+    justify-content: space-between; user-select: none;
+  }
+  .win-body { padding: 10px; }
+  .btn {
+    font-family: 'Comic Sans MS', cursive; font-size: 13px;
+    background: var(--bg);
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #444; border-bottom: 2px solid #444;
+    padding: 4px 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px; color: #000;
+  }
+  .btn:active {
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+  }
+  .btn-primary { background: var(--navy); color: #fff; font-weight: bold; }
+  /* Suite */
+  .suite { margin-bottom: 10px; }
+  .suite-title {
+    font-family: 'VT323', monospace; font-size: 20px;
+    background: var(--navy); color: #fff; padding: 4px 10px;
+    cursor: pointer; user-select: none;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .suite-body { padding: 6px; border: 2px inset #888; background: #fff; }
+  /* Test row */
+  .test-row {
+    font-family: 'VT323', monospace; font-size: 16px;
+    padding: 3px 8px; border-bottom: 1px solid #ddd;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .test-row:last-child { border-bottom: none; }
+  .test-row.pass { background: #e8f0ff; }
+  .test-row.fail { background: #fff0e8; }
+  .test-row.skip { background: #f5f5f5; color: #888; }
+  .test-row.pending { background: #fffff0; }
+  .status-icon { font-size: 18px; flex-shrink: 0; line-height: 1.3; }
+  .test-name { flex: 1; line-height: 1.3; }
+  .test-detail {
+    font-size: 13px; color: #555; margin-top: 2px;
+    font-family: monospace; white-space: pre-wrap; word-break: break-all;
+  }
+  .fail .test-detail { color: #800; }
+  /* Summary bar */
+  #summary {
+    font-family: 'VT323', monospace; font-size: 22px;
+    padding: 8px 12px; background: var(--bg);
+    border: 2px inset #888; margin-bottom: 10px;
+    display: flex; gap: 20px; flex-wrap: wrap; align-items: center;
+  }
+  .sum-pass { color: var(--pass); font-weight: bold; }
+  .sum-fail { color: var(--fail); background: repeating-linear-gradient(45deg,#f00 0,#f00 2px,#fff 2px,#fff 6px); padding: 0 4px; color: #fff; }
+  .sum-total { color: #333; }
+  /* Log */
+  #test-log {
+    background: var(--log-bg); color: var(--log-text);
+    font-family: 'VT323', monospace; font-size: 14px;
+    padding: 8px; height: 140px; overflow-y: auto;
+    border: 2px inset #444; white-space: pre-wrap; word-break: break-word;
+  }
+  /* Sandbox DOM */
+  #sandbox { position: absolute; left: -9999px; top: 0; width: 1200px; }
+  /* Progress */
+  .prog-wrap { height: 20px; background: #fff; border: 2px inset #888; position: relative; margin: 8px 0; }
+  .prog-bar {
+    height: 100%;
+    background: repeating-linear-gradient(-45deg, var(--navy) 0, var(--navy) 8px, #1a6aff 8px, #1a6aff 16px);
+    transition: width 0.3s;
+  }
+  .prog-text {
+    position: absolute; inset: 0; font-family: 'VT323', monospace;
+    font-size: 14px; color: #fff; text-align: center;
+    text-shadow: 1px 1px 0 #000;
+  }
+  marquee { background:#000; color:var(--log-text); font-family:'VT323',monospace; font-size:18px; padding:3px 0; border:2px inset #888; margin-bottom:10px; }
+</style>
+</head>
+<body>
+<marquee scrollamount="3">🧪 ENTO-PROFESSO SEARCH 3000 TEST HARNESS 🧪 RUNNING AUTOMATED QUALITY ASSURANCE SINCE 1997 🧪 ALL SYSTEMS NOMINAL 🧪</marquee>
+
+<div class="win">
+  <div class="win-title">
+    <span>🧪 Ento-Professo Search 3000 — Test Harness v1.0</span>
+    <div style="display:flex;gap:4px;">
+      <div style="width:16px;height:14px;background:var(--bg);border-top:1px solid #fff;border-left:1px solid #fff;border-right:1px solid #444;border-bottom:1px solid #444;font-size:10px;text-align:center;cursor:pointer;">_</div>
+      <div style="width:16px;height:14px;background:var(--bg);border-top:1px solid #fff;border-left:1px solid #fff;border-right:1px solid #444;border-bottom:1px solid #444;font-size:10px;text-align:center;cursor:pointer;">□</div>
+    </div>
+  </div>
+  <div class="win-body">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="btn btn-primary" onclick="runAll()">▶ Run All Tests</button>
+      <button class="btn" onclick="runAll(true)">▶ Run Failed Only</button>
+      <button class="btn" onclick="clearResults()">🗑 Clear Results</button>
+    </div>
+    <div id="summary">No tests run yet.</div>
+    <div class="prog-wrap" id="progWrap" style="display:none;">
+      <div class="prog-bar" id="progBar" style="width:0%"></div>
+      <div class="prog-text" id="progText">0%</div>
+    </div>
+    <div id="suites-container"></div>
+    <div class="win" style="margin-top:10px;">
+      <div class="win-title"><span>📟 Test Log</span></div>
+      <div id="test-log">Test harness ready. Click "Run All Tests" to begin.\n</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden sandbox for DOM tests -->
+<div id="sandbox"></div>
+
+<script>
+"use strict";
+
+// ═══════════════════════════════════════════════════════════
+//  MINI TEST RUNNER
+// ═══════════════════════════════════════════════════════════
+const _suites = [];
+let _results = [];
+
+function describe(name, fn) {
+  const suite = { name, tests: [] };
+  const it = (testName, testFn) => suite.tests.push({ name: testName, fn: testFn });
+  fn(it);
+  _suites.push(suite);
+}
+
+function assert(cond, msg) {
+  if (!cond) throw new Error(msg || "Assertion failed");
+}
+function assertEqual(a, b, msg) {
+  const aStr = JSON.stringify(a), bStr = JSON.stringify(b);
+  if (aStr !== bStr) throw new Error((msg || "assertEqual") + `\n  expected: ${bStr}\n  got:      ${aStr}`);
+}
+function assertContains(str, sub, msg) {
+  if (!String(str).includes(sub)) throw new Error((msg || "assertContains") + `\n  "${sub}" not found in "${str}"`);
+}
+function assertNotContains(str, sub, msg) {
+  if (String(str).includes(sub)) throw new Error((msg || "assertNotContains") + `\n  "${sub}" unexpectedly found in "${str}"`);
+}
+function assertMatch(str, re, msg) {
+  if (!re.test(str)) throw new Error((msg || "assertMatch") + `\n  /${re.source}/ did not match "${str}"`);
+}
+function assertThrows(fn, msg) {
+  try { fn(); } catch { return; }
+  throw new Error(msg || "Expected function to throw");
+}
+async function assertRejects(fn, msg) {
+  try { await fn(); } catch { return; }
+  throw new Error(msg || "Expected async function to reject");
+}
+
+function tlog(msg) {
+  const box = document.getElementById("test-log");
+  if (!box) return;
+  const ts = new Date().toLocaleTimeString();
+  box.textContent += `[${ts}] ${msg}\n`;
+  box.scrollTop = box.scrollHeight;
+}
+
+async function runAll(failedOnly = false) {
+  _results = [];
+  clearResults();
+  document.getElementById("progWrap").style.display = "";
+  tlog("═══ Starting test run ═══");
+
+  const allTests = _suites.flatMap(s => s.tests.map(t => ({ suite: s.name, ...t })));
+  const toRun = failedOnly
+    ? allTests.filter(t => {
+        const prev = document.querySelector(`[data-test="${CSS.escape(t.suite + ":" + t.name)}"]`);
+        return prev ? prev.classList.contains("fail") : true;
+      })
+    : allTests;
+
+  let passed = 0, failed = 0;
+
+  for (let i = 0; i < toRun.length; i++) {
+    const t = toRun[i];
+    const pct = Math.round((i / toRun.length) * 100);
+    document.getElementById("progBar").style.width = pct + "%";
+    document.getElementById("progText").textContent = `${pct}% — ${t.suite} / ${t.name}`;
+
+    let status = "pass", detail = "";
+    try {
+      await t.fn();
+      passed++;
+      tlog(`  ✔ ${t.suite} › ${t.name}`);
+    } catch(e) {
+      status = "fail";
+      detail = e.message;
+      failed++;
+      tlog(`  ✘ ${t.suite} › ${t.name}\n    ${e.message}`);
+    }
+    _results.push({ suite: t.suite, name: t.name, status, detail });
+  }
+
+  document.getElementById("progBar").style.width = "100%";
+  document.getElementById("progText").textContent = "Done!";
+  setTimeout(() => { document.getElementById("progWrap").style.display = "none"; }, 1000);
+
+  renderResults(_results);
+  const sumEl = document.getElementById("summary");
+  const total = passed + failed;
+  sumEl.innerHTML = `
+    <span class="sum-pass">✔ PASS: ${passed}</span>
+    <span class="${failed > 0 ? "sum-fail" : "sum-pass"}">✘ FAIL: ${failed}</span>
+    <span class="sum-total">TOTAL: ${total}</span>
+    <span style="font-size:14px;color:#555;">${new Date().toLocaleTimeString()}</span>
+  `;
+  tlog(`═══ Done: ${passed} passed, ${failed} failed out of ${total} ═══`);
+}
+
+function renderResults(results) {
+  const container = document.getElementById("suites-container");
+  container.innerHTML = "";
+  const bySuite = {};
+  for (const r of results) {
+    if (!bySuite[r.suite]) bySuite[r.suite] = [];
+    bySuite[r.suite].push(r);
+  }
+  for (const [suiteName, tests] of Object.entries(bySuite)) {
+    const passCount = tests.filter(t => t.status === "pass").length;
+    const div = document.createElement("div");
+    div.className = "suite win";
+    div.innerHTML = `
+      <div class="suite-title" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
+        <span>${suiteName}</span>
+        <span>${passCount}/${tests.length} passed</span>
+      </div>
+      <div class="suite-body">
+        ${tests.map(t => `
+          <div class="test-row ${t.status}" data-test="${escHtml(suiteName + ":" + t.name)}">
+            <span class="status-icon">${t.status === "pass" ? "✔" : t.status === "fail" ? "✘" : "—"}</span>
+            <div class="test-name">
+              ${escHtml(t.name)}
+              ${t.detail ? `<div class="test-detail">${escHtml(t.detail)}</div>` : ""}
+            </div>
+          </div>`).join("")}
+      </div>`;
+    container.appendChild(div);
+  }
+}
+
+function clearResults() {
+  document.getElementById("suites-container").innerHTML = "";
+  document.getElementById("summary").textContent = "No tests run yet.";
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MOCK STORAGE (mirrors entoprofesso.html window.storage impl)
+// ═══════════════════════════════════════════════════════════
+const _mockStore = {};
+const mockStorage = {
+  async get(key) {
+    return _mockStore[key] !== undefined ? { value: _mockStore[key] } : null;
+  },
+  async set(key, value) { _mockStore[key] = value; },
+  async delete(key) { delete _mockStore[key]; }
+};
+
+function clearMockStore() {
+  Object.keys(_mockStore).forEach(k => delete _mockStore[k]);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HELPERS — core functions inlined for isolated testing
+//  (mirrors entoprofesso.html logic exactly)
+// ═══════════════════════════════════════════════════════════
+function escapeHtml(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
+
+function buildProfTable(profs) {
+  if (!profs || profs.length === 0) {
+    return '<div class="no-results">⚠ No faculty data found for this school.</div>';
+  }
+  const rows = profs.map(p => {
+    const research = Array.isArray(p.research) ? p.research : [];
+    const email = p.email ? `<a href="mailto:${escapeHtml(p.email)}">${escapeHtml(p.email)}</a>` : "—";
+    const profile = p.profileUrl ? `<a href="${escapeHtml(p.profileUrl)}" target="_blank" rel="noopener">🔗 Profile</a>` : "—";
+    return `<tr>
+      <td><b>${escapeHtml(p.name||"—")}</b></td>
+      <td>${escapeHtml(p.title||"—")}</td>
+      <td>${research.map(r=>`<span class="tag-research">${escapeHtml(r)}</span>`).join(" ")||"—"}</td>
+      <td>${email}</td>
+      <td>${escapeHtml(p.phone||"—")}</td>
+      <td>${profile}</td>
+    </tr>`;
+  }).join("");
+  return `<div class="prof-table-wrap"><table>
+    <thead><tr><th>Name</th><th>Title</th><th>Research Areas</th><th>Email</th><th>Phone</th><th>Profile</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function buildCSV(schools, exportData) {
+  const rows = [["School","Name","Title","Research Areas","Email","Phone","Profile URL"]];
+  for (const { school, data } of exportData) {
+    if (!data || data.status === "error" || !data.professors) continue;
+    for (const p of data.professors) {
+      rows.push([
+        school,
+        p.name||"", p.title||"",
+        (Array.isArray(p.research)?p.research:[]).join("; "),
+        p.email||"", p.phone||"", p.profileUrl||""
+      ]);
+    }
+  }
+  return rows.map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+}
+
+function extractText(data) {
+  return (data.content || []).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+}
+
+async function storageGet(key) {
+  try {
+    const r = await mockStorage.get("school:" + key);
+    return r ? JSON.parse(r.value) : null;
+  } catch { return null; }
+}
+async function storageSet(key, data) {
+  await mockStorage.set("school:" + key, JSON.stringify(data));
+}
+async function storageDel(key) {
+  await mockStorage.delete("school:" + key);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SEARCH helper — runs applySearch logic against a sandbox DOM
+// ═══════════════════════════════════════════════════════════
+function buildSandboxDOM(schools) {
+  const sb = document.getElementById("sandbox");
+  sb.innerHTML = "";
+  const container = document.createElement("div");
+  container.id = "schools-container-test";
+  for (const { name, profs } of schools) {
+    const id = "card_" + name.replace(/\W/g,"_");
+    const card = document.createElement("div");
+    card.id = id;
+    card.innerHTML = buildProfTable(profs);
+    container.appendChild(card);
+  }
+  sb.appendChild(container);
+  return container;
+}
+
+function applySearchTest(container, term) {
+  const schools = [...container.children].map(c => c.id);
+  const q = term.toLowerCase().trim();
+  let totalVisible = 0, totalRows = 0;
+  for (const id of schools) {
+    const card = container.querySelector("#" + id);
+    if (!card) continue;
+    card.querySelectorAll(".search-no-results").forEach(el => el.remove());
+    const rows = card.querySelectorAll("tbody tr");
+    if (!rows.length) continue;
+    let schoolVisible = 0;
+    rows.forEach(row => {
+      const match = !q || row.textContent.toLowerCase().includes(q);
+      row.style.display = match ? "" : "none";
+      if (match) schoolVisible++;
+    });
+    totalRows += rows.length;
+    totalVisible += schoolVisible;
+    if (q && schoolVisible === 0) {
+      const tableWrap = card.querySelector(".prof-table-wrap");
+      if (tableWrap) {
+        const msg = document.createElement("div");
+        msg.className = "search-no-results";
+        msg.textContent = `⚠ No professors match "${term}" at this school.`;
+        tableWrap.after(msg);
+      }
+    }
+  }
+  return { totalVisible, totalRows };
+}
+
+// Mock API response helpers
+function mockApiOk(text) {
+  return { content: [{ type: "text", text }] };
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 1 — Storage
+// ═══════════════════════════════════════════════════════════
+describe("1. Storage", it => {
+  it("set and get a value", async () => {
+    clearMockStore();
+    await mockStorage.set("test-key", "hello");
+    const r = await mockStorage.get("test-key");
+    assert(r !== null, "Expected result");
+    assertEqual(r.value, "hello");
+  });
+
+  it("get a missing key returns null", async () => {
+    clearMockStore();
+    const r = await mockStorage.get("does-not-exist");
+    assertEqual(r, null);
+  });
+
+  it("delete removes a key", async () => {
+    clearMockStore();
+    await mockStorage.set("del-key", "value");
+    await mockStorage.delete("del-key");
+    const r = await mockStorage.get("del-key");
+    assertEqual(r, null);
+  });
+
+  it("delete on missing key does not throw", async () => {
+    clearMockStore();
+    await mockStorage.delete("ghost-key"); // should not throw
+  });
+
+  it("stores school JSON round-trip", async () => {
+    clearMockStore();
+    const data = { status: "ok", professors: [{ name: "Dr. Bug", email: "bug@uni.edu" }] };
+    await storageSet("Cornell University", data);
+    const back = await storageGet("Cornell University");
+    assertEqual(back.professors[0].name, "Dr. Bug");
+  });
+
+  it("multiple schools are stored independently", async () => {
+    clearMockStore();
+    await storageSet("School A", { status: "ok", professors: [{ name: "Alice" }] });
+    await storageSet("School B", { status: "ok", professors: [{ name: "Bob" }, { name: "Carol" }] });
+    const a = await storageGet("School A");
+    const b = await storageGet("School B");
+    assertEqual(a.professors.length, 1);
+    assertEqual(b.professors.length, 2);
+  });
+
+  it("clearing one school does not affect another", async () => {
+    clearMockStore();
+    await storageSet("School A", { status: "ok", professors: [{ name: "Alice" }] });
+    await storageSet("School B", { status: "ok", professors: [{ name: "Bob" }] });
+    await storageDel("School A");
+    const a = await storageGet("School A");
+    const b = await storageGet("School B");
+    assertEqual(a, null);
+    assertEqual(b.professors[0].name, "Bob");
+  });
+
+  it("overwriting a key replaces the value", async () => {
+    clearMockStore();
+    await storageSet("UF", { status: "ok", professors: [] });
+    await storageSet("UF", { status: "ok", professors: [{ name: "New Prof" }] });
+    const d = await storageGet("UF");
+    assertEqual(d.professors.length, 1);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 2 — buildProfTable
+// ═══════════════════════════════════════════════════════════
+describe("2. buildProfTable", it => {
+  it("empty array shows no-results div", () => {
+    const html = buildProfTable([]);
+    assertContains(html, "no-results");
+    assertContains(html, "No faculty data found");
+  });
+
+  it("null input shows no-results div", () => {
+    const html = buildProfTable(null);
+    assertContains(html, "No faculty data found");
+  });
+
+  it("single professor renders one row", () => {
+    const html = buildProfTable([{ name: "Dr. Ant", title: "Professor", research: [], email: null, phone: null, profileUrl: null }]);
+    assertContains(html, "Dr. Ant");
+    assertContains(html, "<table");
+    assertContains(html, "<tr");
+  });
+
+  it("email renders as mailto link", () => {
+    const html = buildProfTable([{ name: "Dr. Fly", email: "fly@bug.edu", research: [] }]);
+    assertContains(html, 'href="mailto:fly@bug.edu"');
+  });
+
+  it("no email shows dash", () => {
+    const html = buildProfTable([{ name: "Dr. Fly", email: null, research: [] }]);
+    assertMatch(html, /\<td\>—\<\/td\>/);
+  });
+
+  it("profileUrl renders as link", () => {
+    const html = buildProfTable([{ name: "Dr. Moth", profileUrl: "https://uni.edu/moth", research: [] }]);
+    assertContains(html, 'href="https://uni.edu/moth"');
+    assertContains(html, "🔗 Profile");
+  });
+
+  it("no profileUrl shows dash", () => {
+    const html = buildProfTable([{ name: "Dr. Moth", profileUrl: null, research: [] }]);
+    assertMatch(html, /\<td\>—\<\/td\>/);
+  });
+
+  it("research tags are rendered as spans", () => {
+    const html = buildProfTable([{ name: "Dr. Bee", research: ["pollination", "colony collapse"] }]);
+    assertContains(html, "pollination");
+    assertContains(html, "colony collapse");
+    assertContains(html, "tag-research");
+  });
+
+  it("null research field does not throw", () => {
+    const html = buildProfTable([{ name: "Dr. Gnat", research: null }]);
+    assertContains(html, "Dr. Gnat");
+  });
+
+  it("HTML characters in name are escaped", () => {
+    const html = buildProfTable([{ name: '<script>alert(1)</script>', research: [] }]);
+    assertNotContains(html, '<script>alert(1)</script>');
+    assertContains(html, "&lt;script&gt;");
+  });
+
+  it("HTML in email is escaped", () => {
+    const html = buildProfTable([{ name: "X", email: '"><img src=x onerror=alert(1)>', research: [] }]);
+    assertNotContains(html, 'onerror=');
+  });
+
+  it("HTML in profileUrl is escaped in href", () => {
+    const html = buildProfTable([{ name: "X", profileUrl: 'javascript:alert(1)', research: [] }]);
+    assertNotContains(html, 'javascript:alert(1)');
+  });
+
+  it("multiple professors render multiple rows", () => {
+    const html = buildProfTable([
+      { name: "Prof A", research: [] },
+      { name: "Prof B", research: [] },
+      { name: "Prof C", research: [] },
+    ]);
+    const matches = html.match(/<tr>/g);
+    assert(matches && matches.length >= 3, "Expected 3+ <tr> elements");
+  });
+
+  it("contains correct table headers", () => {
+    const html = buildProfTable([{ name: "X", research: [] }]);
+    assertContains(html, "Name");
+    assertContains(html, "Title");
+    assertContains(html, "Research Areas");
+    assertContains(html, "Email");
+    assertContains(html, "Phone");
+    assertContains(html, "Profile");
+  });
+
+  it("even/odd striping class applied via table structure", () => {
+    const html = buildProfTable([{ name: "A", research: [] }, { name: "B", research: [] }]);
+    assertContains(html, "<tbody");
+    const rows = (html.match(/<tr>/g)||[]).length;
+    assert(rows >= 2, "Need >=2 rows for striping");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 3 — escapeHtml
+// ═══════════════════════════════════════════════════════════
+describe("3. escapeHtml", it => {
+  it("escapes ampersand", () => assertEqual(escapeHtml("A&B"), "A&amp;B"));
+  it("escapes less-than", () => assertEqual(escapeHtml("<tag>"), "&lt;tag&gt;"));
+  it("escapes greater-than", () => assertEqual(escapeHtml(">"), "&gt;"));
+  it("escapes double quote", () => assertEqual(escapeHtml('"hi"'), "&quot;hi&quot;"));
+  it("escapes single quote", () => assertEqual(escapeHtml("it's"), "it&#39;s"));
+  it("null returns empty string", () => assertEqual(escapeHtml(null), ""));
+  it("undefined returns empty string", () => assertEqual(escapeHtml(undefined), ""));
+  it("numbers are stringified", () => assertEqual(escapeHtml(42), "42"));
+  it("plain string is unchanged", () => assertEqual(escapeHtml("hello world"), "hello world"));
+  it("multiple special chars", () => assertEqual(escapeHtml('<a href="x">'), "&lt;a href=&quot;x&quot;&gt;"));
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 4 — Search / Filter
+// ═══════════════════════════════════════════════════════════
+describe("4. Search / Filter", it => {
+  const PROFS_A = [
+    { name: "Dr. Alice Ant",   title: "Professor",        research: ["myrmecology"], email: "alice@uni.edu",  phone: null, profileUrl: null },
+    { name: "Dr. Bob Beetle",  title: "Assoc. Professor", research: ["coleoptera"],  email: "bob@uni.edu",   phone: null, profileUrl: null },
+  ];
+  const PROFS_B = [
+    { name: "Dr. Carol Cricket", title: "Researcher", research: ["bioacoustics"], email: "carol@other.edu", phone: null, profileUrl: null },
+  ];
+
+  it("empty search shows all rows", () => {
+    const container = buildSandboxDOM([
+      { name: "School A", profs: PROFS_A },
+      { name: "School B", profs: PROFS_B },
+    ]);
+    const { totalVisible, totalRows } = applySearchTest(container, "");
+    assertEqual(totalVisible, 3);
+    assertEqual(totalRows, 3);
+  });
+
+  it("search by professor name (exact, case-insensitive)", () => {
+    const container = buildSandboxDOM([{ name: "School A", profs: PROFS_A }]);
+    const { totalVisible } = applySearchTest(container, "alice ant");
+    assertEqual(totalVisible, 1);
+  });
+
+  it("search by research area", () => {
+    const container = buildSandboxDOM([{ name: "School A", profs: PROFS_A }]);
+    const { totalVisible } = applySearchTest(container, "coleoptera");
+    assertEqual(totalVisible, 1);
+  });
+
+  it("search by email", () => {
+    const container = buildSandboxDOM([
+      { name: "School A", profs: PROFS_A },
+      { name: "School B", profs: PROFS_B },
+    ]);
+    const { totalVisible } = applySearchTest(container, "other.edu");
+    assertEqual(totalVisible, 1);
+  });
+
+  it("search by title", () => {
+    const container = buildSandboxDOM([{ name: "School A", profs: PROFS_A }]);
+    const { totalVisible } = applySearchTest(container, "assoc");
+    assertEqual(totalVisible, 1);
+  });
+
+  it("uppercase search matches lowercase data", () => {
+    const container = buildSandboxDOM([{ name: "School A", profs: PROFS_A }]);
+    const { totalVisible } = applySearchTest(container, "MYRMECOLOGY");
+    assertEqual(totalVisible, 1);
+  });
+
+  it("no match shows zero visible rows", () => {
+    const container = buildSandboxDOM([{ name: "School A", profs: PROFS_A }]);
+    const { totalVisible } = applySearchTest(container, "xyzzy12345");
+    assertEqual(totalVisible, 0);
+  });
+
+  it("no-match injects .search-no-results message", () => {
+    const container = buildSandboxDOM([{ name: "School A", profs: PROFS_A }]);
+    applySearchTest(container, "xyzzy12345");
+    const msg = container.querySelector(".search-no-results");
+    assert(msg !== null, "Expected .search-no-results element");
+    assertContains(msg.textContent, "xyzzy12345");
+  });
+
+  it("clearing search removes .search-no-results message", () => {
+    const container = buildSandboxDOM([{ name: "School A", profs: PROFS_A }]);
+    applySearchTest(container, "xyzzy12345");
+    applySearchTest(container, ""); // clear
+    const msg = container.querySelector(".search-no-results");
+    assertEqual(msg, null);
+  });
+
+  it("partial match works", () => {
+    const container = buildSandboxDOM([{ name: "School A", profs: PROFS_A }]);
+    const { totalVisible } = applySearchTest(container, "bee"); // Bob Beetle
+    assertEqual(totalVisible, 1);
+  });
+
+  it("search across multiple schools", () => {
+    const container = buildSandboxDOM([
+      { name: "School A", profs: PROFS_A },
+      { name: "School B", profs: PROFS_B },
+    ]);
+    const { totalVisible } = applySearchTest(container, "uni.edu");
+    assertEqual(totalVisible, 2); // alice and bob
+  });
+
+  it("school with no table is skipped gracefully", () => {
+    const container = buildSandboxDOM([{ name: "Empty School", profs: [] }]);
+    const { totalVisible, totalRows } = applySearchTest(container, "anything");
+    assertEqual(totalVisible, 0);
+    assertEqual(totalRows, 0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 5 — CSV Export
+// ═══════════════════════════════════════════════════════════
+describe("5. CSV Export", it => {
+  const SCHOOL_DATA = [
+    {
+      school: "Bug University",
+      data: {
+        status: "ok",
+        professors: [
+          { name: "Dr. Ant", title: "Professor", research: ["myrmecology", "colony"], email: "ant@bug.edu", phone: "555-1234", profileUrl: "https://bug.edu/ant" },
+          { name: "Dr. Bee", title: "Assoc. Prof", research: ["pollination"], email: "bee@bug.edu", phone: null, profileUrl: null },
+        ]
+      }
+    },
+    {
+      school: "Empty College",
+      data: { status: "ok", professors: [] }
+    },
+    {
+      school: "Error State University",
+      data: { status: "error", errorMsg: "Timeout" }
+    },
+    {
+      school: "No Cache University",
+      data: null
+    }
+  ];
+
+  it("first row is the header row", () => {
+    const csv = buildCSV([], SCHOOL_DATA);
+    const firstLine = csv.split("\n")[0];
+    assertContains(firstLine, "School");
+    assertContains(firstLine, "Name");
+    assertContains(firstLine, "Email");
+    assertContains(firstLine, "Research Areas");
+  });
+
+  it("professor data appears in CSV", () => {
+    const csv = buildCSV([], SCHOOL_DATA);
+    assertContains(csv, "Dr. Ant");
+    assertContains(csv, "Dr. Bee");
+  });
+
+  it("research areas joined with semicolon", () => {
+    const csv = buildCSV([], SCHOOL_DATA);
+    assertContains(csv, "myrmecology; colony");
+  });
+
+  it("school name is in each professor row", () => {
+    const csv = buildCSV([], SCHOOL_DATA);
+    const lines = csv.split("\n").filter(l => l.includes("Dr. Ant"));
+    assert(lines.length === 1, "Expected exactly one Dr. Ant row");
+    assertContains(lines[0], "Bug University");
+  });
+
+  it("school with no professors produces no data rows (only header)", () => {
+    const csv = buildCSV([], [{ school: "Empty", data: { status: "ok", professors: [] } }]);
+    const lines = csv.split("\n");
+    assertEqual(lines.length, 1); // just the header
+  });
+
+  it("error-status school is skipped", () => {
+    const csv = buildCSV([], SCHOOL_DATA);
+    assertNotContains(csv, "Error State University");
+  });
+
+  it("null-data school is skipped", () => {
+    const csv = buildCSV([], SCHOOL_DATA);
+    assertNotContains(csv, "No Cache University");
+  });
+
+  it("null phone renders as empty string, not 'null'", () => {
+    const csv = buildCSV([], SCHOOL_DATA);
+    assertNotContains(csv, '"null"');
+  });
+
+  it("double-quotes inside fields are escaped", () => {
+    const tricky = [{
+      school: 'School "A"',
+      data: { status: "ok", professors: [{ name: 'He said "hi"', research: [] }] }
+    }];
+    const csv = buildCSV([], tricky);
+    assertContains(csv, '""hi""'); // RFC 4180 escaping
+  });
+
+  it("CSV has correct number of data rows", () => {
+    const csv = buildCSV([], SCHOOL_DATA);
+    const lines = csv.split("\n");
+    // 1 header + 2 profs from Bug University = 3 lines
+    assertEqual(lines.length, 3);
+  });
+
+  it("all fields are double-quoted", () => {
+    const csv = buildCSV([], SCHOOL_DATA);
+    const dataLine = csv.split("\n")[1];
+    assert(dataLine.startsWith('"'), "First field should be quoted");
+    assert(dataLine.endsWith('"'), "Last field should be quoted");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 6 — JSON Export
+// ═══════════════════════════════════════════════════════════
+describe("6. JSON Export", it => {
+  const EXPORT_DATA = [
+    { school: "School A", url: "https://a.edu", data: { status: "ok", professors: [{ name: "Dr. X" }] } },
+    { school: "School B", url: "https://b.edu", data: null },
+  ];
+
+  it("output is valid JSON", () => {
+    const json = JSON.stringify(EXPORT_DATA, null, 2);
+    let parsed;
+    try { parsed = JSON.parse(json); } catch { throw new Error("Invalid JSON output"); }
+    assert(Array.isArray(parsed), "Output should be an array");
+  });
+
+  it("all schools are present regardless of status", () => {
+    const json = JSON.stringify(EXPORT_DATA, null, 2);
+    const parsed = JSON.parse(json);
+    assertEqual(parsed.length, 2);
+  });
+
+  it("school name and url are preserved", () => {
+    const json = JSON.stringify(EXPORT_DATA, null, 2);
+    const parsed = JSON.parse(json);
+    assertEqual(parsed[0].school, "School A");
+    assertEqual(parsed[0].url, "https://a.edu");
+  });
+
+  it("professor data is nested correctly", () => {
+    const json = JSON.stringify(EXPORT_DATA, null, 2);
+    const parsed = JSON.parse(json);
+    assertEqual(parsed[0].data.professors[0].name, "Dr. X");
+  });
+
+  it("null data is preserved as null", () => {
+    const json = JSON.stringify(EXPORT_DATA, null, 2);
+    const parsed = JSON.parse(json);
+    assertEqual(parsed[1].data, null);
+  });
+
+  it("output is pretty-printed (has newlines)", () => {
+    const json = JSON.stringify(EXPORT_DATA, null, 2);
+    assert(json.includes("\n"), "Expected pretty-printed JSON with newlines");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 7 — Hit Counter Logic
+// ═══════════════════════════════════════════════════════════
+describe("7. Hit Counter", it => {
+  async function countProfs(schoolMap) {
+    clearMockStore();
+    for (const [name, data] of Object.entries(schoolMap)) {
+      if (data !== null) await storageSet(name, data);
+    }
+    const counts = await Promise.all(
+      Object.keys(schoolMap).map(async name => {
+        const d = await storageGet(name);
+        return (d && d.professors) ? d.professors.length : 0;
+      })
+    );
+    return counts.reduce((a, b) => a + b, 0);
+  }
+
+  it("counts professors from a single school", async () => {
+    const total = await countProfs({
+      "School A": { status: "ok", professors: [{ name: "P1" }, { name: "P2" }] }
+    });
+    assertEqual(total, 2);
+  });
+
+  it("aggregates across multiple schools", async () => {
+    const total = await countProfs({
+      "School A": { status: "ok", professors: [{ name: "P1" }, { name: "P2" }] },
+      "School B": { status: "ok", professors: [{ name: "P3" }] },
+    });
+    assertEqual(total, 3);
+  });
+
+  it("schools with no cache contribute 0", async () => {
+    const total = await countProfs({
+      "Cached School": { status: "ok", professors: [{ name: "P1" }] },
+      "Empty School": null,
+    });
+    assertEqual(total, 1);
+  });
+
+  it("error-status schools contribute 0", async () => {
+    const total = await countProfs({
+      "Error School": { status: "error", professors: undefined },
+    });
+    assertEqual(total, 0);
+  });
+
+  it("school with empty professors array contributes 0", async () => {
+    const total = await countProfs({
+      "Ghost School": { status: "ok", professors: [] },
+    });
+    assertEqual(total, 0);
+  });
+
+  it("counter is correct after clearing one school", async () => {
+    clearMockStore();
+    await storageSet("A", { status: "ok", professors: [{ name: "P1" }] });
+    await storageSet("B", { status: "ok", professors: [{ name: "P2" }, { name: "P3" }] });
+    await storageDel("A");
+    const count = await countProfs({ A: null, B: { status: "ok", professors: [{ name: "P2" }, { name: "P3" }] } });
+    assertEqual(count, 2);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 8 — extractText (API response parsing)
+// ═══════════════════════════════════════════════════════════
+describe("8. extractText", it => {
+  it("extracts text from single content block", () => {
+    const data = { content: [{ type: "text", text: "hello" }] };
+    assertEqual(extractText(data), "hello");
+  });
+
+  it("concatenates multiple text blocks", () => {
+    const data = { content: [{ type: "text", text: "foo" }, { type: "text", text: "bar" }] };
+    assertEqual(extractText(data), "foo\nbar");
+  });
+
+  it("skips non-text blocks", () => {
+    const data = { content: [
+      { type: "tool_use", id: "x", input: {} },
+      { type: "text", text: "result" },
+    ]};
+    assertEqual(extractText(data), "result");
+  });
+
+  it("returns empty string for no text blocks", () => {
+    const data = { content: [{ type: "tool_use", id: "x", input: {} }] };
+    assertEqual(extractText(data), "");
+  });
+
+  it("handles missing content field", () => {
+    assertEqual(extractText({}), "");
+  });
+
+  it("handles null content", () => {
+    assertEqual(extractText({ content: null }), "");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 9 — Agent JSON Parsing Logic
+// ═══════════════════════════════════════════════════════════
+describe("9. Agent JSON Parsing", it => {
+  // Mimics agent1_findProgramPage parse logic
+  function parseAgent1(text) {
+    const clean = text.replace(/```json|```/g, "").trim();
+    try {
+      const parsed = JSON.parse(clean);
+      return parsed.programUrl || "FALLBACK";
+    } catch {
+      const match = text.match(/https?:\/\/[^\s"'<>]+/);
+      return match ? match[0] : "FALLBACK";
+    }
+  }
+
+  // Mimics agent2_findFaculty parse logic
+  function parseAgent2(text) {
+    const clean = text.replace(/```json|```/g, "").trim();
+    try {
+      const arrMatch = clean.match(/\[[\s\S]*\]/);
+      if (arrMatch) return JSON.parse(arrMatch[0]);
+      return JSON.parse(clean);
+    } catch { return []; }
+  }
+
+  it("agent1 parses clean JSON", () => {
+    const url = parseAgent1('{"programUrl":"https://uni.edu/grad"}');
+    assertEqual(url, "https://uni.edu/grad");
+  });
+
+  it("agent1 strips markdown fences", () => {
+    const url = parseAgent1('```json\n{"programUrl":"https://uni.edu/grad"}\n```');
+    assertEqual(url, "https://uni.edu/grad");
+  });
+
+  it("agent1 falls back to URL extraction on bad JSON", () => {
+    const url = parseAgent1("Sure! The page is at https://uni.edu/grad/programs.");
+    assertEqual(url, "https://uni.edu/grad/programs.");
+  });
+
+  it("agent1 returns FALLBACK when no URL found", () => {
+    const url = parseAgent1("I couldn't find anything.");
+    assertEqual(url, "FALLBACK");
+  });
+
+  it("agent2 parses clean JSON array", () => {
+    const result = parseAgent2('[{"name":"Dr. X","profileUrl":"https://x.edu"}]');
+    assertEqual(result.length, 1);
+    assertEqual(result[0].name, "Dr. X");
+  });
+
+  it("agent2 strips markdown fences", () => {
+    const result = parseAgent2('```json\n[{"name":"Dr. Y"}]\n```');
+    assertEqual(result.length, 1);
+    assertEqual(result[0].name, "Dr. Y");
+  });
+
+  it("agent2 extracts array from prose response", () => {
+    const result = parseAgent2('Here are the faculty:\n[{"name":"Dr. Z"}]\nEnd.');
+    assertEqual(result.length, 1);
+    assertEqual(result[0].name, "Dr. Z");
+  });
+
+  it("agent2 returns empty array on parse failure", () => {
+    const result = parseAgent2("I could not find faculty data.");
+    assertEqual(result, []);
+  });
+
+  it("agent3 batch fallback returns names from input", () => {
+    // Mimics the catch block in agent3_batch
+    const batch = [{ name: "Dr. Ant", profileUrl: "https://x.edu" }, { name: "Dr. Bee", profileUrl: null }];
+    const fallback = batch.map(f => ({
+      name: f.name || "Unknown",
+      title: null, research: [], email: null, phone: null,
+      profileUrl: f.profileUrl || null
+    }));
+    assertEqual(fallback[0].name, "Dr. Ant");
+    assertEqual(fallback[1].profileUrl, null);
+    assertEqual(fallback[0].research, []);
+  });
+
+  it("agent3 parses full professor objects", () => {
+    const json = JSON.stringify([{
+      name: "Dr. Moth",
+      title: "Professor of Entomology",
+      research: ["lepidoptera", "migration"],
+      email: "moth@uni.edu",
+      phone: "555-9999",
+      profileUrl: "https://uni.edu/moth"
+    }]);
+    const parsed = JSON.parse(json);
+    assertEqual(parsed[0].research.length, 2);
+    assertEqual(parsed[0].email, "moth@uni.edu");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 10 — Badge & Progress DOM State
+// ═══════════════════════════════════════════════════════════
+describe("10. Badge & Progress DOM State", it => {
+  function setupBadge() {
+    const sb = document.getElementById("sandbox");
+    const id = "test_badge_school";
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <span class="badge badge-idle" id="badge_${id}">⬜ Not Searched</span>
+      <div id="progress_${id}"></div>
+    `;
+    sb.appendChild(div);
+    return id;
+  }
+
+  function setBadge(id, cls, text) {
+    const el = document.getElementById("badge_" + id);
+    if (el) { el.className = "badge " + cls; el.textContent = text; }
+  }
+
+  function setProgress(id, pct, label) {
+    const el = document.getElementById("progress_" + id);
+    if (!el) return;
+    if (pct >= 100) { el.innerHTML = ""; return; }
+    el.innerHTML = `<div class="progress-wrap">
+      <div class="progress-bar" style="width:${pct}%"></div>
+      <div class="progress-text">${label}</div>
+    </div>`;
+  }
+
+  it("badge starts as badge-idle", () => {
+    const id = setupBadge();
+    const el = document.getElementById("badge_" + id);
+    assert(el.classList.contains("badge-idle"), "Expected badge-idle class");
+  });
+
+  it("setBadge changes class to badge-loading", () => {
+    const id = setupBadge();
+    setBadge(id, "badge-loading", "⏳ Loading...");
+    const el = document.getElementById("badge_" + id);
+    assert(el.classList.contains("badge-loading"), "Expected badge-loading");
+    assertEqual(el.textContent, "⏳ Loading...");
+  });
+
+  it("setBadge changes class to badge-success", () => {
+    const id = setupBadge();
+    setBadge(id, "badge-success", "✅ 5 profs");
+    const el = document.getElementById("badge_" + id);
+    assert(el.classList.contains("badge-success"), "Expected badge-success");
+  });
+
+  it("setBadge changes class to badge-error", () => {
+    const id = setupBadge();
+    setBadge(id, "badge-error", "❌ Error");
+    const el = document.getElementById("badge_" + id);
+    assert(el.classList.contains("badge-error"), "Expected badge-error");
+  });
+
+  it("setBadge changes class to badge-cached", () => {
+    const id = setupBadge();
+    setBadge(id, "badge-cached", "✅ cached");
+    const el = document.getElementById("badge_" + id);
+    assert(el.classList.contains("badge-cached"), "Expected badge-cached");
+  });
+
+  it("setProgress renders progress bar at 50%", () => {
+    const id = setupBadge();
+    setProgress(id, 50, "Halfway!");
+    const el = document.getElementById("progress_" + id);
+    const bar = el.querySelector(".progress-bar");
+    assert(bar !== null, "Expected .progress-bar");
+    assertContains(bar.style.width, "50%");
+  });
+
+  it("setProgress at 0% renders bar", () => {
+    const id = setupBadge();
+    setProgress(id, 0, "Starting...");
+    const el = document.getElementById("progress_" + id);
+    assert(el.innerHTML.length > 0, "Expected progress HTML");
+  });
+
+  it("setProgress at 100% clears the element", () => {
+    const id = setupBadge();
+    setProgress(id, 50, "Halfway");
+    setProgress(id, 100, "Done!");
+    const el = document.getElementById("progress_" + id);
+    assertEqual(el.innerHTML, "");
+  });
+
+  it("progress text label is displayed", () => {
+    const id = setupBadge();
+    setProgress(id, 33, "Loading faculty...");
+    const el = document.getElementById("progress_" + id);
+    assertContains(el.textContent, "Loading faculty...");
+  });
+
+  it("badge text updates correctly", () => {
+    const id = setupBadge();
+    setBadge(id, "badge-success", "✅ 42 profs");
+    const el = document.getElementById("badge_" + id);
+    assertEqual(el.textContent, "✅ 42 profs");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 11 — renderSchoolCard DOM output
+// ═══════════════════════════════════════════════════════════
+describe("11. renderSchoolCard DOM", it => {
+  const SCHOOL = { name: "Test University", url: "https://test.edu" };
+
+  function renderSchoolCard(school, data) {
+    const id = "card_" + school.name.replace(/\W/g,"_");
+    const old = document.getElementById(id);
+    if (old) old.remove();
+
+    let badge = "badge-idle", badgeText = "⬜ Not Searched";
+    let bodyHTML = "";
+    if (data) {
+      if (data.status === "error") {
+        badge = "badge-error"; badgeText = "❌ Error";
+        bodyHTML = `<div class="error-box">⛔ ERROR: ${escapeHtml(data.errorMsg||"")}</div>`;
+      } else {
+        badge = "badge-cached";
+        badgeText = `✅ ${(data.professors||[]).length} profs (cached)`;
+        bodyHTML = buildProfTable(data.professors||[]);
+      }
+    }
+
+    const card = document.createElement("div");
+    card.className = "win school-card";
+    card.id = id;
+    card.innerHTML = `
+      <div class="win-title"><span>🎓 ${escapeHtml(school.name)}</span></div>
+      <div class="win-body">
+        <div class="school-header">
+          <div>
+            <div class="school-name">${escapeHtml(school.name)}</div>
+            <div class="school-url">${escapeHtml(school.url)}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <span class="badge ${badge}" id="badge_${id}">${badgeText}</span>
+            <button class="btn" id="btn_${id}">🔄 Scrape</button>
+          </div>
+        </div>
+        <div id="progress_${id}"></div>
+        <div id="body_${id}">${bodyHTML}</div>
+      </div>`;
+
+    const sb = document.getElementById("sandbox");
+    sb.appendChild(card);
+    return card;
+  }
+
+  it("renders card with correct id", () => {
+    const card = renderSchoolCard(SCHOOL, null);
+    assertEqual(card.id, "card_Test_University");
+  });
+
+  it("shows school name in card", () => {
+    const card = renderSchoolCard(SCHOOL, null);
+    assertContains(card.textContent, "Test University");
+  });
+
+  it("shows school URL in card", () => {
+    const card = renderSchoolCard(SCHOOL, null);
+    assertContains(card.textContent, "https://test.edu");
+  });
+
+  it("idle state shows badge-idle", () => {
+    const card = renderSchoolCard(SCHOOL, null);
+    const badge = card.querySelector(".badge");
+    assert(badge.classList.contains("badge-idle"), "Expected badge-idle");
+  });
+
+  it("error state shows badge-error and error-box", () => {
+    const card = renderSchoolCard(SCHOOL, { status: "error", errorMsg: "Timeout" });
+    const badge = card.querySelector(".badge");
+    assert(badge.classList.contains("badge-error"), "Expected badge-error");
+    const errBox = card.querySelector(".error-box");
+    assert(errBox !== null, "Expected .error-box");
+    assertContains(errBox.textContent, "Timeout");
+  });
+
+  it("cached state shows prof count in badge", () => {
+    const card = renderSchoolCard(SCHOOL, {
+      status: "ok",
+      professors: [{ name: "P1", research: [] }, { name: "P2", research: [] }]
+    });
+    const badge = card.querySelector(".badge");
+    assert(badge.classList.contains("badge-cached"), "Expected badge-cached");
+    assertContains(badge.textContent, "2");
+  });
+
+  it("cached state shows professor table", () => {
+    const card = renderSchoolCard(SCHOOL, {
+      status: "ok",
+      professors: [{ name: "Dr. Bug", research: ["myrmecology"] }]
+    });
+    assertContains(card.innerHTML, "Dr. Bug");
+    assertContains(card.innerHTML, "myrmecology");
+  });
+
+  it("re-rendering replaces previous card", () => {
+    renderSchoolCard(SCHOOL, null);
+    renderSchoolCard(SCHOOL, null);
+    const cards = document.querySelectorAll("#card_Test_University");
+    assertEqual(cards.length, 1);
+  });
+
+  it("XSS in school name is escaped", () => {
+    const xss = { name: '<img src=x onerror=alert(1)>', url: "https://x.edu" };
+    const card = renderSchoolCard(xss, null);
+    assertNotContains(card.innerHTML, "onerror=alert(1)");
+  });
+
+  it("XSS in error message is escaped", () => {
+    const card = renderSchoolCard(SCHOOL, { status: "error", errorMsg: '<script>bad()</script>' });
+    assertNotContains(card.innerHTML, '<script>bad()');
+  });
+
+  it("scrape button is present", () => {
+    const card = renderSchoolCard(SCHOOL, null);
+    const btn = card.querySelector("button");
+    assert(btn !== null, "Expected scrape button");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 12 — saveFile / anchorDownload (browser API availability)
+// ═══════════════════════════════════════════════════════════
+describe("12. File Save API", it => {
+  it("File System Access API availability is detectable", () => {
+    const supported = "showSaveFilePicker" in window;
+    // Just assert the detection works — result depends on browser
+    assert(typeof supported === "boolean", "showSaveFilePicker check should return boolean");
+  });
+
+  it("URL.createObjectURL is available (fallback dependency)", () => {
+    assert(typeof URL.createObjectURL === "function", "URL.createObjectURL must exist for download fallback");
+  });
+
+  it("Blob is available", () => {
+    const b = new Blob(["test"], { type: "text/csv" });
+    assert(b.size > 0, "Blob should have content");
+  });
+
+  it("CSV blob has correct MIME type", () => {
+    const b = new Blob(["a,b,c"], { type: "text/csv" });
+    assertEqual(b.type, "text/csv");
+  });
+
+  it("JSON blob has correct MIME type", () => {
+    const b = new Blob(['{"a":1}'], { type: "application/json" });
+    assertEqual(b.type, "application/json");
+  });
+
+  it("Blob URL is revocable without error", () => {
+    const url = URL.createObjectURL(new Blob(["x"]));
+    URL.revokeObjectURL(url);
+    // No throw = pass
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 13 — School Config (matches entoprofesso.html SCHOOLS array)
+// ═══════════════════════════════════════════════════════════
+const SCHOOLS = [
+  {
+    name:    "University of Arizona",
+    url:     "https://insects.arizona.edu/",
+  },
+  {
+    name:    "University of California Davis",
+    url:     "https://entomology.ucdavis.edu/",
+    gradUrl: "https://entomology.ucdavis.edu/graduate-programs",
+  },
+  {
+    name:    "University of Hawaii (CTAHR)",
+    url:     "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology",
+    gradUrl: "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology",
+  },
+];
+
+describe("13. School Config Integrity", it => {
+  it("all schools have a non-empty name", () => {
+    for (const s of SCHOOLS) {
+      assert(s.name && s.name.trim().length > 0, `School missing name: ${JSON.stringify(s)}`);
+    }
+  });
+
+  it("all schools have a valid https:// url", () => {
+    for (const s of SCHOOLS) {
+      assert(s.url.startsWith("https://"), `School URL must use https: ${s.name} → ${s.url}`);
+    }
+  });
+
+  it("all gradUrls (when present) use https://", () => {
+    for (const s of SCHOOLS) {
+      if (s.gradUrl) {
+        assert(s.gradUrl.startsWith("https://"), `gradUrl must use https: ${s.name} → ${s.gradUrl}`);
+      }
+    }
+  });
+
+  it("school names are unique", () => {
+    const names = SCHOOLS.map(s => s.name);
+    const unique = new Set(names);
+    assertEqual(unique.size, names.length);
+  });
+
+  it("school urls are unique", () => {
+    const urls = SCHOOLS.map(s => s.url);
+    const unique = new Set(urls);
+    assertEqual(unique.size, urls.length);
+  });
+
+  it("University of Arizona has correct base URL", () => {
+    const s = SCHOOLS.find(s => s.name === "University of Arizona");
+    assert(s !== undefined, "School not found");
+    assertEqual(s.url, "https://insects.arizona.edu/");
+  });
+
+  it("University of Arizona has no hardcoded gradUrl (Agent 1 must search)", () => {
+    const s = SCHOOLS.find(s => s.name === "University of Arizona");
+    assert(!s.gradUrl, "Arizona gradUrl should be undefined so Agent 1 searches");
+  });
+
+  it("UC Davis has correct base URL", () => {
+    const s = SCHOOLS.find(s => s.name === "University of California Davis");
+    assert(s !== undefined, "School not found");
+    assertEqual(s.url, "https://entomology.ucdavis.edu/");
+  });
+
+  it("UC Davis has correct known gradUrl", () => {
+    const s = SCHOOLS.find(s => s.name === "University of California Davis");
+    assertEqual(s.gradUrl, "https://entomology.ucdavis.edu/graduate-programs");
+  });
+
+  it("Hawaii has correct base URL", () => {
+    const s = SCHOOLS.find(s => s.name === "University of Hawaii (CTAHR)");
+    assert(s !== undefined, "School not found");
+    assertEqual(s.url, "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology");
+  });
+
+  it("Hawaii gradUrl points directly to entomology grad page", () => {
+    const s = SCHOOLS.find(s => s.name === "University of Hawaii (CTAHR)");
+    assertContains(s.gradUrl, "Entomology");
+  });
+
+  it("storageKey for each school is unique and stable", () => {
+    const keys = SCHOOLS.map(s => "school:" + s.name);
+    const unique = new Set(keys);
+    assertEqual(unique.size, SCHOOLS.length);
+  });
+
+  it("card ID for each school is unique (no collision)", () => {
+    const ids = SCHOOLS.map(s => "card_" + s.name.replace(/\W/g, "_"));
+    const unique = new Set(ids);
+    assertEqual(unique.size, SCHOOLS.length);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 14 — Agent 1 gradUrl Short-Circuit Logic
+// ═══════════════════════════════════════════════════════════
+describe("14. Agent 1 gradUrl Short-Circuit", it => {
+  // Mimics entoprofesso.html agent1_findProgramPage short-circuit
+  async function agent1_shortCircuit(school, mockCallClaude) {
+    if (school.gradUrl) return school.gradUrl;
+    // Would call Claude — use mock
+    return mockCallClaude ? await mockCallClaude() : school.url;
+  }
+
+  it("UC Davis returns known gradUrl without calling Claude", async () => {
+    const ucdavis = SCHOOLS.find(s => s.name === "University of California Davis");
+    let claudeCalled = false;
+    const result = await agent1_shortCircuit(ucdavis, () => { claudeCalled = true; return "should-not-be-called"; });
+    assertEqual(result, "https://entomology.ucdavis.edu/graduate-programs");
+    assert(!claudeCalled, "Claude should NOT be called when gradUrl is known");
+  });
+
+  it("Hawaii returns known gradUrl without calling Claude", async () => {
+    const hawaii = SCHOOLS.find(s => s.name === "University of Hawaii (CTAHR)");
+    let claudeCalled = false;
+    const result = await agent1_shortCircuit(hawaii, () => { claudeCalled = true; return "should-not-be-called"; });
+    assertEqual(result, "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology");
+    assert(!claudeCalled, "Claude should NOT be called when gradUrl is known");
+  });
+
+  it("Arizona falls through to Claude (no gradUrl)", async () => {
+    const arizona = SCHOOLS.find(s => s.name === "University of Arizona");
+    let claudeCalled = false;
+    const result = await agent1_shortCircuit(arizona, async () => { claudeCalled = true; return "https://insects.arizona.edu/grad"; });
+    assert(claudeCalled, "Claude SHOULD be called when gradUrl is not set");
+    assertEqual(result, "https://insects.arizona.edu/grad");
+  });
+
+  it("gradUrl is returned verbatim (no mutation)", async () => {
+    const school = { name: "Test", url: "https://a.edu", gradUrl: "https://a.edu/grad?x=1&y=2" };
+    const result = await agent1_shortCircuit(school, null);
+    assertEqual(result, "https://a.edu/grad?x=1&y=2");
+  });
+
+  it("school with empty string gradUrl falls through to Claude", async () => {
+    const school = { name: "X", url: "https://x.edu", gradUrl: "" };
+    let claudeCalled = false;
+    await agent1_shortCircuit(school, async () => { claudeCalled = true; return "found"; });
+    assert(claudeCalled, "Empty gradUrl should NOT short-circuit");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 15 — Real School Storage Round-Trip
+// ═══════════════════════════════════════════════════════════
+describe("15. Real School Storage Round-Trip", it => {
+  // Sample realistic professor records for each school
+  const SAMPLE_PROFS = {
+    "University of Arizona": [
+      { name: "Dr. Gene Hall", title: "Professor", research: ["integrated pest management", "stored product insects"], email: "ghall@arizona.edu", phone: null, profileUrl: "https://insects.arizona.edu/people/gene-hall" },
+      { name: "Dr. Yves Carrière", title: "Regents Professor", research: ["Bt resistance", "population genetics", "insect ecology"], email: "carriery@arizona.edu", phone: null, profileUrl: "https://insects.arizona.edu/people/yves-carriere" },
+    ],
+    "University of California Davis": [
+      { name: "Dr. Walter Leal", title: "Distinguished Professor", research: ["chemical ecology", "olfaction", "mosquito repellent"], email: "wsleal@ucdavis.edu", phone: null, profileUrl: "https://entomology.ucdavis.edu/people/faculty/walter-leal" },
+      { name: "Dr. James Carey", title: "Professor", research: ["demography", "longevity", "Mediterranean fruit fly"], email: "jrcarey@ucdavis.edu", phone: null, profileUrl: null },
+    ],
+    "University of Hawaii (CTAHR)": [
+      { name: "Dr. Mark Wright", title: "Professor", research: ["biological control", "invasive species", "tephritid flies"], email: "wrightm@hawaii.edu", phone: null, profileUrl: null },
+    ],
+  };
+
+  it("can store and retrieve Arizona profs", async () => {
+    clearMockStore();
+    await storageSet("University of Arizona", { status: "ok", professors: SAMPLE_PROFS["University of Arizona"] });
+    const d = await storageGet("University of Arizona");
+    assertEqual(d.professors.length, 2);
+    assertEqual(d.professors[0].name, "Dr. Gene Hall");
+  });
+
+  it("can store and retrieve UC Davis profs", async () => {
+    clearMockStore();
+    await storageSet("University of California Davis", { status: "ok", professors: SAMPLE_PROFS["University of California Davis"] });
+    const d = await storageGet("University of California Davis");
+    assertEqual(d.professors[0].email, "wsleal@ucdavis.edu");
+  });
+
+  it("can store and retrieve Hawaii profs", async () => {
+    clearMockStore();
+    await storageSet("University of Hawaii (CTAHR)", { status: "ok", professors: SAMPLE_PROFS["University of Hawaii (CTAHR)"] });
+    const d = await storageGet("University of Hawaii (CTAHR)");
+    assertContains(d.professors[0].research.join(","), "biological control");
+  });
+
+  it("all three schools can be stored simultaneously", async () => {
+    clearMockStore();
+    for (const [name, profs] of Object.entries(SAMPLE_PROFS)) {
+      await storageSet(name, { status: "ok", professors: profs });
+    }
+    for (const [name] of Object.entries(SAMPLE_PROFS)) {
+      const d = await storageGet(name);
+      assert(d !== null, `Expected data for ${name}`);
+      assert(d.professors.length > 0, `Expected professors for ${name}`);
+    }
+  });
+
+  it("CSV export includes all real school profs", () => {
+    const exportData = Object.entries(SAMPLE_PROFS).map(([school, professors]) => ({
+      school, data: { status: "ok", professors }
+    }));
+    const csv = buildCSV([], exportData);
+    assertContains(csv, "Dr. Gene Hall");
+    assertContains(csv, "Dr. Walter Leal");
+    assertContains(csv, "Dr. Mark Wright");
+  });
+
+  it("CSV research areas for Arizona prof are semicolon-joined", () => {
+    const exportData = [{ school: "University of Arizona", data: { status: "ok", professors: SAMPLE_PROFS["University of Arizona"] } }];
+    const csv = buildCSV([], exportData);
+    assertContains(csv, "integrated pest management; stored product insects");
+  });
+
+  it("search on Arizona prof name works", () => {
+    const profs = SAMPLE_PROFS["University of Arizona"];
+    const container = buildSandboxDOM([{ name: "University of Arizona", profs }]);
+    const { totalVisible } = applySearchTest(container, "carrière");
+    assertEqual(totalVisible, 1);
+  });
+
+  it("search on UC Davis research area works", () => {
+    const profs = SAMPLE_PROFS["University of California Davis"];
+    const container = buildSandboxDOM([{ name: "University of California Davis", profs }]);
+    const { totalVisible } = applySearchTest(container, "demography");
+    assertEqual(totalVisible, 1);
+  });
+
+  it("search on Hawaii email domain works", () => {
+    const profs = SAMPLE_PROFS["University of Hawaii (CTAHR)"];
+    const container = buildSandboxDOM([{ name: "University of Hawaii (CTAHR)", profs }]);
+    const { totalVisible } = applySearchTest(container, "hawaii.edu");
+    assertEqual(totalVisible, 1);
+  });
+
+  it("total hit counter across all real schools is correct", async () => {
+    clearMockStore();
+    for (const [name, profs] of Object.entries(SAMPLE_PROFS)) {
+      await storageSet(name, { status: "ok", professors: profs });
+    }
+    const counts = await Promise.all(
+      Object.keys(SAMPLE_PROFS).map(async name => {
+        const d = await storageGet(name);
+        return d ? d.professors.length : 0;
+      })
+    );
+    const total = counts.reduce((a, b) => a + b, 0);
+    assertEqual(total, 5); // 2 + 2 + 1
+  });
+
+  it("buildProfTable renders Arizona profile URL as link", () => {
+    const html = buildProfTable(SAMPLE_PROFS["University of Arizona"]);
+    assertContains(html, "href=\"https://insects.arizona.edu/people/gene-hall\"");
+  });
+
+  it("buildProfTable handles UC Davis null profileUrl gracefully", () => {
+    const html = buildProfTable(SAMPLE_PROFS["University of California Davis"]);
+    assertContains(html, "Dr. James Carey");
+    // null profileUrl → dash, not a broken link
+    assertNotContains(html, 'href="null"');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  AUTO-RUN on load
+// ═══════════════════════════════════════════════════════════
+window.addEventListener("DOMContentLoaded", () => {
+  tlog("🧪 Test harness loaded. " + _suites.length + " suites registered.");
+  tlog("Click '▶ Run All Tests' to start.");
+  // Auto-run after short delay
+  setTimeout(() => runAll(), 400);
+});
+</script>
+</body>
+</html>

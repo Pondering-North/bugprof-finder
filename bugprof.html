@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐛 Ento-Professo Search 300 🐛</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Special+Elite&display=swap');
+  :root {
+    --navy:          #000080;
+    --bg:            #c0c0c0;
+    --white:         #ffffff;
+    --black:         #000000;
+    --status-ok:     #003f7f;
+    --status-err:    #1a1a1a;
+    --status-warn:   #4a3800;
+    --status-cached: #2a2a2a;
+    --log-bg:        #000000;
+    --log-text:      #ffff00;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #000080;
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%230000aa' /%3E%3C/svg%3E");
+    font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+    color: #000;
+    min-height: 100vh;
+    padding: 10px;
+  }
+  .win {
+    background: var(--bg);
+    border-top: 2px solid #fff;
+    border-left: 2px solid #fff;
+    border-right: 2px solid #444;
+    border-bottom: 2px solid #444;
+    margin-bottom: 12px;
+  }
+  .win-title {
+    background: linear-gradient(90deg, var(--navy) 0%, #1084d0 100%);
+    color: #fff;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    padding: 3px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+  }
+  .win-title .btns { display: flex; gap: 3px; }
+  .win-btn {
+    width: 16px; height: 14px;
+    background: var(--bg);
+    border-top: 1px solid #fff; border-left: 1px solid #fff;
+    border-right: 1px solid #444; border-bottom: 1px solid #444;
+    font-size: 10px; line-height: 13px; text-align: center;
+    cursor: pointer; font-family: monospace;
+  }
+  .win-body { padding: 10px; }
+  marquee {
+    background: #000; color: var(--log-text);
+    font-family: 'VT323', monospace; font-size: 20px;
+    padding: 4px 0; margin-bottom: 10px;
+    border: 2px inset #888;
+  }
+  .main-header { text-align: center; padding: 10px; }
+  .main-header h1 {
+    font-family: 'VT323', monospace;
+    font-size: 52px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    letter-spacing: 2px;
+  }
+  .main-header p { font-size: 13px; color: #ddd; margin-top: 4px; }
+  .bug-row { font-size: 28px; letter-spacing: 6px; margin: 6px 0; }
+  .btn {
+    font-family: 'Comic Sans MS', cursive;
+    font-size: 13px;
+    background: var(--bg);
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #444; border-bottom: 2px solid #444;
+    padding: 4px 12px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    color: #000;
+  }
+  .btn:active {
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+  }
+  .btn:disabled { color: #555; cursor: not-allowed; background: #aaa; }
+  .btn-primary { background: var(--navy); color: #fff; font-weight: bold; }
+  .btn-primary:active { background: #000066; }
+  .btn-danger {
+    background: #1a1a1a; color: #fff;
+    border: 2px solid #fff; outline: 2px solid #000;
+  }
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    padding: 8px;
+    border-bottom: 2px solid #888;
+    background: var(--bg);
+  }
+  .toolbar-sep { width: 2px; height: 24px; background: #888; border-right: 1px solid #fff; margin: 0 4px; }
+  .statusbar {
+    background: var(--bg); padding: 4px 10px;
+    border-top: 2px solid #888;
+    font-family: 'VT323', monospace; font-size: 16px;
+    display: flex; gap: 12px;
+  }
+  .status-pane {
+    border-top: 1px solid #888; border-left: 1px solid #888;
+    border-bottom: 1px solid #fff; border-right: 1px solid #fff;
+    padding: 1px 8px; flex: 1;
+  }
+  #schools-container { display: flex; flex-direction: column; gap: 10px; }
+  .school-card .win-body { padding: 8px; }
+  .school-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; flex-wrap: wrap; gap: 6px;
+  }
+  .school-name { font-family: 'VT323', monospace; font-size: 22px; color: var(--navy); }
+  .school-url { font-size: 11px; color: #000080; text-decoration: underline; font-weight: bold; }
+  .badge {
+    font-family: 'VT323', monospace; font-size: 15px;
+    padding: 2px 8px;
+    border-top: 1px solid #fff; border-left: 1px solid #fff;
+    border-right: 1px solid #444; border-bottom: 1px solid #444;
+    font-weight: bold;
+  }
+  .badge-idle    { background: var(--bg); color: #333; border: 2px solid #888; }
+  .badge-loading {
+    background: var(--navy); color: #fff;
+    animation: blink 1s step-end infinite;
+    outline: 2px dashed #fff; outline-offset: 1px;
+  }
+  .badge-success { background: var(--status-ok); color: #fff; outline: 2px solid #fff; outline-offset: 1px; }
+  .badge-error {
+    background: repeating-linear-gradient(45deg, #1a1a1a 0px, #1a1a1a 4px, #555 4px, #555 8px);
+    color: #fff; outline: 2px solid #fff; outline-offset: 1px;
+  }
+  .badge-cached { background: #444; color: #fff; border: 2px dotted #fff; }
+  @keyframes blink { 50% { opacity: 0.4; } }
+  .prof-table-wrap { overflow-x: auto; border: 2px inset #888; margin-top: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; }
+  th {
+    background: var(--navy); color: #fff;
+    font-family: 'VT323', monospace; font-size: 16px;
+    padding: 4px 8px; text-align: left; border-right: 2px solid #fff;
+  }
+  tr:nth-child(even) { background: #d8d8d8; }
+  tr:nth-child(odd)  { background: #ffffff; }
+  tr:hover { background: #000080; color: #fff; }
+  tr:hover td a { color: #ffff00; }
+  td { padding: 4px 8px; border-right: 1px solid #aaa; vertical-align: top; }
+  td a { color: #000080; font-size: 11px; text-decoration: underline; font-weight: bold; }
+  .no-results {
+    font-family: 'VT323', monospace; font-size: 18px;
+    color: #000; padding: 8px;
+    background: #fff; border: 3px solid #000; margin-top: 8px;
+  }
+  .error-box {
+    background: #fff; border: 4px solid #000;
+    padding: 10px; margin-top: 8px;
+    font-family: 'VT323', monospace; font-size: 18px; color: #000;
+    box-shadow: inset 0 0 0 6px #fff, inset 0 0 0 12px #000, inset 0 0 0 14px #fff;
+  }
+  .progress-wrap {
+    margin-top: 6px;
+    border: 2px inset #888; height: 18px; background: #fff; position: relative;
+  }
+  .progress-bar {
+    height: 100%;
+    background: repeating-linear-gradient(-45deg, var(--navy) 0px, var(--navy) 8px, #1a6aff 8px, #1a6aff 16px);
+    transition: width 0.4s;
+  }
+  .progress-text {
+    position: absolute; top: 0; left: 0; right: 0;
+    font-family: 'VT323', monospace; font-size: 14px;
+    color: #fff; text-align: center;
+    text-shadow: 1px 1px 0 #000, -1px 0 0 #000, 0 -1px 0 #000;
+  }
+  .hit-counter {
+    font-family: 'VT323', monospace; font-size: 24px;
+    background: #000; color: var(--log-text);
+    padding: 2px 10px; border: 3px inset #444;
+    letter-spacing: 4px;
+  }
+  hr { border: none; border-top: 2px groove #888; margin: 8px 0; }
+  .under-construction {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'VT323', monospace; font-size: 16px;
+    background: repeating-linear-gradient(45deg, #000 0, #000 10px, #fff 10px, #fff 20px);
+    color: #000; padding: 6px 12px;
+    text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff;
+    border: 3px solid #000;
+  }
+  .under-construction span:nth-child(2) { background: #fff; padding: 0 6px; }
+  #log-box {
+    background: var(--log-bg); color: var(--log-text);
+    font-family: 'VT323', monospace; font-size: 15px;
+    padding: 8px; height: 120px; overflow-y: auto;
+    border: 2px inset #444; margin-top: 0;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  /* Search bar */
+  .search-input {
+    font-family: 'VT323', monospace; font-size: 16px;
+    background: #fff;
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+    padding: 2px 6px; width: 200px; color: #000;
+  }
+  .search-input:focus { outline: 2px solid var(--navy); }
+  #searchCount { font-size: 12px; color: #444; font-family: 'VT323', monospace; font-size: 15px; }
+  .search-no-results {
+    font-family: 'VT323', monospace; font-size: 15px;
+    background: #fffbe6; border: 2px solid #888;
+    padding: 4px 8px; color: #333; margin-top: 4px;
+  }
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: var(--bg);
+    border-top: 3px solid #fff; border-left: 3px solid #fff;
+    border-right: 3px solid #444; border-bottom: 3px solid #444;
+    max-width: 400px; width: 95%;
+  }
+  .modal-body { padding: 12px; }
+  .modal-body p { margin-bottom: 8px; font-size: 13px; }
+  .win-input {
+    width: 100%; font-family: 'VT323', monospace; font-size: 17px;
+    background: #fff;
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+    padding: 4px 6px;
+  }
+  .modal-footer { display: flex; gap: 6px; margin-top: 10px; justify-content: flex-end; }
+  .tag-research {
+    display: inline-block;
+    background: #e8e8ff; border: 2px solid #000080;
+    font-size: 11px; padding: 1px 5px; margin: 1px;
+    font-weight: bold; color: #000;
+  }
+</style>
+</head>
+<body>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal-box win">
+    <div class="win-title">
+      <span>🔑 Enter API Key</span>
+      <div class="btns"><div class="win-btn" onclick="document.getElementById('apiModal').classList.remove('show')">✕</div></div>
+    </div>
+    <div class="modal-body">
+      <p><b>Anthropic API Key Required</b></p>
+      <p style="font-size:11px;color:#555;">Your key is stored only in this browser session and never sent anywhere except api.anthropic.com.</p>
+      <input type="password" id="apiKeyInput" class="win-input" placeholder="sk-ant-..."
+             onkeydown="if(event.key==='Enter') saveApiKey()"/>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="saveApiKey()">✔ OK</button>
+        <button class="btn" onclick="document.getElementById('apiModal').classList.remove('show')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MARQUEE -->
+<marquee scrollamount="4">🐛 WELCOME TO ENTO-PROFESSO SEARCH 3000 🐝 AN APP FOR ALL YOUR GRADUATE-RESEARCH NEEDS 🦋 BOOKMARK THIS PAGE!! 🐜 BEST VIEWED IN NETSCAPE NAVIGATOR 4.0 AT 800x600 🪲</marquee>
+
+<!-- MAIN WINDOW -->
+<div class="win">
+  <div class="win-title">
+    <span>🐞 Ento-Professo Search 3000 — Faculty Search System v1.0</span>
+    <div class="btns">
+      <div class="win-btn">_</div>
+      <div class="win-btn">□</div>
+      <div class="win-btn">✕</div>
+    </div>
+  </div>
+
+  <!-- header -->
+  <div class="win-body">
+    <div class="main-header win" style="background:#000080; color:#fff; border:none;">
+      <div class="win-body" style="background:#000080;">
+        <div class="bug-row">🦟 🪲 🦋 🐜 🐝 🪳 🦗 🐛</div>
+        <h1>Ento-Professo Search 3000</h1>
+        <p style="color:#ffffff; font-size:14px; font-weight:bold;">★★ The Internet's Premier Entomology Faculty Research Tool ★★</p>
+        <p style="color:#ffff00; font-size:12px; margin-top:4px; font-weight:bold;">Powered by Artificial Intelligence &amp; HyperText Technology</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- toolbar -->
+  <div class="toolbar">
+    <button class="btn btn-primary" id="scrapeAllBtn" onclick="scrapeAll()">
+      🔍 Search ALL Schools
+    </button>
+    <div class="toolbar-sep"></div>
+    <button class="btn" onclick="clearAllCache()">🗑 Clear Cache</button>
+    <button class="btn" onclick="document.getElementById('apiModal').classList.add('show')">🔑 API Key</button>
+    <div class="toolbar-sep"></div>
+    <button class="btn" onclick="exportCSV()">💾 Export CSV</button>
+    <button class="btn" onclick="exportJSON()">📄 Export JSON</button>
+    <div class="toolbar-sep"></div>
+    <label style="font-size:12px; color:#333; font-weight:bold; white-space:nowrap;">🔎 Filter:</label>
+    <input type="text" id="searchInput" class="search-input"
+           placeholder="Name, research, email..."
+           oninput="applySearch(this.value)"
+           aria-label="Filter professors" />
+    <button class="btn" onclick="clearSearch()" title="Clear search">✕</button>
+    <span id="searchCount"></span>
+    <div class="toolbar-sep"></div>
+    <span style="font-size:12px; color:#555; white-space:nowrap;">Professors found:</span>
+    <span class="hit-counter" id="hitCounter">0000</span>
+  </div>
+
+  <!-- schools -->
+  <div class="win-body">
+    <div id="schools-container"></div>
+
+    <!-- log window -->
+    <div class="win" style="margin-top:12px;">
+      <div class="win-title">
+        <span>📟 Activity Log</span>
+        <button class="btn" style="font-size:11px; padding:1px 6px;" onclick="clearLog()">Clear</button>
+      </div>
+      <div id="log-box">Ready. Click "Search ALL Schools" to begin...\n</div>
+    </div>
+
+    <div class="under-construction" style="margin-top:12px;">
+      <span>🚧</span>
+      <span>THIS PAGE IS UNDER CONSTRUCTION — MORE SCHOOLS COMING SOON — CHECK BACK LATER!!</span>
+      <span>🚧</span>
+    </div>
+  </div>
+
+  <!-- statusbar -->
+  <div class="statusbar">
+    <div class="status-pane" id="statusMain">Ready</div>
+    <div class="status-pane" style="max-width:160px;" id="statusTime">--</div>
+    <div class="status-pane" style="max-width:120px;">Ento-Professo Search 3000 v1.0</div>
+  </div>
+</div>
+
+<p style="text-align:center; font-family:'VT323',monospace; font-size:14px; color:#fff; margin-top:6px;">
+  © 1997–2026 Ento-Professo Search 3000 Research Systems Inc. · Made with ❤️ and lots of 🐛 ·
+  <a href="#" style="color:#ffff00; font-weight:bold;">Web Ring</a> ·
+  <a href="#" style="color:#ffff00; font-weight:bold;">Sign Guestbook</a>
+</p>
+
+<script>
+"use strict";
+
+// ═══════════════════════════════════════════
+//  STORAGE — FIX: window.storage was never defined; wrap localStorage
+// ═══════════════════════════════════════════
+window.storage = {
+  async get(key) {
+    try {
+      const val = localStorage.getItem("entoprofesso:" + key);
+      return val !== null ? { value: val } : null;
+    } catch { return null; }
+  },
+  async set(key, value) {
+    try { localStorage.setItem("entoprofesso:" + key, value); } catch(e) {
+      console.warn("Storage write failed:", e);
+    }
+  },
+  async delete(key) {
+    try { localStorage.removeItem("entoprofesso:" + key); } catch {}
+  }
+};
+
+// ═══════════════════════════════════════════
+//  CONFIG — Add/remove schools freely
+//  Optional `gradUrl`: skip Agent 1 search when the grad page is already known
+// ═══════════════════════════════════════════
+const SCHOOLS = [
+  {
+    name: "University of Arizona",
+    url:  "https://insects.arizona.edu/",
+    // gradUrl not known yet — Agent 1 will search
+  },
+  {
+    name:    "University of California Davis",
+    url:     "https://entomology.ucdavis.edu/",
+    gradUrl: "https://entomology.ucdavis.edu/graduate-programs",
+  },
+  {
+    name:    "University of Hawaii (CTAHR)",
+    url:     "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology",
+    gradUrl: "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology",
+  },
+];
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let apiKey = sessionStorage.getItem("entoprofesso_apikey") || "";
+let isRunning = false;
+
+// ═══════════════════════════════════════════
+//  STORAGE HELPERS
+// ═══════════════════════════════════════════
+function storageKey(school) { return "school:" + school.name; }
+
+async function loadSchool(school) {
+  try {
+    const r = await window.storage.get(storageKey(school));
+    return r ? JSON.parse(r.value) : null;
+  } catch { return null; }
+}
+
+async function saveSchool(school, data) {
+  try {
+    await window.storage.set(storageKey(school), JSON.stringify(data));
+  } catch(e) { log("⚠ Storage write failed: " + e.message); }
+}
+
+async function deleteSchool(school) {
+  try { await window.storage.delete(storageKey(school)); } catch {}
+}
+
+// ═══════════════════════════════════════════
+//  LOGGING
+// ═══════════════════════════════════════════
+function log(msg) {
+  const box = document.getElementById("log-box");
+  if (!box) return;
+  const ts = new Date().toLocaleTimeString();
+  box.textContent += `[${ts}] ${msg}\n`;
+  box.scrollTop = box.scrollHeight;
+}
+
+function clearLog() {
+  const box = document.getElementById("log-box");
+  if (box) box.textContent = "";
+}
+
+function setStatus(msg) {
+  const el = document.getElementById("statusMain");
+  if (el) el.textContent = msg;
+  const te = document.getElementById("statusTime");
+  if (te) te.textContent = new Date().toLocaleTimeString();
+}
+
+// ═══════════════════════════════════════════
+//  API KEY
+// ═══════════════════════════════════════════
+function saveApiKey() {
+  apiKey = document.getElementById("apiKeyInput").value.trim();
+  if (!apiKey) { alert("Please enter an API key."); return; }
+  sessionStorage.setItem("entoprofesso_apikey", apiKey);
+  document.getElementById("apiModal").classList.remove("show");
+  log("🔑 API key saved for this session.");
+}
+
+// ═══════════════════════════════════════════
+//  SEARCH / FILTER  (NEW)
+// ═══════════════════════════════════════════
+function applySearch(term) {
+  const q = term.toLowerCase().trim();
+  let totalVisible = 0;
+  let totalRows = 0;
+
+  for (const school of SCHOOLS) {
+    const id = "card_" + school.name.replace(/\W/g, "_");
+    const card = document.getElementById(id);
+    if (!card) continue;
+
+    // Remove any previous search-no-results message
+    card.querySelectorAll(".search-no-results").forEach(el => el.remove());
+
+    const rows = card.querySelectorAll("tbody tr");
+    if (rows.length === 0) continue;
+
+    let schoolVisible = 0;
+    rows.forEach(row => {
+      const match = !q || row.textContent.toLowerCase().includes(q);
+      row.style.display = match ? "" : "none";
+      if (match) schoolVisible++;
+    });
+
+    totalRows += rows.length;
+    totalVisible += schoolVisible;
+
+    // If search active and no results in this school, show message
+    if (q && schoolVisible === 0) {
+      const tableWrap = card.querySelector(".prof-table-wrap");
+      if (tableWrap) {
+        const msg = document.createElement("div");
+        msg.className = "search-no-results";
+        msg.textContent = `⚠ No professors match "${term}" at this school.`;
+        tableWrap.after(msg);
+      }
+    }
+  }
+
+  const countEl = document.getElementById("searchCount");
+  if (countEl) {
+    countEl.textContent = q
+      ? `Showing ${totalVisible} of ${totalRows} professors`
+      : "";
+  }
+}
+
+function clearSearch() {
+  const input = document.getElementById("searchInput");
+  if (input) { input.value = ""; applySearch(""); }
+}
+
+// ═══════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════
+async function renderAll() {
+  const container = document.getElementById("schools-container");
+  if (!container) return;
+  container.innerHTML = "";
+  for (const school of SCHOOLS) {
+    const cached = await loadSchool(school);
+    renderSchoolCard(school, cached);
+  }
+  await updateHitCounter();
+}
+
+function renderSchoolCard(school, data) {
+  const container = document.getElementById("schools-container");
+  if (!container) return;
+  const id = "card_" + school.name.replace(/\W/g, "_");
+  const old = document.getElementById(id);
+  if (old) old.remove();
+
+  let badge = "badge-idle", badgeText = "⬜ Not Searched";
+  let bodyHTML = "";
+
+  if (data) {
+    if (data.status === "error") {
+      badge = "badge-error"; badgeText = "❌ Error";
+      bodyHTML = `<div class="error-box">
+        ⛔ ERROR: School could not be accessed.<br>
+        <small>${escapeHtml(data.errorMsg || "Unknown error occurred.")}</small><br>
+        <small>Last attempted: ${escapeHtml(data.scrapedAt || "")}</small>
+      </div>`;
+    } else {
+      badge = "badge-cached";
+      badgeText = `✅ ${(data.professors || []).length} profs (cached)`;
+      bodyHTML = buildProfTable(data.professors || []);
+    }
+  }
+
+  const card = document.createElement("div");
+  card.className = "win school-card";
+  card.id = id;
+  card.innerHTML = `
+    <div class="win-title">
+      <span>🎓 ${escapeHtml(school.name)}</span>
+      <div class="btns"><div class="win-btn">?</div></div>
+    </div>
+    <div class="win-body">
+      <div class="school-header">
+        <div>
+          <div class="school-name">${escapeHtml(school.name)}</div>
+          <div class="school-url">${escapeHtml(school.url)}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <span class="badge ${badge}" id="badge_${id}">${badgeText}</span>
+          <button class="btn" onclick="scrapeOne(${JSON.stringify(school.name)})" id="btn_${id}">🔄 Scrape</button>
+          <button class="btn btn-danger" onclick="clearOne(${JSON.stringify(school.name)})">🗑 Clear</button>
+        </div>
+      </div>
+      <div id="progress_${id}"></div>
+      <div id="body_${id}">${bodyHTML}</div>
+    </div>`;
+  container.appendChild(card);
+}
+
+function buildProfTable(profs) {
+  if (!profs || profs.length === 0) {
+    return '<div class="no-results">⚠ No faculty data found for this school.</div>';
+  }
+  const rows = profs.map(p => {
+    const research = Array.isArray(p.research) ? p.research : [];
+    const email = p.email ? `<a href="mailto:${escapeHtml(p.email)}">${escapeHtml(p.email)}</a>` : "—";
+    const profile = p.profileUrl ? `<a href="${escapeHtml(p.profileUrl)}" target="_blank" rel="noopener">🔗 Profile</a>` : "—";
+    return `<tr>
+      <td><b>${escapeHtml(p.name || "—")}</b></td>
+      <td>${escapeHtml(p.title || "—")}</td>
+      <td>${research.map(r => `<span class="tag-research">${escapeHtml(r)}</span>`).join(" ") || "—"}</td>
+      <td>${email}</td>
+      <td>${escapeHtml(p.phone || "—")}</td>
+      <td>${profile}</td>
+    </tr>`;
+  }).join("");
+
+  return `<div class="prof-table-wrap">
+    <table>
+      <thead><tr>
+        <th>Name</th><th>Title</th><th>Research Areas</th>
+        <th>Email</th><th>Phone</th><th>Profile</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  HIT COUNTER — FIX: forEach with async callbacks doesn't await;
+//  use Promise.all to accumulate counts correctly
+// ═══════════════════════════════════════════
+async function updateHitCounter() {
+  const counts = await Promise.all(
+    SCHOOLS.map(async s => {
+      const d = await loadSchool(s);
+      return (d && d.professors) ? d.professors.length : 0;
+    })
+  );
+  const total = counts.reduce((a, b) => a + b, 0);
+  const el = document.getElementById("hitCounter");
+  if (el) el.textContent = String(total).padStart(4, "0");
+}
+
+// ═══════════════════════════════════════════
+//  SCRAPING
+// ═══════════════════════════════════════════
+async function scrapeAll() {
+  if (isRunning) return;
+  if (!apiKey) {
+    document.getElementById("apiModal").classList.add("show");
+    log("⚠ Please enter your API key first.");
+    return;
+  }
+  isRunning = true;
+  document.getElementById("scrapeAllBtn").disabled = true;
+  setStatus("🔍 Searching all schools...");
+  log("═══ Starting full scrape of " + SCHOOLS.length + " schools ═══");
+  await Promise.allSettled(SCHOOLS.map(s => scrapeOne(s.name)));
+  isRunning = false;
+  document.getElementById("scrapeAllBtn").disabled = false;
+  setStatus("✅ Done!");
+  log("═══ All schools processed ═══");
+  await updateHitCounter();
+}
+
+async function scrapeOne(schoolName) {
+  const school = SCHOOLS.find(s => s.name === schoolName);
+  if (!school) return;
+  const id = "card_" + school.name.replace(/\W/g, "_");
+  setBadge(id, "badge-loading", "⏳ Loading...");
+  setProgress(id, 0, "Initializing...");
+  log(`🔍 Starting: ${school.name}`);
+  setStatus(`Scraping: ${school.name}`);
+
+  // Disable per-card scrape button while running
+  const btn = document.getElementById("btn_" + id);
+  if (btn) btn.disabled = true;
+
+  try {
+    setProgress(id, 15, "Agent 1: Finding program page...");
+    const programUrl = await agent1_findProgramPage(school);
+    log(`  ✔ Program page: ${programUrl}`);
+
+    setProgress(id, 40, "Agent 2: Finding faculty list...");
+    const facultyData = await agent2_findFaculty(school, programUrl);
+    log(`  ✔ Found ${facultyData.length} faculty profiles`);
+
+    setProgress(id, 70, "Agent 3: Extracting professor details...");
+    const professors = await agent3_extractDetails(school, facultyData);
+    log(`  ✔ Extracted ${professors.length} complete professor records`);
+
+    setProgress(id, 100, "Complete!");
+    const saved = { status: "ok", scrapedAt: new Date().toLocaleString(), professors };
+    await saveSchool(school, saved);
+    renderSchoolCard(school, saved);
+    setBadge(id, "badge-success", `✅ ${professors.length} profs`);
+    log(`✅ ${school.name}: Done (${professors.length} professors)`);
+  } catch(err) {
+    log(`❌ ${school.name}: ${err.message}`);
+    const errData = {
+      status: "error",
+      scrapedAt: new Date().toLocaleString(),
+      errorMsg: err.message
+    };
+    await saveSchool(school, errData);
+    renderSchoolCard(school, errData);
+    setBadge(id, "badge-error", "❌ Error");
+  } finally {
+    const b = document.getElementById("btn_" + id);
+    if (b) b.disabled = false;
+    await updateHitCounter();
+    // Re-apply active search after card re-renders
+    const q = document.getElementById("searchInput");
+    if (q && q.value.trim()) applySearch(q.value);
+  }
+}
+
+function setBadge(id, cls, text) {
+  const el = document.getElementById("badge_" + id);
+  if (el) { el.className = "badge " + cls; el.textContent = text; }
+}
+
+function setProgress(id, pct, label) {
+  const el = document.getElementById("progress_" + id);
+  if (!el) return;
+  if (pct >= 100) { setTimeout(() => { el.innerHTML = ""; }, 600); return; }
+  el.innerHTML = `<div class="progress-wrap">
+    <div class="progress-bar" style="width:${pct}%"></div>
+    <div class="progress-text">${escapeHtml(label)}</div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  AGENT 1 — Find Program Page
+//  Short-circuits if school.gradUrl is already known.
+// ═══════════════════════════════════════════
+async function agent1_findProgramPage(school) {
+  if (school.gradUrl) {
+    log(`  ℹ Using known grad URL: ${school.gradUrl}`);
+    return school.gradUrl;
+  }
+
+  const prompt = `You are a web research agent. Find the graduate programs page (Masters/PhD) for entomology at ${school.name}.
+Department website: ${school.url}
+Find the specific URL for their graduate programs in entomology (Masters or PhD programs page, or main graduate studies page for the entomology department).
+Respond with ONLY a JSON object, no other text:
+{"programUrl": "https://..."}
+If you cannot find a specific graduate page, return the main department URL.`;
+
+  const data = await callClaude(prompt, true);
+  const text = extractText(data);
+  const clean = text.replace(/```json|```/g, "").trim();
+  try {
+    const parsed = JSON.parse(clean);
+    return parsed.programUrl || school.url;
+  } catch {
+    const match = text.match(/https?:\/\/[^\s"'<>]+/);
+    return match ? match[0] : school.url;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  AGENT 2 — Find Faculty
+// ═══════════════════════════════════════════
+async function agent2_findFaculty(school, programUrl) {
+  const prompt = `You are a web research agent. Find all faculty members in the entomology department at ${school.name}.
+Department/program URL: ${programUrl}
+Main website: ${school.url}
+Search the web for the faculty directory. Find all professors, researchers, and faculty members in entomology (including those who supervise graduate students).
+Respond with ONLY a JSON array, no other text:
+[
+  {"name": "Dr. Jane Smith", "profileUrl": "https://..."},
+  ...
+]
+Include as many faculty as you can find. If you cannot find profile URLs, include just names.`;
+
+  const data = await callClaude(prompt, true);
+  const text = extractText(data);
+  const clean = text.replace(/```json|```/g, "").trim();
+  try {
+    const arrMatch = clean.match(/\[[\s\S]*\]/);
+    if (arrMatch) return JSON.parse(arrMatch[0]);
+    return JSON.parse(clean);
+  } catch {
+    log(`  ⚠ Could not parse faculty list for ${school.name}`);
+    return [];
+  }
+}
+
+// ═══════════════════════════════════════════
+//  AGENT 3 — Extract Professor Details
+// ═══════════════════════════════════════════
+async function agent3_extractDetails(school, facultyList) {
+  if (facultyList.length === 0) return [];
+  const BATCH = 5;
+  const results = [];
+  for (let i = 0; i < facultyList.length; i += BATCH) {
+    const batch = facultyList.slice(i, i + BATCH);
+    const batchResult = await agent3_batch(school, batch);
+    results.push(...batchResult);
+  }
+  return results;
+}
+
+async function agent3_batch(school, batch) {
+  const listStr = batch.map((f, i) =>
+    `${i + 1}. Name: ${f.name || "Unknown"}, Profile URL: ${f.profileUrl || "N/A"}`
+  ).join("\n");
+
+  const prompt = `You are a web research agent. Find detailed information about entomology faculty at ${school.name}.
+For each professor listed, search the web for their profile and extract details:
+${listStr}
+For each professor find:
+- Full name and title (Professor, Associate Professor, Assistant Professor, Research Scientist, etc.)
+- Research interests/areas (list of 2-5 key topics)
+- Email address
+- Phone number (if publicly listed)
+- Profile URL
+Respond with ONLY a JSON array, no markdown, no explanation:
+[
+  {
+    "name": "Full Name",
+    "title": "Professor of Entomology",
+    "research": ["topic1", "topic2", "topic3"],
+    "email": "email@university.edu",
+    "phone": "555-555-5555",
+    "profileUrl": "https://..."
+  }
+]
+If you cannot find certain info, use null for that field. Always include the name.`;
+
+  const data = await callClaude(prompt, true, 4096);
+  const text = extractText(data);
+  const clean = text.replace(/```json|```/g, "").trim();
+  try {
+    const arrMatch = clean.match(/\[[\s\S]*\]/);
+    if (arrMatch) return JSON.parse(arrMatch[0]);
+    return JSON.parse(clean);
+  } catch {
+    return batch.map(f => ({
+      name: f.name || "Unknown",
+      title: null, research: [], email: null, phone: null,
+      profileUrl: f.profileUrl || null
+    }));
+  }
+}
+
+// ═══════════════════════════════════════════
+//  ANTHROPIC API CALL
+//  FIX: model name updated; max_tokens parameterised
+// ═══════════════════════════════════════════
+async function callClaude(prompt, useSearch = false, maxTokens = 2048) {
+  if (!apiKey) throw new Error("No API key set — click 🔑 API Key to add one.");
+  const body = {
+    model: "claude-sonnet-4-5",
+    max_tokens: maxTokens,
+    messages: [{ role: "user", content: prompt }],
+  };
+  if (useSearch) {
+    body.tools = [{ type: "web_search_20250305", name: "web_search" }];
+  }
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error(`API error ${resp.status}: ${err.slice(0, 300)}`);
+  }
+  return await resp.json();
+}
+
+function extractText(data) {
+  return (data.content || [])
+    .filter(b => b.type === "text")
+    .map(b => b.text)
+    .join("\n");
+}
+
+// ═══════════════════════════════════════════
+//  CLEAR / CACHE
+// ═══════════════════════════════════════════
+async function clearOne(schoolName) {
+  const school = SCHOOLS.find(s => s.name === schoolName);
+  if (!school) return;
+  await deleteSchool(school);
+  renderSchoolCard(school, null);
+  log(`🗑 Cleared cache for ${school.name}`);
+  await updateHitCounter();
+}
+
+async function clearAllCache() {
+  if (!confirm("Clear cached data for all schools?")) return;
+  for (const s of SCHOOLS) await deleteSchool(s);
+  await renderAll();
+  log("🗑 All cache cleared.");
+}
+
+// ═══════════════════════════════════════════
+//  EXPORT — FIX: use File System Access API when available,
+//  fall back to anchor-download on older browsers
+// ═══════════════════════════════════════════
+async function gatherExportData() {
+  const out = [];
+  for (const school of SCHOOLS) {
+    const d = await loadSchool(school);
+    out.push({ school: school.name, url: school.url, data: d });
+  }
+  return out;
+}
+
+async function exportCSV() {
+  const rows = [["School","Name","Title","Research Areas","Email","Phone","Profile URL"]];
+  const exportData = await gatherExportData();
+  for (const { school, data } of exportData) {
+    if (!data || data.status === "error" || !data.professors) continue;
+    for (const p of data.professors) {
+      rows.push([
+        school,
+        p.name || "",
+        p.title || "",
+        (Array.isArray(p.research) ? p.research : []).join("; "),
+        p.email || "",
+        p.phone || "",
+        p.profileUrl || ""
+      ]);
+    }
+  }
+  const csv = rows.map(r =>
+    r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")
+  ).join("\n");
+  await saveFile(csv, "entoprofesso_export.csv", "text/csv");
+  log("💾 CSV exported: entoprofesso_export.csv");
+}
+
+async function exportJSON() {
+  const exportData = await gatherExportData();
+  const json = JSON.stringify(exportData, null, 2);
+  await saveFile(json, "entoprofesso_export.json", "application/json");
+  log("📄 JSON exported: entoprofesso_export.json");
+}
+
+// Try native save dialog (File System Access API); fall back to anchor download
+async function saveFile(content, suggestedName, mimeType) {
+  if ("showSaveFilePicker" in window) {
+    try {
+      const ext = suggestedName.split(".").pop();
+      const handle = await window.showSaveFilePicker({
+        suggestedName,
+        types: [{
+          description: mimeType.includes("csv") ? "CSV File" : "JSON File",
+          accept: { [mimeType]: ["." + ext] }
+        }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(new Blob([content], { type: mimeType }));
+      await writable.close();
+      log(`✅ File saved via system dialog.`);
+      return;
+    } catch(e) {
+      if (e.name === "AbortError") { log("💾 Save cancelled."); return; }
+      // Fall through to anchor download on unexpected errors
+      log("⚠ Native save failed, using download fallback.");
+    }
+  }
+  // Fallback: create temporary anchor and click it
+  anchorDownload(suggestedName, content, mimeType);
+}
+
+function anchorDownload(filename, content, mime) {
+  const url = URL.createObjectURL(new Blob([content], { type: mime }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════
+//  UTILITY
+// ═══════════════════════════════════════════
+function escapeHtml(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+window.addEventListener("DOMContentLoaded", async () => {
+  if (apiKey) log("🔑 API key loaded from session.");
+  else log("⚠ No API key found. Click 🔑 API Key to set one.");
+  await renderAll();
+  log("🐛 Ento-Professo Search 3000 initialized. " + SCHOOLS.length + " schools loaded.");
+});
+</script>
+</body>
+</html>
