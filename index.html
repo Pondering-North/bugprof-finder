@@ -347,7 +347,6 @@ const SCHOOLS = [
 // ═══════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════
-let apiKey = sessionStorage.getItem("entoprofesso_apikey") || "";
 let isRunning = false;
 
 // ═══════════════════════════════════════════
@@ -704,7 +703,6 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 //  ANTHROPIC API CALL — with 429 retry backoff
 // ═══════════════════════════════════════════
 async function callClaude(prompt, useSearch = false, maxTokens = 2048, _retry = 0) {
-  if (!apiKey) throw new Error("No API key set.");
   const body = {
     model: "claude-sonnet-4-5",
     max_tokens: maxTokens,
@@ -713,14 +711,9 @@ async function callClaude(prompt, useSearch = false, maxTokens = 2048, _retry = 
   if (useSearch) {
     body.tools = [{ type: "web_search_20250305", name: "web_search" }];
   }
-  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+  const resp = await fetch("/api/claude", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
