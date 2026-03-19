@@ -302,7 +302,6 @@
     </button>
     <div class="toolbar-sep"></div>
     <button class="btn" onclick="clearAllCache()">🗑 Clear Cache</button>
-    <button class="btn" onclick="document.getElementById('apiModal').classList.add('show')">🔑 API Key</button>
     <div class="toolbar-sep"></div>
     <button class="btn" onclick="exportCSV()">💾 Export CSV</button>
     <button class="btn" onclick="exportJSON()">📄 Export JSON</button>
@@ -381,21 +380,9 @@ window.storage = {
 //  Optional `gradUrl`: skip Agent 1 search when the grad page is already known
 // ═══════════════════════════════════════════
 const SCHOOLS = [
-  {
-    name: "University of Arizona",
-    url:  "https://insects.arizona.edu/",
-    // gradUrl not known yet — Agent 1 will search
-  },
-  {
-    name:    "University of California Davis",
-    url:     "https://entomology.ucdavis.edu/",
-    gradUrl: "https://entomology.ucdavis.edu/graduate-programs",
-  },
-  {
-    name:    "University of Hawaii (CTAHR)",
-    url:     "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology",
-    gradUrl: "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology",
-  },
+  { name: "University of Arizona",       url: "https://insects.arizona.edu/directory/faculty" },
+  { name: "Kansas State University",     url: "https://entomology.k-state.edu/about/people/faculty/" },
+  { name: "University of Hawaii (CTAHR)", url: "https://cms.ctahr.hawaii.edu/peps/people/faculty" },
 ];
 
 // ═══════════════════════════════════════════
@@ -646,8 +633,10 @@ async function scrapeAll() {
   isRunning = true;
   document.getElementById("scrapeAllBtn").disabled = true;
   setStatus("🔍 Searching all schools...");
-  log("═══ Starting full scrape of " + SCHOOLS.length + " schools ═══");
-  await Promise.allSettled(SCHOOLS.map(s => scrapeOne(s.name)));
+  log("═══ Starting scrape of " + SCHOOLS.length + " schools ═══");
+  for (const s of SCHOOLS) {
+    await scrapeOne(s.name);
+  }
   isRunning = false;
   document.getElementById("scrapeAllBtn").disabled = false;
   setStatus("✅ Done!");
@@ -660,26 +649,16 @@ async function scrapeOne(schoolName) {
   if (!school) return;
   const id = "card_" + school.name.replace(/\W/g, "_");
   setBadge(id, "badge-loading", "⏳ Loading...");
-  setProgress(id, 0, "Initializing...");
+  setProgress(id, 20, "Searching faculty directory...");
   log(`🔍 Starting: ${school.name}`);
   setStatus(`Scraping: ${school.name}`);
 
-  // Disable per-card scrape button while running
   const btn = document.getElementById("btn_" + id);
   if (btn) btn.disabled = true;
 
   try {
-    setProgress(id, 15, "Agent 1: Finding program page...");
-    const programUrl = await agent1_findProgramPage(school);
-    log(`  ✔ Program page: ${programUrl}`);
-
-    setProgress(id, 40, "Agent 2: Finding faculty list...");
-    const facultyData = await agent2_findFaculty(school, programUrl);
-    log(`  ✔ Found ${facultyData.length} faculty profiles`);
-
-    setProgress(id, 70, "Agent 3: Extracting professor details...");
-    const professors = await agent3_extractDetails(school, facultyData);
-    log(`  ✔ Extracted ${professors.length} complete professor records`);
+    const professors = await agentFindFaculty(school);
+    log(`  ✔ Found ${professors.length} professors`);
 
     setProgress(id, 100, "Complete!");
     const saved = { status: "ok", scrapedAt: new Date().toLocaleString(), professors };
@@ -689,11 +668,7 @@ async function scrapeOne(schoolName) {
     log(`✅ ${school.name}: Done (${professors.length} professors)`);
   } catch(err) {
     log(`❌ ${school.name}: ${err.message}`);
-    const errData = {
-      status: "error",
-      scrapedAt: new Date().toLocaleString(),
-      errorMsg: err.message
-    };
+    const errData = { status: "error", scrapedAt: new Date().toLocaleString(), errorMsg: err.message };
     await saveSchool(school, errData);
     renderSchoolCard(school, errData);
     setBadge(id, "badge-error", "❌ Error");
@@ -701,7 +676,6 @@ async function scrapeOne(schoolName) {
     const b = document.getElementById("btn_" + id);
     if (b) b.disabled = false;
     await updateHitCounter();
-    // Re-apply active search after card re-renders
     const q = document.getElementById("searchInput");
     if (q && q.value.trim()) applySearch(q.value);
   }
@@ -723,50 +697,48 @@ function setProgress(id, pct, label) {
 }
 
 // ═══════════════════════════════════════════
-//  AGENT 1 — Find Program Page
-//  Short-circuits if school.gradUrl is already known.
+//  PAGE FETCH — Jina Reader renders JS pages
+//  and returns clean markdown text
 // ═══════════════════════════════════════════
-async function agent1_findProgramPage(school) {
-  if (school.gradUrl) {
-    log(`  ℹ Using known grad URL: ${school.gradUrl}`);
-    return school.gradUrl;
+async function fetchPageText(url) {
+  const resp = await fetch(`https://r.jina.ai/${url}`, {
+    headers: { "Accept": "text/plain" },
+    signal: AbortSignal.timeout(20000)
+  });
+  const text = await resp.text();
+  if (text.includes("error 403") || text.includes("error 404") || text.length < 300) {
+    throw new Error(`Could not retrieve page content from ${url} (blocked or empty).`);
   }
-
-  const prompt = `You are a web research agent. Find the graduate programs page (Masters/PhD) for entomology at ${school.name}.
-Department website: ${school.url}
-Find the specific URL for their graduate programs in entomology (Masters or PhD programs page, or main graduate studies page for the entomology department).
-Respond with ONLY a JSON object, no other text:
-{"programUrl": "https://..."}
-If you cannot find a specific graduate page, return the main department URL.`;
-
-  const data = await callClaude(prompt, true);
-  const text = extractText(data);
-  const clean = text.replace(/```json|```/g, "").trim();
-  try {
-    const parsed = JSON.parse(clean);
-    return parsed.programUrl || school.url;
-  } catch {
-    const match = text.match(/https?:\/\/[^\s"'<>]+/);
-    return match ? match[0] : school.url;
-  }
+  // Cap at 30k chars to stay within token budget (faculty content can start late in page)
+  return text.slice(0, 30000);
 }
 
 // ═══════════════════════════════════════════
-//  AGENT 2 — Find Faculty
+//  SINGLE AGENT — parse fetched page, no web_search tool
 // ═══════════════════════════════════════════
-async function agent2_findFaculty(school, programUrl) {
-  const prompt = `You are a web research agent. Find all faculty members in the entomology department at ${school.name}.
-Department/program URL: ${programUrl}
-Main website: ${school.url}
-Search the web for the faculty directory. Find all professors, researchers, and faculty members in entomology (including those who supervise graduate students).
-Respond with ONLY a JSON array, no other text:
-[
-  {"name": "Dr. Jane Smith", "profileUrl": "https://..."},
-  ...
-]
-Include as many faculty as you can find. If you cannot find profile URLs, include just names.`;
+async function agentFindFaculty(school) {
+  log(`  → Fetching: ${school.url}`);
+  const pageText = await fetchPageText(school.url);
+  log(`  → Fetched ${pageText.length} chars — sending to Claude...`);
 
-  const data = await callClaude(prompt, true);
+  const prompt = `The following is text scraped from the faculty directory page of ${school.name} (${school.url}).
+
+Extract every faculty member you can find. For each person return:
+- name: full name
+- title: academic rank (Professor, Associate Professor, Assistant Professor, Researcher, Lecturer, etc.)
+- research: array of 2–5 research topic keywords (infer from their bio if not listed explicitly)
+- email: email address if present
+- phone: phone if present
+- profileUrl: their individual profile link if present
+
+PAGE TEXT:
+${pageText}
+
+Respond with ONLY a raw JSON array, no markdown fences, no explanation:
+[{"name":"...","title":"...","research":["..."],"email":null,"phone":null,"profileUrl":null}]
+Use null for any field not found. Include every person listed.`;
+
+  const data = await callClaude(prompt, false, 4096);
   const text = extractText(data);
   const clean = text.replace(/```json|```/g, "").trim();
   try {
@@ -780,69 +752,15 @@ Include as many faculty as you can find. If you cannot find profile URLs, includ
 }
 
 // ═══════════════════════════════════════════
-//  AGENT 3 — Extract Professor Details
+//  RATE LIMIT HELPERS
 // ═══════════════════════════════════════════
-async function agent3_extractDetails(school, facultyList) {
-  if (facultyList.length === 0) return [];
-  const BATCH = 5;
-  const results = [];
-  for (let i = 0; i < facultyList.length; i += BATCH) {
-    const batch = facultyList.slice(i, i + BATCH);
-    const batchResult = await agent3_batch(school, batch);
-    results.push(...batchResult);
-  }
-  return results;
-}
-
-async function agent3_batch(school, batch) {
-  const listStr = batch.map((f, i) =>
-    `${i + 1}. Name: ${f.name || "Unknown"}, Profile URL: ${f.profileUrl || "N/A"}`
-  ).join("\n");
-
-  const prompt = `You are a web research agent. Find detailed information about entomology faculty at ${school.name}.
-For each professor listed, search the web for their profile and extract details:
-${listStr}
-For each professor find:
-- Full name and title (Professor, Associate Professor, Assistant Professor, Research Scientist, etc.)
-- Research interests/areas (list of 2-5 key topics)
-- Email address
-- Phone number (if publicly listed)
-- Profile URL
-Respond with ONLY a JSON array, no markdown, no explanation:
-[
-  {
-    "name": "Full Name",
-    "title": "Professor of Entomology",
-    "research": ["topic1", "topic2", "topic3"],
-    "email": "email@university.edu",
-    "phone": "555-555-5555",
-    "profileUrl": "https://..."
-  }
-]
-If you cannot find certain info, use null for that field. Always include the name.`;
-
-  const data = await callClaude(prompt, true, 4096);
-  const text = extractText(data);
-  const clean = text.replace(/```json|```/g, "").trim();
-  try {
-    const arrMatch = clean.match(/\[[\s\S]*\]/);
-    if (arrMatch) return JSON.parse(arrMatch[0]);
-    return JSON.parse(clean);
-  } catch {
-    return batch.map(f => ({
-      name: f.name || "Unknown",
-      title: null, research: [], email: null, phone: null,
-      profileUrl: f.profileUrl || null
-    }));
-  }
-}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ═══════════════════════════════════════════
-//  ANTHROPIC API CALL
-//  FIX: model name updated; max_tokens parameterised
+//  ANTHROPIC API CALL — with 429 retry backoff
 // ═══════════════════════════════════════════
-async function callClaude(prompt, useSearch = false, maxTokens = 2048) {
-  if (!apiKey) throw new Error("No API key set — click 🔑 API Key to add one.");
+async function callClaude(prompt, useSearch = false, maxTokens = 2048, _retry = 0) {
+  if (!apiKey) throw new Error("No API key set.");
   const body = {
     model: "claude-sonnet-4-5",
     max_tokens: maxTokens,
@@ -861,6 +779,16 @@ async function callClaude(prompt, useSearch = false, maxTokens = 2048) {
     },
     body: JSON.stringify(body),
   });
+
+  // Rate limited — wait and retry (up to 4 times)
+  if (resp.status === 429 && _retry < 4) {
+    const wait = (2 ** _retry) * 15000; // 15s, 30s, 60s, 120s
+    log(`⏸ Rate limited. Waiting ${wait / 1000}s before retry ${_retry + 1}/4...`);
+    setStatus(`⏸ Rate limited — waiting ${wait / 1000}s...`);
+    await sleep(wait);
+    return callClaude(prompt, useSearch, maxTokens, _retry + 1);
+  }
+
   if (!resp.ok) {
     const err = await resp.text();
     throw new Error(`API error ${resp.status}: ${err.slice(0, 300)}`);
