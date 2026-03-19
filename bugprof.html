@@ -290,7 +290,6 @@
       <div class="win-body" style="background:#000080;">
         <div class="bug-row">🦟 🪲 🦋 🐜 🐝 🪳 🦗 🐛</div>
         <h1>Ento-Professo Search 3000</h1>
-        <p style="color:#ffffff; font-size:14px; font-weight:bold;">★★ The Internet's Premier Entomology Faculty Research Tool ★★</p>
         <p style="color:#ffff00; font-size:12px; margin-top:4px; font-weight:bold;">Powered by Artificial Intelligence &amp; HyperText Technology</p>
       </div>
     </div>
@@ -580,6 +579,14 @@ function renderSchoolCard(school, data) {
   container.appendChild(card);
 }
 
+// Block javascript:, data:, and other dangerous URL schemes
+function safeUrl(url) {
+  if (!url) return null;
+  const s = String(url).trim().replace(/\s/g, "").toLowerCase();
+  if (s.startsWith("javascript:") || s.startsWith("data:") || s.startsWith("vbscript:")) return null;
+  return url;
+}
+
 function buildProfTable(profs) {
   if (!profs || profs.length === 0) {
     return '<div class="no-results">⚠ No faculty data found for this school.</div>';
@@ -587,7 +594,8 @@ function buildProfTable(profs) {
   const rows = profs.map(p => {
     const research = Array.isArray(p.research) ? p.research : [];
     const email = p.email ? `<a href="mailto:${escapeHtml(p.email)}">${escapeHtml(p.email)}</a>` : "—";
-    const profile = p.profileUrl ? `<a href="${escapeHtml(p.profileUrl)}" target="_blank" rel="noopener">🔗 Profile</a>` : "—";
+    const cleanUrl = safeUrl(p.profileUrl);
+    const profile = cleanUrl ? `<a href="${escapeHtml(cleanUrl)}" target="_blank" rel="noopener">🔗 Profile</a>` : "—";
     return `<tr>
       <td><b>${escapeHtml(p.name || "—")}</b></td>
       <td>${escapeHtml(p.title || "—")}</td>

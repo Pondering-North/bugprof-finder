@@ -308,6 +308,13 @@ function escapeHtml(str) {
     .replace(/'/g,"&#39;");
 }
 
+function safeUrl(url) {
+  if (!url) return null;
+  const s = String(url).trim().replace(/\s/g, "").toLowerCase();
+  if (s.startsWith("javascript:") || s.startsWith("data:") || s.startsWith("vbscript:")) return null;
+  return url;
+}
+
 function buildProfTable(profs) {
   if (!profs || profs.length === 0) {
     return '<div class="no-results">⚠ No faculty data found for this school.</div>';
@@ -315,7 +322,8 @@ function buildProfTable(profs) {
   const rows = profs.map(p => {
     const research = Array.isArray(p.research) ? p.research : [];
     const email = p.email ? `<a href="mailto:${escapeHtml(p.email)}">${escapeHtml(p.email)}</a>` : "—";
-    const profile = p.profileUrl ? `<a href="${escapeHtml(p.profileUrl)}" target="_blank" rel="noopener">🔗 Profile</a>` : "—";
+    const cleanUrl = safeUrl(p.profileUrl);
+    const profile = cleanUrl ? `<a href="${escapeHtml(cleanUrl)}" target="_blank" rel="noopener">🔗 Profile</a>` : "—";
     return `<tr>
       <td><b>${escapeHtml(p.name||"—")}</b></td>
       <td>${escapeHtml(p.title||"—")}</td>
@@ -544,19 +552,23 @@ describe("2. buildProfTable", it => {
   });
 
   it("HTML characters in name are escaped", () => {
-    const html = buildProfTable([{ name: '<script>alert(1)</script>', research: [] }]);
-    assertNotContains(html, '<script>alert(1)</script>');
+    const html = buildProfTable([{ name: '<script>alert(1)<\/script>', research: [] }]);
+    assertNotContains(html, '<script>');
     assertContains(html, "&lt;script&gt;");
   });
 
   it("HTML in email is escaped", () => {
     const html = buildProfTable([{ name: "X", email: '"><img src=x onerror=alert(1)>', research: [] }]);
-    assertNotContains(html, 'onerror=');
+    // The dangerous chars must be HTML-entity-encoded (< becomes &lt;), never left raw
+    assertContains(html, '&lt;img');
+    assertNotContains(html, '<img ');   // no raw unescaped tag
   });
 
   it("HTML in profileUrl is escaped in href", () => {
     const html = buildProfTable([{ name: "X", profileUrl: 'javascript:alert(1)', research: [] }]);
-    assertNotContains(html, 'javascript:alert(1)');
+    // safeUrl() must strip javascript: — the link should fall back to "—"
+    assertNotContains(html, 'href="javascript:');
+    assertContains(html, '—');
   });
 
   it("multiple professors render multiple rows", () => {
@@ -1262,11 +1274,13 @@ describe("11. renderSchoolCard DOM", it => {
   it("XSS in school name is escaped", () => {
     const xss = { name: '<img src=x onerror=alert(1)>', url: "https://x.edu" };
     const card = renderSchoolCard(xss, null);
-    assertNotContains(card.innerHTML, "onerror=alert(1)");
+    // < must be entity-encoded — raw unescaped <img tag must NOT appear
+    assertNotContains(card.innerHTML, '<img ');
+    assertContains(card.innerHTML, '&lt;img');
   });
 
   it("XSS in error message is escaped", () => {
-    const card = renderSchoolCard(SCHOOL, { status: "error", errorMsg: '<script>bad()</script>' });
+    const card = renderSchoolCard(SCHOOL, { status: "error", errorMsg: '<script>bad()<\/script>' });
     assertNotContains(card.innerHTML, '<script>bad()');
   });
 
