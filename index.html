@@ -114,6 +114,13 @@
   }
   #schools-container { display: flex; flex-direction: column; gap: 10px; }
   .school-card .win-body { padding: 8px; }
+  /* Collapsed state — only title bar visible */
+  .school-card.minimised .win-body {
+    display: none;
+  }
+  .school-card.minimised .win-title {
+    border-bottom: none;
+  }
   .school-header {
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 8px; flex-wrap: wrap; gap: 6px;
@@ -492,11 +499,13 @@ function renderSchoolCard(school, data) {
   card.className = "win school-card";
   card.id = id;
   card.innerHTML = `
-    <div class="win-title">
+    <div class="win-title" style="cursor:pointer;" onclick="toggleCard(${JSON.stringify(id)})" title="Click to minimise / restore">
       <span>🎓 ${escapeHtml(school.name)}</span>
-      <div class="btns"><div class="win-btn">?</div></div>
+      <div class="btns">
+        <div class="win-btn" id="minbtn_${id}" title="Minimise">_</div>
+      </div>
     </div>
-    <div class="win-body">
+    <div class="win-body" id="collapsible_${id}">
       <div class="school-header">
         <div>
           <div class="school-name">${escapeHtml(school.name)}</div>
@@ -504,8 +513,8 @@ function renderSchoolCard(school, data) {
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <span class="badge ${badge}" id="badge_${id}">${badgeText}</span>
-          <button class="btn" onclick="scrapeOne(${JSON.stringify(school.name)})" id="btn_${id}">🔄 Scrape</button>
-          <button class="btn btn-danger" onclick="clearOne(${JSON.stringify(school.name)})">🗑 Clear</button>
+          <button class="btn" onclick="event.stopPropagation();scrapeOne(${JSON.stringify(school.name)})" id="btn_${id}">🔄 Scrape</button>
+          <button class="btn btn-danger" onclick="event.stopPropagation();clearOne(${JSON.stringify(school.name)})">🗑 Clear</button>
         </div>
       </div>
       <div id="progress_${id}"></div>
@@ -622,6 +631,17 @@ async function scrapeOne(schoolName) {
     const q = document.getElementById("searchInput");
     if (q && q.value.trim()) applySearch(q.value);
   }
+}
+
+// ═══════════════════════════════════════════
+//  MINIMISE / RESTORE
+// ═══════════════════════════════════════════
+function toggleCard(id) {
+  const card = document.getElementById(id);
+  if (!card) return;
+  const isMin = card.classList.toggle("minimised");
+  const btn = document.getElementById("minbtn_" + id);
+  if (btn) btn.textContent = isMin ? "□" : "_";
 }
 
 function setBadge(id, cls, text) {
