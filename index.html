@@ -193,6 +193,20 @@
     letter-spacing: 4px;
   }
   hr { border: none; border-top: 2px groove #888; margin: 8px 0; }
+  /* Bug emoji scrollbar */
+  ::-webkit-scrollbar { width: 16px; }
+  ::-webkit-scrollbar-track {
+    background: var(--bg);
+    border-left: 1px solid #888;
+    border-right: 1px solid #fff;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--navy);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='32'%3E%3Ctext x='1' y='24' font-size='14'%3E%F0%9F%90%9B%3C/text%3E%3C/svg%3E");
+    background-repeat: repeat-y;
+    border: 1px solid #fff;
+  }
+  ::-webkit-scrollbar-thumb:hover { background-color: #1084d0; }
   .under-construction {
     display: flex; align-items: center; gap: 8px;
     font-family: 'VT323', monospace; font-size: 16px;
@@ -237,7 +251,7 @@
 
 
 <!-- MARQUEE -->
-<marquee scrollamount="4">🐛 WELCOME TO ENTO-PROFESSO SEARCH 3000 🐝 AN APP FOR ALL YOUR GRADUATE-RESEARCH NEEDS 🦋 BOOKMARK THIS PAGE!! 🐜 BEST VIEWED IN NETSCAPE NAVIGATOR 4.0 AT 800x600 🪲</marquee>
+<marquee scrollamount="4"><img src="assets/space-invader.png" style="height:22px;vertical-align:middle;margin:0 8px;image-rendering:pixelated;"> WELCOME TO ENTO-PROFESSO SEARCH 3000 <img src="assets/space-invader.png" style="height:22px;vertical-align:middle;margin:0 8px;image-rendering:pixelated;"> AN APP FOR ALL YOUR GRADUATE-RESEARCH NEEDS <img src="assets/space-invader.png" style="height:22px;vertical-align:middle;margin:0 8px;image-rendering:pixelated;"> BOOKMARK THIS PAGE!! <img src="assets/space-invader.png" style="height:22px;vertical-align:middle;margin:0 8px;image-rendering:pixelated;"> BEST VIEWED IN NETSCAPE NAVIGATOR 4.0 AT 800x600 <img src="assets/space-invader.png" style="height:22px;vertical-align:middle;margin:0 8px;image-rendering:pixelated;"></marquee>
 
 <!-- MAIN WINDOW -->
 <div class="win">
@@ -254,7 +268,7 @@
   <div class="win-body">
     <div class="main-header win" style="background:#000080; color:#fff; border:none;">
       <div class="win-body" style="background:#000080;">
-        <div class="bug-row">🦟 🪲 🦋 🐜 🐝 🪳 🦗 🐛</div>
+        <div class="bug-row">🐛 🐞 🐜 🦗 🪲 🦟 🪳 🐝</div>
         <h1>Ento-Professo Search 3000</h1>
         <p style="color:#ffff00; font-size:12px; margin-top:4px; font-weight:bold;">Powered by Artificial Intelligence &amp; HyperText Technology</p>
       </div>
