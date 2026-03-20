@@ -1607,7 +1607,7 @@ describe("16. Minimise / Restore Toggle", it => {
     if (btn) btn.textContent = isMin ? "□" : "_";
   }
 
-  // Helper: build a minimal school card in the sandbox
+  // Helper: build a minimal school card matching the current index.html layout
   function makeCard(id) {
     const sb = document.getElementById("sandbox");
     const old = document.getElementById(id);
@@ -1616,9 +1616,12 @@ describe("16. Minimise / Restore Toggle", it => {
     card.className = "win school-card";
     card.id = id;
     card.innerHTML = `
-      <div class="win-title" onclick="toggleCard('${id}')">
+      <div class="win-title">
         <span>🎓 Test School</span>
-        <div class="btns"><div class="win-btn" id="minbtn_${id}">_</div></div>
+        <div class="btns">
+          <div class="win-btn" id="minbtn_${id}" title="Minimise" onclick="toggleCard('${id}')">_</div>
+          <div class="win-btn" title="Close">✕</div>
+        </div>
       </div>
       <div class="win-body" id="collapsible_${id}">
         <p>Some content here.</p>
@@ -1688,10 +1691,43 @@ describe("16. Minimise / Restore Toggle", it => {
   it("minimised card has win-body hidden via CSS class", () => {
     const card = makeCard("card_toggle_test_css");
     toggleCard("card_toggle_test_css");
-    // The .minimised class should be present — CSS hides .minimised .win-body
     assert(card.classList.contains("minimised"), "minimised class drives CSS visibility");
     const body = card.querySelector(".win-body");
     assert(body !== null, "win-body element still exists in DOM when minimised");
+  });
+
+  it("title bar has exactly two win-btn elements", () => {
+    const card = makeCard("card_toggle_btncount");
+    const btns = card.querySelectorAll(".win-title .win-btn");
+    assertEqual(btns.length, 2);
+  });
+
+  it("first button is the minimise button (_)", () => {
+    const card = makeCard("card_toggle_firstbtn");
+    const btns = card.querySelectorAll(".win-title .win-btn");
+    assertEqual(btns[0].textContent.trim(), "_");
+    assertEqual(btns[0].title, "Minimise");
+  });
+
+  it("second button is the close button (✕)", () => {
+    const card = makeCard("card_toggle_closebtn");
+    const btns = card.querySelectorAll(".win-title .win-btn");
+    assertEqual(btns[1].textContent.trim(), "✕");
+    assertEqual(btns[1].title, "Close");
+  });
+
+  it("title bar itself is not clickable (no onclick)", () => {
+    const card = makeCard("card_toggle_titleclick");
+    const titleBar = card.querySelector(".win-title");
+    assert(!titleBar.hasAttribute("onclick"), "Title bar should not have onclick — only the _ button should");
+  });
+
+  it("minimise button changes to □ and close button stays ✕", () => {
+    const card = makeCard("card_toggle_bothbtns");
+    toggleCard("card_toggle_bothbtns");
+    const btns = card.querySelectorAll(".win-title .win-btn");
+    assertEqual(btns[0].textContent.trim(), "□");
+    assertEqual(btns[1].textContent.trim(), "✕");
   });
 });
 

@@ -499,10 +499,11 @@ function renderSchoolCard(school, data) {
   card.className = "win school-card";
   card.id = id;
   card.innerHTML = `
-    <div class="win-title" style="cursor:pointer;" onclick="toggleCard(${JSON.stringify(id)})" title="Click to minimise / restore">
+    <div class="win-title">
       <span>🎓 ${escapeHtml(school.name)}</span>
       <div class="btns">
-        <div class="win-btn" id="minbtn_${id}" title="Minimise">_</div>
+        <div class="win-btn" id="minbtn_${id}" title="Minimise" onclick="toggleCard(${JSON.stringify(id)})">_</div>
+        <div class="win-btn" title="Close" onclick="clearOne(${JSON.stringify(school.name)})">✕</div>
       </div>
     </div>
     <div class="win-body" id="collapsible_${id}">
@@ -513,8 +514,8 @@ function renderSchoolCard(school, data) {
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <span class="badge ${badge}" id="badge_${id}">${badgeText}</span>
-          <button class="btn" onclick="event.stopPropagation();scrapeOne(${JSON.stringify(school.name)})" id="btn_${id}">🔄 Scrape</button>
-          <button class="btn btn-danger" onclick="event.stopPropagation();clearOne(${JSON.stringify(school.name)})">🗑 Clear</button>
+          <button class="btn" onclick="scrapeOne(${JSON.stringify(school.name)})" id="btn_${id}">🔄 Scrape</button>
+          <button class="btn btn-danger" onclick="clearOne(${JSON.stringify(school.name)})">🗑 Clear</button>
         </div>
       </div>
       <div id="progress_${id}"></div>
