@@ -502,7 +502,7 @@ function renderSchoolCard(school, data) {
     <div class="win-title">
       <span>🎓 ${escapeHtml(school.name)}</span>
       <div class="btns">
-        <div class="win-btn" id="minbtn_${id}" title="Minimise" onclick="toggleCard(${JSON.stringify(id)})">_</div>
+        <div class="win-btn" id="minbtn_${id}" title="Minimise" onclick="toggleCard('${id}')">_</div>
         <div class="win-btn" title="Close" onclick="clearOne(${JSON.stringify(school.name)})">✕</div>
       </div>
     </div>
