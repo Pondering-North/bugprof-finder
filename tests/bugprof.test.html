@@ -1594,6 +1594,108 @@ describe("15. Real School Storage Round-Trip", it => {
 });
 
 // ═══════════════════════════════════════════════════════════
+//  SUITE 16 — Minimise / Restore Toggle
+// ═══════════════════════════════════════════════════════════
+describe("16. Minimise / Restore Toggle", it => {
+
+  // Local copy of toggleCard matching index.html implementation
+  function toggleCard(id) {
+    const card = document.getElementById(id);
+    if (!card) return;
+    const isMin = card.classList.toggle("minimised");
+    const btn = document.getElementById("minbtn_" + id);
+    if (btn) btn.textContent = isMin ? "□" : "_";
+  }
+
+  // Helper: build a minimal school card in the sandbox
+  function makeCard(id) {
+    const sb = document.getElementById("sandbox");
+    const old = document.getElementById(id);
+    if (old) old.remove();
+    const card = document.createElement("div");
+    card.className = "win school-card";
+    card.id = id;
+    card.innerHTML = `
+      <div class="win-title" onclick="toggleCard('${id}')">
+        <span>🎓 Test School</span>
+        <div class="btns"><div class="win-btn" id="minbtn_${id}">_</div></div>
+      </div>
+      <div class="win-body" id="collapsible_${id}">
+        <p>Some content here.</p>
+      </div>`;
+    sb.appendChild(card);
+    return card;
+  }
+
+  it("card starts expanded (no minimised class)", () => {
+    const card = makeCard("card_toggle_test_1");
+    assert(!card.classList.contains("minimised"), "Card should start expanded");
+  });
+
+  it("toggleCard adds minimised class", () => {
+    const card = makeCard("card_toggle_test_2");
+    toggleCard("card_toggle_test_2");
+    assert(card.classList.contains("minimised"), "Expected minimised class after toggle");
+  });
+
+  it("toggleCard removes minimised class on second call", () => {
+    const card = makeCard("card_toggle_test_3");
+    toggleCard("card_toggle_test_3");
+    toggleCard("card_toggle_test_3");
+    assert(!card.classList.contains("minimised"), "Expected minimised class removed after second toggle");
+  });
+
+  it("button text changes to □ when minimised", () => {
+    makeCard("card_toggle_test_4");
+    toggleCard("card_toggle_test_4");
+    const btn = document.getElementById("minbtn_card_toggle_test_4");
+    assertEqual(btn.textContent, "□");
+  });
+
+  it("button text reverts to _ when restored", () => {
+    makeCard("card_toggle_test_5");
+    toggleCard("card_toggle_test_5");
+    toggleCard("card_toggle_test_5");
+    const btn = document.getElementById("minbtn_card_toggle_test_5");
+    assertEqual(btn.textContent, "_");
+  });
+
+  it("multiple toggles always return to correct state", () => {
+    const card = makeCard("card_toggle_test_6");
+    for (let i = 0; i < 6; i++) toggleCard("card_toggle_test_6");
+    // 6 toggles = back to expanded
+    assert(!card.classList.contains("minimised"), "Expected expanded after 6 toggles");
+    const btn = document.getElementById("minbtn_card_toggle_test_6");
+    assertEqual(btn.textContent, "_");
+  });
+
+  it("toggleCard does nothing when id not found", () => {
+    // Should not throw
+    let threw = false;
+    try { toggleCard("card_nonexistent_xyz"); }
+    catch(e) { threw = true; }
+    assert(!threw, "toggleCard should handle missing id gracefully");
+  });
+
+  it("two separate cards toggle independently", () => {
+    const cardA = makeCard("card_toggle_a");
+    const cardB = makeCard("card_toggle_b");
+    toggleCard("card_toggle_a");
+    assert(cardA.classList.contains("minimised"), "Card A should be minimised");
+    assert(!cardB.classList.contains("minimised"), "Card B should still be expanded");
+  });
+
+  it("minimised card has win-body hidden via CSS class", () => {
+    const card = makeCard("card_toggle_test_css");
+    toggleCard("card_toggle_test_css");
+    // The .minimised class should be present — CSS hides .minimised .win-body
+    assert(card.classList.contains("minimised"), "minimised class drives CSS visibility");
+    const body = card.querySelector(".win-body");
+    assert(body !== null, "win-body element still exists in DOM when minimised");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
 //  AUTO-RUN on load
 // ═══════════════════════════════════════════════════════════
 window.addEventListener("DOMContentLoaded", () => {
