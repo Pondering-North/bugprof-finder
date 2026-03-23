@@ -412,6 +412,12 @@
   <div class="win-body">
     <div id="schools-container"></div>
 
+    <div class="under-construction" style="margin-top:12px;">
+      <span>🚧</span>
+      <span>THIS PAGE IS UNDER CONSTRUCTION — MORE SCHOOLS COMING SOON — CHECK BACK LATER!!</span>
+      <span>🚧</span>
+    </div>
+
     <!-- log window -->
     <div class="win" style="margin-top:12px;">
       <div class="win-title">
@@ -419,12 +425,6 @@
         <button class="btn" style="font-size:11px; padding:1px 6px;" onclick="clearLog()">Clear</button>
       </div>
       <div id="log-box">Ready. Click "Search ALL Schools" to begin...\n</div>
-    </div>
-
-    <div class="under-construction" style="margin-top:12px;">
-      <span>🚧</span>
-      <span>THIS PAGE IS UNDER CONSTRUCTION — MORE SCHOOLS COMING SOON — CHECK BACK LATER!!</span>
-      <span>🚧</span>
     </div>
   </div>
 
@@ -439,7 +439,7 @@
 <p style="text-align:center; font-family:'VT323',monospace; font-size:14px; color:#fff; margin-top:6px;">
   © 1997–2026 Ento-Professo Search 3000 Research Systems Inc. · Made with ❤️ and lots of 🐛 ·
   <a href="#" style="color:#ffff00; font-weight:bold;">Web Ring</a> ·
-  <a href="#" style="color:#ffff00; font-weight:bold;">Sign Guestbook</a>
+  <a href="guestbook.html" style="color:#ffff00; font-weight:bold;">Sign Guestbook</a>
 </p>
 
 <!-- ── FIELD GUIDE LAUNCHER ── -->
@@ -565,10 +565,67 @@ function parseFields(msg) {
 }
 
 // ═══════════════════════════════════════════
+//  FIELD GUIDE — fuzzy matching for typo correction
+// ═══════════════════════════════════════════
+const KNOWN_FIELDS = [
+  "entomology","molecular biology","molecular genetics","chemical ecology",
+  "epidemiology","parasitology","toxicology","ecology","evolution",
+  "systematics","taxonomy","phylogenetics","neuroscience","neurobiology",
+  "genetics","genomics","proteomics","biochemistry","cell biology",
+  "developmental biology","physiology","pest management",
+  "integrated pest management","biological control","insect physiology",
+  "vector biology","agricultural entomology","urban entomology",
+  "forensic entomology","aquatic entomology","medical entomology",
+  "invasive species","conservation biology","population genetics",
+  "behavioral ecology","chemical biology","microbiology","virology",
+  "immunology","agroecology","pollination","apiculture","soil ecology",
+  "forest entomology","crop protection","molecular chemistry","chemistry",
+  "zoology","botany","mycology","nematology",
+];
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m + 1}, (_, i) => [i]);
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1]
+        ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+// Merge KNOWN_FIELDS with any research tags currently rendered in the DOM.
+function collectKnownFields() {
+  const fromDOM = Array.from(document.querySelectorAll(".tag-research"))
+    .map(el => el.textContent.toLowerCase().trim());
+  return [...new Set([...KNOWN_FIELDS, ...fromDOM])];
+}
+
+// For each field term, find the closest known match.
+// Returns [{original, suggested}] only for terms that look like typos.
+function findCorrections(fields) {
+  const known = collectKnownFields();
+  return fields.flatMap(field => {
+    if (known.includes(field)) return [];
+    let bestDist = Infinity, bestMatch = null;
+    for (const k of known) {
+      const d = levenshtein(field, k);
+      if (d < bestDist) { bestDist = d; bestMatch = k; }
+    }
+    const threshold = Math.min(4, Math.max(2, Math.floor(field.length * 0.35)));
+    return (bestDist > 0 && bestDist <= threshold && bestMatch)
+      ? [{ original: field, suggested: bestMatch }]
+      : [];
+  });
+}
+
+// ═══════════════════════════════════════════
 //  FIELD GUIDE — chatbox UI
 // ═══════════════════════════════════════════
-let chatState = "greeting";
+let chatState = "awaiting_fields";
 let pendingFields = [];
+let pendingCorrections = [];
 
 function toggleChat() {
   const box = document.getElementById("chatbox");
@@ -583,11 +640,10 @@ function startGreeting() {
   setTimeout(() => addBotMsg("I'm <b>BugBot</b> — your research field guide!"), 600);
   setTimeout(() => {
     if (activeFilters.length > 0) {
-      addBotMsg(`Current filter: <b>${activeFilters.map(f => escapeHtml(f)).join(", ")}</b>.<br>Type new fields to replace it, or close this window.`);
+      addBotMsg(`Current filter: <b>${activeFilters.map(f => escapeHtml(f)).join(", ")}</b>.<br>Type new fields to replace it, type <b>clear filter</b> to remove it, or close this window.`);
     } else {
       addBotMsg("Tell me which research fields you're interested in — e.g. <b>epidemiology</b>, <b>molecular biology</b>, <b>chemical ecology</b>. You can list multiple!");
     }
-    chatState = "awaiting_fields";
   }, 1200);
 }
 
@@ -626,19 +682,66 @@ async function sendChat() {
   if (!msg) return;
   input.value = "";
   addUserMsg(msg);
+  const lower = msg.toLowerCase().trim();
 
+  // ── awaiting_fields ──────────────────────
   if (chatState === "awaiting_fields") {
-    pendingFields = parseFields(msg);
-    if (pendingFields.length === 0) {
-      addBotMsg("Hmm, I couldn't parse any field names. Try something like: <b>chemical ecology, pest management</b>");
+    if (lower.includes("clear filter") || lower === "clear") {
+      if (activeFilters.length === 0) {
+        addBotMsg("No active filter to clear! Type some research fields to get started. 🐛");
+        return;
+      }
+      addBotMsg(`Are you sure you want to clear the filter (<b>${activeFilters.map(f => escapeHtml(f)).join(", ")}</b>)? Type <b>yes</b> or <b>no</b>.`);
+      chatState = "confirming_clear";
       return;
     }
+
+    pendingFields = parseFields(msg);
+    if (pendingFields.length === 0) {
+      addBotMsg("I can't parse anything. Try something like: <b>chemical ecology, pest management</b>");
+      return;
+    }
+
+    pendingCorrections = findCorrections(pendingFields);
+    if (pendingCorrections.length > 0) {
+      const corrList = pendingCorrections
+        .map(c => `"<b>${escapeHtml(c.original)}</b>" → "<b>${escapeHtml(c.suggested)}</b>"`)
+        .join("<br>");
+      addBotMsg(`I noticed some possible misspellings:<br>${corrList}<br><br>Did you mean these? Type <b>yes</b> to use corrected spellings, or <b>no</b> to search as typed.`);
+      chatState = "confirming_corrections";
+      return;
+    }
+
     const list = pendingFields.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
     addBotMsg(`Got it! I'll filter for: ${list}<br><br>Type <b>yes</b> to apply, or enter different fields to change.`);
     chatState = "confirming";
 
+  // ── confirming_clear ─────────────────────
+  } else if (chatState === "confirming_clear") {
+    if (["yes","y","ok","sure","yep","yeah"].includes(lower)) {
+      await clearFilter();
+    } else {
+      addBotMsg("OK! Keeping your current filter. Type new fields anytime to update it.");
+    }
+    chatState = "awaiting_fields";
+
+  // ── confirming_corrections ───────────────
+  } else if (chatState === "confirming_corrections") {
+    if (["yes","y","ok","sure","yep","yeah"].includes(lower)) {
+      pendingFields = pendingFields.map(f => {
+        const fix = pendingCorrections.find(c => c.original === f);
+        return fix ? fix.suggested : f;
+      });
+      addBotMsg("Corrections applied! ✅");
+    } else {
+      addBotMsg("Got it — using your original spellings.");
+    }
+    const list = pendingFields.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
+    addBotMsg(`I'll filter for: ${list}<br><br>Type <b>yes</b> to apply.`);
+    chatState = "confirming";
+
+  // ── confirming ───────────────────────────
   } else if (chatState === "confirming") {
-    const lower = msg.toLowerCase().trim();
     if (["yes","y","ok","sure","apply","yep","yeah"].includes(lower)) {
       activeFilters = pendingFields;
       await saveFilters();
@@ -646,14 +749,22 @@ async function sendChat() {
       applyFilterToAllCards();
       const list = activeFilters.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
       addBotMsg(`✅ Filter applied for: ${list}<br><br>Hit <b>Search ALL Schools</b> to re-scrape with this filter active, or close this window to browse current results.`);
-      addSysMsg("Tip: re-scraping will fetch only matching professors from scratch.");
+      addSysMsg("Tip: re-scraping fetches only matching professors from scratch.");
       log(`🔎 Field Guide filter set: ${activeFilters.join(", ")}`);
       chatState = "awaiting_fields";
     } else {
-      // Treat as new field input
       pendingFields = parseFields(msg);
       if (pendingFields.length === 0) {
-        addBotMsg("I couldn't parse that. Type <b>yes</b> to confirm the last filter, or enter new fields.");
+        addBotMsg("I couldn't parse that. Type <b>yes</b> to confirm, or enter new fields.");
+        return;
+      }
+      pendingCorrections = findCorrections(pendingFields);
+      if (pendingCorrections.length > 0) {
+        const corrList = pendingCorrections
+          .map(c => `"<b>${escapeHtml(c.original)}</b>" → "<b>${escapeHtml(c.suggested)}</b>"`)
+          .join("<br>");
+        addBotMsg(`Possible misspellings:<br>${corrList}<br><br>Did you mean these? <b>yes</b> or <b>no</b>.`);
+        chatState = "confirming_corrections";
         return;
       }
       const list = pendingFields.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");

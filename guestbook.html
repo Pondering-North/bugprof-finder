@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐛 Ento-Professo Guestbook 🐛</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Special+Elite&display=swap');
+  :root {
+    --navy: #000080;
+    --bg:   #c0c0c0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #000080;
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%230000aa' /%3E%3C/svg%3E");
+    font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+    color: #000;
+    min-height: 100vh;
+    padding: 10px;
+  }
+  .win {
+    background: var(--bg);
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #444; border-bottom: 2px solid #444;
+    margin-bottom: 12px;
+  }
+  .win-title {
+    background: linear-gradient(90deg, var(--navy) 0%, #1084d0 100%);
+    color: #fff;
+    font-family: 'VT323', monospace; font-size: 18px;
+    padding: 3px 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    user-select: none;
+  }
+  .win-title .btns { display: flex; gap: 3px; }
+  .win-btn {
+    width: 16px; height: 14px; background: var(--bg);
+    border-top: 1px solid #fff; border-left: 1px solid #fff;
+    border-right: 1px solid #444; border-bottom: 1px solid #444;
+    font-size: 10px; line-height: 13px; text-align: center;
+    cursor: pointer; font-family: monospace; text-decoration: none; color: #000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .win-body { padding: 10px; }
+  marquee {
+    background: #000; color: #ffff00;
+    font-family: 'VT323', monospace; font-size: 16px;
+    padding: 3px 0; letter-spacing: 1px;
+  }
+
+  /* ── header ── */
+  .app-header {
+    background: var(--navy);
+    padding: 18px 0 14px;
+    text-align: center;
+    border-bottom: 4px solid #1084d0;
+  }
+  .app-header h1 {
+    font-family: 'VT323', monospace; font-size: 46px;
+    color: #fff; letter-spacing: 2px;
+  }
+  .app-header .sub {
+    font-family: 'VT323', monospace; font-size: 16px; color: #ffff00;
+    margin-top: 4px;
+  }
+  .bug-row { font-size: 26px; margin-bottom: 6px; letter-spacing: 6px; }
+
+  /* ── sign form ── */
+  .form-row {
+    display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .form-row label {
+    font-family: 'VT323', monospace; font-size: 16px;
+    display: block; margin-bottom: 3px;
+  }
+  .form-row input, .form-row textarea {
+    font-family: 'Comic Sans MS', cursive; font-size: 13px;
+    background: #fff; color: #000;
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+    padding: 4px 6px; outline: none;
+  }
+  #inp-name  { width: 200px; }
+  #inp-msg   { width: 100%; resize: vertical; min-height: 56px; }
+  .btn {
+    font-family: 'VT323', monospace; font-size: 16px;
+    background: var(--bg); color: #000;
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #444; border-bottom: 2px solid #444;
+    padding: 3px 12px; cursor: pointer; white-space: nowrap;
+  }
+  .btn:active {
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+  }
+  .btn-sign {
+    background: var(--navy); color: #fff;
+    border-top: 2px solid #8888ff; border-left: 2px solid #8888ff;
+    border-right: 2px solid #000; border-bottom: 2px solid #000;
+    font-size: 17px; padding: 5px 18px;
+  }
+  .btn-sign:active {
+    border-top: 2px solid #000; border-left: 2px solid #000;
+    border-right: 2px solid #8888ff; border-bottom: 2px solid #8888ff;
+  }
+
+  /* ── entries ── */
+  #entries-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .entry {
+    background: #fff;
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+    padding: 8px 12px;
+    position: relative;
+  }
+  .entry-header {
+    display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px;
+  }
+  .entry-name {
+    font-family: 'VT323', monospace; font-size: 20px; color: var(--navy);
+    font-weight: bold;
+  }
+  .entry-date {
+    font-family: 'VT323', monospace; font-size: 13px; color: #666;
+  }
+  .entry-num {
+    position: absolute; top: 8px; right: 10px;
+    font-family: 'VT323', monospace; font-size: 13px; color: #aaa;
+  }
+  .entry-msg {
+    font-family: 'Comic Sans MS', cursive; font-size: 13px;
+    color: #222; line-height: 1.5;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .entry-divider {
+    border: none; border-top: 1px dashed #aaa; margin: 6px 0;
+  }
+
+  .empty-msg {
+    font-family: 'VT323', monospace; font-size: 18px; color: #666;
+    text-align: center; padding: 20px;
+  }
+
+  /* ── status bar ── */
+  .statusbar {
+    display: flex; background: var(--bg);
+    border-top: 2px solid #444;
+    font-family: 'VT323', monospace; font-size: 14px;
+  }
+  .status-pane {
+    flex: 1; padding: 2px 8px; color: #000;
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+    margin: 3px; white-space: nowrap; overflow: hidden;
+  }
+
+  /* ── toast ── */
+  #toast {
+    display: none; position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--navy); color: #ffff00;
+    font-family: 'VT323', monospace; font-size: 18px;
+    padding: 8px 24px;
+    border-top: 2px solid #8888ff; border-left: 2px solid #8888ff;
+    border-right: 2px solid #000; border-bottom: 2px solid #000;
+    z-index: 999;
+  }
+</style>
+</head>
+<body>
+
+<marquee scrollamount="4">🐛 SIGN THE GUESTBOOK — LET THE WORLD KNOW YOU WERE HERE!! 🐛 WELCOME TO ENTO-PROFESSO SEARCH 3000 🐛 BEST VIEWED IN NETSCAPE NAVIGATOR 4.0 AT 800x600 🐛</marquee>
+
+<div class="win" style="max-width:860px; margin:10px auto;">
+  <div class="win-title">
+    <span>📖 Ento-Professo Guestbook — Sign Your Name!!</span>
+    <div class="btns">
+      <a class="win-btn" href="index.html" title="Back to main app">←</a>
+    </div>
+  </div>
+
+  <!-- header -->
+  <div class="app-header">
+    <div class="bug-row">🐛 🐝 🦋 🐞 🦗 🐜 🦟 🐝</div>
+    <h1>Ento-Professo Guestbook</h1>
+    <div class="sub">Sign your name and leave a note for fellow bug enthusiasts!!</div>
+  </div>
+
+  <!-- sign form -->
+  <div class="win-body">
+    <div class="win" style="margin-bottom:16px;">
+      <div class="win-title">✏️ Sign the Guestbook</div>
+      <div class="win-body">
+        <div class="form-row">
+          <div>
+            <label for="inp-name">Your Name: *</label>
+            <input id="inp-name" type="text" maxlength="80" placeholder="e.g. Jane Entomologist" />
+          </div>
+          <div style="flex:1; min-width:200px;">
+            <label for="inp-msg">Message (optional):</label>
+            <textarea id="inp-msg" maxlength="500" placeholder="Write something... 🐛"></textarea>
+          </div>
+        </div>
+        <button class="btn btn-sign" onclick="signGuestbook()">✍️ Sign Guestbook!!</button>
+      </div>
+    </div>
+
+    <!-- entries -->
+    <div class="win">
+      <div class="win-title">
+        <span>📜 Visitors (<span id="entry-count">0</span>)</span>
+        <span id="entries-status" style="font-size:13px; color:#ccc;"></span>
+      </div>
+      <div class="win-body">
+        <div id="entries-list">
+          <div class="empty-msg">No entries yet — be the first to sign!! 🐛</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- statusbar -->
+  <div class="statusbar">
+    <div class="status-pane" id="status-pane">Ready</div>
+    <div class="status-pane" style="max-width:180px;">Ento-Professo Guestbook v1.0</div>
+  </div>
+</div>
+
+<p style="text-align:center; font-family:'VT323',monospace; font-size:14px; color:#fff; margin-top:6px;">
+  © 1997–2026 Ento-Professo Search 3000 Research Systems Inc. · Made with ❤️ and lots of 🐛 ·
+  <a href="index.html" style="color:#ffff00; font-weight:bold;">← Back to Search</a>
+</p>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+const STORAGE_KEY = "entoprofesso:guestbook";
+
+function loadEntries() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  } catch { return []; }
+}
+
+function saveEntries(entries) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+function escapeHtml(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function renderEntries() {
+  const entries = loadEntries();
+  const list = document.getElementById("entries-list");
+  const countEl = document.getElementById("entry-count");
+  countEl.textContent = entries.length;
+
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="empty-msg">No entries yet — be the first to sign!! 🐛</div>';
+    return;
+  }
+
+  // Show newest first
+  list.innerHTML = [...entries].reverse().map((e, i) => {
+    const num = entries.length - i;
+    const msg = e.message ? `<hr class="entry-divider"><div class="entry-msg">${escapeHtml(e.message)}</div>` : "";
+    return `<div class="entry">
+      <span class="entry-num">#${num}</span>
+      <div class="entry-header">
+        <span class="entry-name">🐛 ${escapeHtml(e.name)}</span>
+        <span class="entry-date">${escapeHtml(e.date)}</span>
+      </div>
+      ${msg}
+    </div>`;
+  }).join("");
+}
+
+function showToast(msg, duration = 2500) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.style.display = "block";
+  setTimeout(() => { el.style.display = "none"; }, duration);
+}
+
+function setStatus(msg) {
+  document.getElementById("status-pane").textContent = msg;
+}
+
+function signGuestbook() {
+  const nameInput = document.getElementById("inp-name");
+  const msgInput  = document.getElementById("inp-msg");
+  const name = nameInput.value.trim();
+  const message = msgInput.value.trim();
+
+  if (!name) {
+    nameInput.focus();
+    showToast("⚠ Please enter your name!");
+    setStatus("⚠ Name is required.");
+    return;
+  }
+
+  const entries = loadEntries();
+  const entry = {
+    name,
+    message: message || null,
+    date: new Date().toLocaleString(),
+  };
+  entries.push(entry);
+  saveEntries(entries);
+
+  nameInput.value = "";
+  msgInput.value = "";
+  renderEntries();
+  showToast("✅ You've signed the guestbook!!");
+  setStatus(`✅ Welcome, ${name}! Entry #${entries.length} saved.`);
+}
+
+// Allow Enter in name field to submit
+document.getElementById("inp-name").addEventListener("keydown", e => {
+  if (e.key === "Enter") signGuestbook();
+});
+
+renderEntries();
+setStatus("📖 Guestbook loaded — " + loadEntries().length + " entries.");
+</script>
+</body>
+</html>
