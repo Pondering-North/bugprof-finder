@@ -244,6 +244,109 @@
     font-size: 11px; padding: 1px 5px; margin: 1px;
     font-weight: bold; color: #000;
   }
+  /* Highlight matched research tags when a filter is active */
+  .tag-research.matched {
+    background: #ffff00; border-color: #000; color: #000;
+  }
+
+  /* ── FILTER ACTIVE STRIP ── */
+  #filter-strip {
+    display: none; align-items: center; gap: 6px; flex-wrap: wrap;
+    width: 100%; padding: 4px 8px;
+    background: var(--navy);
+    border-top: 1px solid #888;
+    font-family: 'VT323', monospace; font-size: 15px; color: #ffff00;
+  }
+  #filter-strip.visible { display: flex; }
+  .filter-pill {
+    background: #000; color: #ffff00;
+    border: 2px solid #ffff00; padding: 1px 7px;
+    font-family: 'VT323', monospace; font-size: 14px;
+  }
+
+  /* ── FIELD GUIDE LAUNCHER (fixed bottom-right) ── */
+  #chat-launcher {
+    position: fixed; bottom: 18px; right: 18px; z-index: 200;
+    font-family: 'VT323', monospace; font-size: 15px;
+    background: var(--navy); color: #fff;
+    border-top: 3px solid #8888ff; border-left: 3px solid #8888ff;
+    border-right: 3px solid #000; border-bottom: 3px solid #000;
+    padding: 7px 14px; cursor: pointer;
+    box-shadow: 3px 3px 0 #000;
+    animation: launcher-pulse 3s ease-in-out infinite;
+  }
+  @keyframes launcher-pulse {
+    0%,100% { box-shadow: 3px 3px 0 #000; }
+    50%      { box-shadow: 3px 3px 0 #000, 0 0 12px #8888ff; }
+  }
+  #chat-launcher:hover { background: #0000cc; }
+  #chat-launcher .notif {
+    display: none; background: #ffff00; color: #000;
+    font-size: 11px; padding: 0 4px; margin-left: 4px;
+    font-weight: bold; vertical-align: middle;
+  }
+  #chat-launcher .notif.show { display: inline; }
+
+  /* ── FIELD GUIDE CHATBOX WINDOW ── */
+  #chatbox {
+    display: none;
+    position: fixed; bottom: 64px; right: 18px; z-index: 300;
+    width: 320px;
+    box-shadow: 5px 5px 0 #000;
+  }
+  #chatbox.open { display: block; }
+
+  #chat-messages {
+    height: 230px; overflow-y: auto;
+    background: #fff;
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 2px solid #ddd; border-bottom: 2px solid #ddd;
+    padding: 8px; display: flex; flex-direction: column; gap: 7px;
+  }
+  .chat-bubble {
+    font-family: 'Comic Sans MS', cursive; font-size: 12px;
+    padding: 6px 9px; max-width: 88%; line-height: 1.5;
+  }
+  .chat-bubble.bot {
+    background: #dde4ff; color: #000; align-self: flex-start;
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #8888cc; border-bottom: 2px solid #8888cc;
+  }
+  .chat-bubble.bot b { color: #000080; }
+  .chat-bubble.user {
+    background: var(--navy); color: #fff; align-self: flex-end;
+    border-top: 2px solid #8888ff; border-left: 2px solid #8888ff;
+    border-right: 2px solid #000; border-bottom: 2px solid #000;
+  }
+  .chat-bubble.sys {
+    background: #ffffcc; color: #000; align-self: center;
+    font-style: italic; font-size: 11px; text-align: center;
+    border: 1px dashed #888; max-width: 95%; padding: 3px 7px;
+  }
+  #chat-input-row {
+    display: flex; background: var(--bg); border-top: 2px solid #444;
+  }
+  #chat-input {
+    flex: 1; font-family: 'Comic Sans MS', cursive; font-size: 12px;
+    background: #fff; color: #000;
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 1px solid #999; border-bottom: 2px solid #fff;
+    padding: 5px 7px; outline: none;
+  }
+  #chat-send {
+    font-family: 'VT323', monospace; font-size: 16px;
+    background: var(--navy); color: #fff;
+    border-top: 2px solid #8888ff; border-left: 2px solid #8888ff;
+    border-right: 2px solid #000; border-bottom: 2px solid #000;
+    padding: 4px 12px; cursor: pointer;
+  }
+  #chat-send:active {
+    border-top: 2px solid #000; border-left: 2px solid #000;
+    border-right: 2px solid #8888ff; border-bottom: 2px solid #8888ff;
+  }
+
+  /* Hide table rows that don't match the active field filter */
+  tr.filter-hidden { display: none; }
 </style>
 </head>
 <body>
@@ -298,6 +401,13 @@
     <span class="hit-counter" id="hitCounter">0000</span>
   </div>
 
+  <!-- field guide filter active strip -->
+  <div id="filter-strip">
+    <span>🔎 FIELD GUIDE FILTER:</span>
+    <span id="filter-pills"></span>
+    <button class="btn" style="font-size:12px;padding:2px 8px;margin-left:auto;" onclick="clearFilter()">✕ Clear Filter</button>
+  </div>
+
   <!-- schools -->
   <div class="win-body">
     <div id="schools-container"></div>
@@ -332,6 +442,27 @@
   <a href="#" style="color:#ffff00; font-weight:bold;">Sign Guestbook</a>
 </p>
 
+<!-- ── FIELD GUIDE LAUNCHER ── -->
+<button id="chat-launcher" onclick="toggleChat()">
+  🐛 Field Guide <span class="notif" id="chat-notif">ON</span>
+</button>
+
+<!-- ── FIELD GUIDE CHATBOX ── -->
+<div id="chatbox" class="win">
+  <div class="win-title">
+    <span>💬 BugBot — Research Field Guide</span>
+    <div class="btns">
+      <div class="win-btn" onclick="toggleChat()">✕</div>
+    </div>
+  </div>
+  <div id="chat-messages"></div>
+  <div id="chat-input-row">
+    <input id="chat-input" type="text" placeholder="e.g. epidemiology, molecular biology..."
+           onkeydown="if(event.key==='Enter')sendChat()" />
+    <button id="chat-send" onclick="sendChat()">SEND ▶</button>
+  </div>
+</div>
+
 <script>
 "use strict";
 
@@ -354,6 +485,182 @@ window.storage = {
     try { localStorage.removeItem("entoprofesso:" + key); } catch {}
   }
 };
+
+// ═══════════════════════════════════════════
+//  FIELD GUIDE — filter state (persisted across sessions)
+// ═══════════════════════════════════════════
+let activeFilters = [];  // array of lowercase strings
+const FILTER_KEY = "fieldguide_filters";
+
+async function loadFilters() {
+  try {
+    const r = await window.storage.get(FILTER_KEY);
+    if (r) activeFilters = JSON.parse(r.value) || [];
+  } catch { activeFilters = []; }
+}
+
+async function saveFilters() {
+  try { await window.storage.set(FILTER_KEY, JSON.stringify(activeFilters)); } catch {}
+}
+
+async function clearFilter() {
+  activeFilters = [];
+  await saveFilters();
+  renderFilterStrip();
+  applyFilterToAllCards();
+  log("🔎 Field Guide filter cleared.");
+  addBotMessage("Filter cleared! Showing all professors again. 🐛 Type new fields anytime.");
+  document.getElementById("chat-notif").classList.remove("show");
+}
+
+function renderFilterStrip() {
+  const strip = document.getElementById("filter-strip");
+  const pills = document.getElementById("filter-pills");
+  if (activeFilters.length === 0) {
+    strip.classList.remove("visible");
+    pills.innerHTML = "";
+  } else {
+    strip.classList.add("visible");
+    pills.innerHTML = activeFilters
+      .map(f => `<span class="filter-pill">${escapeHtml(f)}</span>`).join(" ");
+    document.getElementById("chat-notif").classList.add("show");
+  }
+}
+
+// Show/hide table rows based on whether research fields match any active filter.
+// Case-insensitive — filters are stored lowercase, cell text is lowercased before compare.
+function applyFilterToAllCards() {
+  if (activeFilters.length === 0) {
+    document.querySelectorAll("tr.filter-hidden").forEach(r => r.classList.remove("filter-hidden"));
+    document.querySelectorAll(".tag-research.matched").forEach(t => t.classList.remove("matched"));
+    return;
+  }
+  document.querySelectorAll("tbody tr").forEach(row => {
+    const researchCell = row.querySelector("td:nth-child(3)");
+    if (!researchCell) return;
+    const cellText = researchCell.textContent.toLowerCase();
+    const matches = activeFilters.some(f => cellText.includes(f));
+    if (matches) {
+      row.classList.remove("filter-hidden");
+      // Highlight the specific matching tags
+      researchCell.querySelectorAll(".tag-research").forEach(tag => {
+        const t = tag.textContent.toLowerCase();
+        tag.classList.toggle("matched", activeFilters.some(f => t.includes(f)));
+      });
+    } else {
+      row.classList.add("filter-hidden");
+      researchCell.querySelectorAll(".tag-research").forEach(t => t.classList.remove("matched"));
+    }
+  });
+}
+
+// Split a user message into individual field terms.
+// Handles commas, semicolons, slashes, "and", "&", "or" as delimiters.
+// Lowercases everything so matching is always case-insensitive.
+function parseFields(msg) {
+  return msg
+    .split(/,|;|\/| and | & | or /i)
+    .map(s => s.trim().toLowerCase())
+    .filter(s => s.length > 1);
+}
+
+// ═══════════════════════════════════════════
+//  FIELD GUIDE — chatbox UI
+// ═══════════════════════════════════════════
+let chatState = "greeting";
+let pendingFields = [];
+
+function toggleChat() {
+  const box = document.getElementById("chatbox");
+  box.classList.toggle("open");
+  if (box.classList.contains("open") && document.getElementById("chat-messages").children.length === 0) {
+    startGreeting();
+  }
+}
+
+function startGreeting() {
+  addBotMsg("Greetings, fellow bug enthusiast!! 🐛");
+  setTimeout(() => addBotMsg("I'm <b>BugBot</b> — your research field guide!"), 600);
+  setTimeout(() => {
+    if (activeFilters.length > 0) {
+      addBotMsg(`Current filter: <b>${activeFilters.map(f => escapeHtml(f)).join(", ")}</b>.<br>Type new fields to replace it, or close this window.`);
+    } else {
+      addBotMsg("Tell me which research fields you're interested in — e.g. <b>epidemiology</b>, <b>molecular biology</b>, <b>chemical ecology</b>. You can list multiple!");
+    }
+    chatState = "awaiting_fields";
+  }, 1200);
+}
+
+function addBotMsg(html) {
+  const el = document.createElement("div");
+  el.className = "chat-bubble bot";
+  el.innerHTML = html;
+  document.getElementById("chat-messages").appendChild(el);
+  scrollMsgs();
+}
+
+function addUserMsg(text) {
+  const el = document.createElement("div");
+  el.className = "chat-bubble user";
+  el.textContent = text;
+  document.getElementById("chat-messages").appendChild(el);
+  scrollMsgs();
+}
+
+function addSysMsg(text) {
+  const el = document.createElement("div");
+  el.className = "chat-bubble sys";
+  el.textContent = text;
+  document.getElementById("chat-messages").appendChild(el);
+  scrollMsgs();
+}
+
+function scrollMsgs() {
+  const el = document.getElementById("chat-messages");
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendChat() {
+  const input = document.getElementById("chat-input");
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = "";
+  addUserMsg(msg);
+
+  if (chatState === "awaiting_fields") {
+    pendingFields = parseFields(msg);
+    if (pendingFields.length === 0) {
+      addBotMsg("Hmm, I couldn't parse any field names. Try something like: <b>chemical ecology, pest management</b>");
+      return;
+    }
+    const list = pendingFields.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
+    addBotMsg(`Got it! I'll filter for: ${list}<br><br>Type <b>yes</b> to apply, or enter different fields to change.`);
+    chatState = "confirming";
+
+  } else if (chatState === "confirming") {
+    const lower = msg.toLowerCase().trim();
+    if (["yes","y","ok","sure","apply","yep","yeah"].includes(lower)) {
+      activeFilters = pendingFields;
+      await saveFilters();
+      renderFilterStrip();
+      applyFilterToAllCards();
+      const list = activeFilters.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
+      addBotMsg(`✅ Filter applied for: ${list}<br><br>Hit <b>Search ALL Schools</b> to re-scrape with this filter active, or close this window to browse current results.`);
+      addSysMsg("Tip: re-scraping will fetch only matching professors from scratch.");
+      log(`🔎 Field Guide filter set: ${activeFilters.join(", ")}`);
+      chatState = "awaiting_fields";
+    } else {
+      // Treat as new field input
+      pendingFields = parseFields(msg);
+      if (pendingFields.length === 0) {
+        addBotMsg("I couldn't parse that. Type <b>yes</b> to confirm the last filter, or enter new fields.");
+        return;
+      }
+      const list = pendingFields.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
+      addBotMsg(`Updated! I'll filter for: ${list}<br><br>Type <b>yes</b> to apply.`);
+    }
+  }
+}
 
 // ═══════════════════════════════════════════
 //  CONFIG — Add/remove schools freely
@@ -631,6 +938,7 @@ async function scrapeOne(schoolName) {
     const saved = { status: "ok", scrapedAt: new Date().toLocaleString(), professors };
     await saveSchool(school, saved);
     renderSchoolCard(school, saved);
+    applyFilterToAllCards();   // re-apply any active Field Guide filter
     setBadge(id, "badge-success", `✅ ${professors.length} profs`);
     log(`✅ ${school.name}: Done (${professors.length} professors)`);
   } catch(err) {
@@ -707,7 +1015,11 @@ Extract every faculty member you can find. For each person return:
 - research: array of 2–5 research topic keywords (infer from their bio if not listed explicitly)
 - email: email address if present
 - phone: phone if present
-- profileUrl: their individual profile link if present
+- profileUrl: their individual profile link if present${
+  activeFilters.length > 0
+    ? `\n\nIMPORTANT: The user wants ONLY professors whose research relates to: ${activeFilters.join(", ")}. Skip anyone whose research clearly doesn't match.`
+    : ""
+}
 
 PAGE TEXT:
 ${pageText}
@@ -893,8 +1205,12 @@ function escapeHtml(str) {
 //  INIT
 // ═══════════════════════════════════════════
 window.addEventListener("DOMContentLoaded", async () => {
+  await loadFilters();          // restore persisted Field Guide filters
   await renderAll();
+  renderFilterStrip();          // show filter strip if a filter was restored
+  applyFilterToAllCards();      // apply filter to any cached results
   log("🐛 Ento-Professo Search 3000 initialized. " + SCHOOLS.length + " schools loaded.");
+  if (activeFilters.length > 0) log(`🔎 Field Guide filter restored: ${activeFilters.join(", ")}`);
 });
 </script>
 </body>
