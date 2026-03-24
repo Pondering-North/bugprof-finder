@@ -126,7 +126,9 @@
     margin-bottom: 8px; flex-wrap: wrap; gap: 6px;
   }
   .school-name { font-family: 'VT323', monospace; font-size: 22px; color: var(--navy); }
-  .school-url { font-size: 11px; color: #000080; text-decoration: underline; font-weight: bold; }
+  /* FIX 6: brighter blue + thicker underline distinguishes links from plain navy body text */
+  .school-url { font-size: 11px; color: #0055cc; text-decoration: underline;
+                text-decoration-thickness: 2px; text-underline-offset: 2px; font-weight: bold; }
   .badge {
     font-family: 'VT323', monospace; font-size: 15px;
     padding: 2px 8px;
@@ -140,12 +142,15 @@
     animation: blink 1s step-end infinite;
     outline: 2px dashed #fff; outline-offset: 1px;
   }
+  /* FIX 4: badge-error uses white/dark stripes (distinct from cached's solid grey);
+     badge-cached gets a dashed outline so the two are shape-distinct, not just color-distinct */
   .badge-success { background: var(--status-ok); color: #fff; outline: 2px solid #fff; outline-offset: 1px; }
   .badge-error {
-    background: repeating-linear-gradient(45deg, #1a1a1a 0px, #1a1a1a 4px, #555 4px, #555 8px);
+    background: repeating-linear-gradient(45deg, #000 0px, #000 5px, #fff 5px, #fff 10px);
     color: #fff; outline: 2px solid #fff; outline-offset: 1px;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
   }
-  .badge-cached { background: #444; color: #fff; border: 2px dotted #fff; }
+  .badge-cached { background: #555; color: #fff; outline: 2px dashed #fff; outline-offset: 2px; }
   @keyframes blink { 50% { opacity: 0.4; } }
   .prof-table-wrap { overflow-x: auto; border: 2px inset #888; margin-top: 8px; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; }
@@ -156,10 +161,13 @@
   }
   tr:nth-child(even) { background: #d8d8d8; }
   tr:nth-child(odd)  { background: #ffffff; }
-  tr:hover { background: #000080; color: #fff; }
+  /* FIX 5: yellow left accent bar on hover — distinguishable without color alone */
+  tr:hover { background: #000080; color: #fff; box-shadow: inset 4px 0 0 #ffff00; }
   tr:hover td a { color: #ffff00; }
   td { padding: 4px 8px; border-right: 1px solid #aaa; vertical-align: top; }
-  td a { color: #000080; font-size: 11px; text-decoration: underline; font-weight: bold; }
+  /* FIX 6 (cont): table links also get brighter blue + thicker underline */
+  td a { color: #0055cc; font-size: 11px; text-decoration: underline;
+         text-decoration-thickness: 2px; text-underline-offset: 2px; font-weight: bold; }
   .no-results {
     font-family: 'VT323', monospace; font-size: 18px;
     color: #000; padding: 8px;
@@ -244,23 +252,25 @@
     font-size: 11px; padding: 1px 5px; margin: 1px;
     font-weight: bold; color: #000;
   }
-  /* Highlight matched research tags when a filter is active */
+  /* FIX 1: matched tags get yellow bg + thicker border + ✓ marker — shape-distinct, not color-only */
   .tag-research.matched {
-    background: #ffff00; border-color: #000; color: #000;
+    background: #ffff00; border: 3px solid #000; color: #000;
   }
+  .tag-research.matched::after { content: " ✓"; font-weight: bold; }
 
-  /* ── FILTER ACTIVE STRIP ── */
+  /* FIX 7: filter strip gets a bright yellow top border as a non-color shape cue */
   #filter-strip {
     display: none; align-items: center; gap: 6px; flex-wrap: wrap;
     width: 100%; padding: 4px 8px;
     background: var(--navy);
-    border-top: 1px solid #888;
+    border-top: 3px solid #ffff00;
     font-family: 'VT323', monospace; font-size: 15px; color: #ffff00;
   }
   #filter-strip.visible { display: flex; }
+  /* FIX 3: filter pills get a double border so they're distinguishable by shape, not just color */
   .filter-pill {
     background: #000; color: #ffff00;
-    border: 2px solid #ffff00; padding: 1px 7px;
+    border: 3px double #ffff00; padding: 1px 7px;
     font-family: 'VT323', monospace; font-size: 14px;
   }
 
@@ -307,12 +317,14 @@
     font-family: 'Comic Sans MS', cursive; font-size: 12px;
     padding: 6px 9px; max-width: 88%; line-height: 1.5;
   }
+  /* FIX 2: bot bubble gets a solid left accent bar; user bubble gets a right accent bar —
+     position + shape distinguish them beyond just background color */
   .chat-bubble.bot {
     background: #dde4ff; color: #000; align-self: flex-start;
-    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-top: 2px solid #fff; border-left: 5px solid #8888cc;
     border-right: 2px solid #8888cc; border-bottom: 2px solid #8888cc;
   }
-  .chat-bubble.bot b { color: #000080; }
+  .chat-bubble.bot b { color: #000055; }
   .chat-bubble.user {
     background: var(--navy); color: #fff; align-self: flex-end;
     border-top: 2px solid #8888ff; border-left: 2px solid #8888ff;
