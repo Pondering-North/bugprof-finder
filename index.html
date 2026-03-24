@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🐛 Ento-Professo Search 300 🐛</title>
+<title>Ento-Professo Search 3000</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=Special+Elite&display=swap');
   :root {
@@ -405,15 +405,15 @@
   <!-- toolbar -->
   <div class="toolbar">
     <button class="btn btn-primary" id="scrapeAllBtn" onclick="scrapeAll()">
-      🔍 Search ALL Schools
+      Search ALL Schools
     </button>
     <div class="toolbar-sep"></div>
-    <button class="btn" onclick="clearAllCache()">🗑 Clear Cache</button>
+    <button class="btn" onclick="clearAllCache()"> Clear Cache</button>
     <div class="toolbar-sep"></div>
-    <button class="btn" onclick="exportCSV()">💾 Export CSV</button>
-    <button class="btn" onclick="exportJSON()">📄 Export JSON</button>
+    <button class="btn" onclick="exportCSV()"> Export CSV</button>
+    <button class="btn" onclick="exportJSON()"> Export JSON</button>
     <div class="toolbar-sep"></div>
-    <label style="font-size:12px; color:#333; font-weight:bold; white-space:nowrap;">🔎 Filter:</label>
+    <label style="font-size:12px; color:#333; font-weight:bold; white-space:nowrap;"> Filter:</label>
     <input type="text" id="searchInput" class="search-input"
            placeholder="Name, research, email..."
            oninput="applySearch(this.value)"
@@ -427,7 +427,7 @@
 
   <!-- field guide filter active strip -->
   <div id="filter-strip">
-    <span>🔎 FIELD GUIDE FILTER:</span>
+    <span>FIELD GUIDE FILTER:</span>
     <span id="filter-pills"></span>
     <button class="btn" style="font-size:12px;padding:2px 8px;margin-left:auto;" onclick="clearFilter()">✕ Clear Filter</button>
   </div>
@@ -471,7 +471,7 @@
 
 <!-- ── FIELD GUIDE LAUNCHER ── -->
 <button id="chat-launcher" onclick="toggleChat()">
-  🐛 Field Guide <span class="notif" id="chat-notif">ON</span>
+  Field Guide <span class="notif" id="chat-notif">ON</span>
 </button>
 
 <!-- ── FIELD GUIDE CHATBOX ── -->
@@ -668,7 +668,7 @@ function toggleChat() {
 }
 
 function startGreeting() {
-  addBotMsg("Greetings, fellow bug enthusiast!! 🐛");
+  addBotMsg("Greetings, fellow bug enthusiast!");
   setTimeout(() => addBotMsg("I'm <b>BugBot</b> — your field research guide!"), 600);
   setTimeout(() => {
     if (activeFilters.length > 0) {
