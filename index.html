@@ -433,10 +433,10 @@
     <!-- log window -->
     <div class="win" style="margin-top:12px;">
       <div class="win-title">
-        <span>📟 Activity Log</span>
+        <span><img src="images/terminal.png" style="height:16px;vertical-align:middle;image-rendering:pixelated;"> Activity Log</span>
         <button class="btn" style="font-size:11px; padding:1px 6px;" onclick="clearLog()">Clear</button>
       </div>
-      <div id="log-box">Ready. Click "Search ALL Schools" to begin...\n</div>
+      <div id="log-box">Click "Search ALL Schools" to begin...\n</div>
     </div>
   </div>
 
@@ -480,6 +480,10 @@
 
 <script>
 "use strict";
+
+// Image substitutes for emojis
+const IMG_CHECK = `<img src="images/checkmark.png" style="height:12px;vertical-align:middle;image-rendering:pixelated;">`;
+const IMG_X     = `<img src="images/x-sign.png"    style="height:12px;vertical-align:middle;image-rendering:pixelated;">`;
 
 // ═══════════════════════════════════════════
 //  STORAGE — FIX: window.storage was never defined; wrap localStorage
@@ -652,7 +656,7 @@ function toggleChat() {
 
 function startGreeting() {
   addBotMsg("Greetings, fellow bug enthusiast!! 🐛");
-  setTimeout(() => addBotMsg("I'm <b>BugBot</b> — your research field guide!"), 600);
+  setTimeout(() => addBotMsg("I'm <b>BugBot</b> — your field research guide!"), 600);
   setTimeout(() => {
     if (activeFilters.length > 0) {
       addBotMsg(`Current filter: <b>${activeFilters.map(f => escapeHtml(f)).join(", ")}</b>.<br>Type new fields to replace it, type <b>clear filter</b> to remove it, or close this window.`);
@@ -747,7 +751,7 @@ async function sendChat() {
         const fix = pendingCorrections.find(c => c.original === f);
         return fix ? fix.suggested : f;
       });
-      addBotMsg("Corrections applied! ✅");
+      addBotMsg(`Corrections applied! ${IMG_CHECK}`);
     } else {
       addBotMsg("Got it — using your original spellings.");
     }
@@ -763,7 +767,7 @@ async function sendChat() {
       renderFilterStrip();
       applyFilterToAllCards();
       const list = activeFilters.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
-      addBotMsg(`✅ Filter applied for: ${list}<br><br>Hit <b>Search ALL Schools</b> to re-scrape with this filter active, or close this window to browse current results.`);
+      addBotMsg(`${IMG_CHECK} Filter applied for: ${list}<br><br>Hit <b>Search ALL Schools</b> to re-scrape with this filter active, or close this window to browse current results.`);
       addSysMsg("Tip: re-scraping fetches only matching professors from scratch.");
       log(`🔎 Field Guide filter set: ${activeFilters.join(", ")}`);
       chatState = "awaiting_fields";
@@ -843,7 +847,7 @@ function clearLog() {
 
 function setStatus(msg) {
   const el = document.getElementById("statusMain");
-  if (el) el.textContent = msg;
+  if (el) el.innerHTML = msg;
   const te = document.getElementById("statusTime");
   if (te) te.textContent = new Date().toLocaleTimeString();
 }
@@ -929,7 +933,7 @@ function renderSchoolCard(school, data) {
 
   if (data) {
     if (data.status === "error") {
-      badge = "badge-error"; badgeText = "❌ Error";
+      badge = "badge-error"; badgeText = `${IMG_X} Error`;
       bodyHTML = `<div class="error-box">
         ⛔ ERROR: School could not be accessed.<br>
         <small>${escapeHtml(data.errorMsg || "Unknown error occurred.")}</small><br>
@@ -937,7 +941,7 @@ function renderSchoolCard(school, data) {
       </div>`;
     } else {
       badge = "badge-cached";
-      badgeText = `✅ ${(data.professors || []).length} profs (cached)`;
+      badgeText = `${IMG_CHECK} ${(data.professors || []).length} profs (cached)`;
       bodyHTML = buildProfTable(data.professors || []);
     }
   }
@@ -1039,7 +1043,7 @@ async function scrapeAll() {
   }
   isRunning = false;
   document.getElementById("scrapeAllBtn").disabled = false;
-  setStatus("✅ Done!");
+  setStatus(`${IMG_CHECK} Done!`);
   log("═══ All schools processed ═══");
   await updateHitCounter();
 }
@@ -1065,14 +1069,14 @@ async function scrapeOne(schoolName) {
     await saveSchool(school, saved);
     renderSchoolCard(school, saved);
     applyFilterToAllCards();   // re-apply any active Field Guide filter
-    setBadge(id, "badge-success", `✅ ${professors.length} profs`);
+    setBadge(id, "badge-success", `${IMG_CHECK} ${professors.length} profs`);
     log(`✅ ${school.name}: Done (${professors.length} professors)`);
   } catch(err) {
     log(`❌ ${school.name}: ${err.message}`);
     const errData = { status: "error", scrapedAt: new Date().toLocaleString(), errorMsg: err.message };
     await saveSchool(school, errData);
     renderSchoolCard(school, errData);
-    setBadge(id, "badge-error", "❌ Error");
+    setBadge(id, "badge-error", `${IMG_X} Error`);
   } finally {
     const b = document.getElementById("btn_" + id);
     if (b) b.disabled = false;
@@ -1093,9 +1097,9 @@ function toggleCard(id) {
   if (btn) btn.textContent = isMin ? "□" : "_";
 }
 
-function setBadge(id, cls, text) {
+function setBadge(id, cls, html) {
   const el = document.getElementById("badge_" + id);
-  if (el) { el.className = "badge " + cls; el.textContent = text; }
+  if (el) { el.className = "badge " + cls; el.innerHTML = html; }
 }
 
 function setProgress(id, pct, label) {
