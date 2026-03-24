@@ -425,9 +425,9 @@
     <div id="schools-container"></div>
 
     <div class="under-construction" style="margin-top:12px;">
-      <span>🚧</span>
+      <span><img src="images/traffic-cone.png" style="height:20px;vertical-align:middle;image-rendering:pixelated;"></span>
       <span>THIS PAGE IS UNDER CONSTRUCTION — MORE SCHOOLS COMING SOON — CHECK BACK LATER!!</span>
-      <span>🚧</span>
+      <span><img src="images/traffic-cone.png" style="height:20px;vertical-align:middle;image-rendering:pixelated;"></span>
     </div>
 
     <!-- log window -->
@@ -484,6 +484,7 @@
 // Image substitutes for emojis
 const IMG_CHECK = `<img src="images/checkmark.png" style="height:12px;vertical-align:middle;image-rendering:pixelated;">`;
 const IMG_X     = `<img src="images/x-sign.png"    style="height:12px;vertical-align:middle;image-rendering:pixelated;">`;
+const IMG_CONE  = `<img src="images/traffic-cone.png" style="height:13px;vertical-align:middle;image-rendering:pixelated;">`;
 
 // ═══════════════════════════════════════════
 //  STORAGE — FIX: window.storage was never defined; wrap localStorage
@@ -888,7 +889,7 @@ function applySearch(term) {
       if (tableWrap) {
         const msg = document.createElement("div");
         msg.className = "search-no-results";
-        msg.textContent = `⚠ No professors match "${term}" at this school.`;
+        msg.innerHTML = `${IMG_CONE} No professors match "${escapeHtml(term)}" at this school.`;
         tableWrap.after(msg);
       }
     }
@@ -935,7 +936,7 @@ function renderSchoolCard(school, data) {
     if (data.status === "error") {
       badge = "badge-error"; badgeText = `${IMG_X} Error`;
       bodyHTML = `<div class="error-box">
-        ⛔ ERROR: School could not be accessed.<br>
+        <img src="images/traffic-cone.png" style="height:14px;vertical-align:middle;image-rendering:pixelated;"> ERROR: School could not be accessed.<br>
         <small>${escapeHtml(data.errorMsg || "Unknown error occurred.")}</small><br>
         <small>Last attempted: ${escapeHtml(data.scrapedAt || "")}</small>
       </div>`;
@@ -985,7 +986,7 @@ function safeUrl(url) {
 
 function buildProfTable(profs) {
   if (!profs || profs.length === 0) {
-    return '<div class="no-results">⚠ No faculty data found for this school.</div>';
+    return `<div class="no-results">${IMG_CONE} No faculty data found for this school.</div>`;
   }
   const rows = profs.map(p => {
     const research = Array.isArray(p.research) ? p.research : [];
