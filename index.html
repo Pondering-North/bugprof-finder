@@ -484,7 +484,7 @@
 // Image substitutes for emojis
 const IMG_CHECK = `<img src="images/checkmark.png" style="height:12px;vertical-align:middle;image-rendering:pixelated;">`;
 const IMG_X     = `<img src="images/x-sign.png"    style="height:12px;vertical-align:middle;image-rendering:pixelated;">`;
-const IMG_CONE  = `<img src="images/traffic-cone.png" style="height:13px;vertical-align:middle;image-rendering:pixelated;">`;
+const IMG_CONE  = `<img src="images/caution-sign.png" style="height:13px;vertical-align:middle;image-rendering:pixelated;">`;
 
 // ═══════════════════════════════════════════
 //  STORAGE — FIX: window.storage was never defined; wrap localStorage
@@ -936,7 +936,7 @@ function renderSchoolCard(school, data) {
     if (data.status === "error") {
       badge = "badge-error"; badgeText = `${IMG_X} Error`;
       bodyHTML = `<div class="error-box">
-        <img src="images/traffic-cone.png" style="height:14px;vertical-align:middle;image-rendering:pixelated;"> ERROR: School could not be accessed.<br>
+        ${IMG_CONE} ERROR: School could not be accessed.<br>
         <small>${escapeHtml(data.errorMsg || "Unknown error occurred.")}</small><br>
         <small>Last attempted: ${escapeHtml(data.scrapedAt || "")}</small>
       </div>`;
