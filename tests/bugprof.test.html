@@ -1620,7 +1620,7 @@ describe("16. Minimise / Restore Toggle", it => {
         <span>🎓 Test School</span>
         <div class="btns">
           <div class="win-btn" id="minbtn_${id}" title="Minimise" onclick="toggleCard('${id}')">_</div>
-          <div class="win-btn" title="Close">✕</div>
+          <div class="win-btn" title="Remove school" onclick="removeSchool('Test School')">✕</div>
         </div>
       </div>
       <div class="win-body" id="collapsible_${id}">
@@ -1709,11 +1709,18 @@ describe("16. Minimise / Restore Toggle", it => {
     assertEqual(btns[0].title, "Minimise");
   });
 
-  it("second button is the close button (✕)", () => {
+  it("second button is the remove button (✕)", () => {
     const card = makeCard("card_toggle_closebtn");
     const btns = card.querySelectorAll(".win-title .win-btn");
     assertEqual(btns[1].textContent.trim(), "✕");
-    assertEqual(btns[1].title, "Close");
+    assertEqual(btns[1].title, "Remove school");
+  });
+
+  it("remove button has removeSchool onclick handler", () => {
+    const card = makeCard("card_toggle_removebtn");
+    const btn = card.querySelectorAll(".win-title .win-btn")[1];
+    assert(btn.hasAttribute("onclick"), "Remove button should have onclick attribute");
+    assert(btn.getAttribute("onclick").includes("removeSchool"), "onclick should call removeSchool");
   });
 
   it("title bar itself is not clickable (no onclick)", () => {
