@@ -836,7 +836,7 @@ async function sendChat() {
 //  CONFIG — Add/remove schools freely
 //  Optional `gradUrl`: skip Agent 1 search when the grad page is already known
 // ═══════════════════════════════════════════
-const SCHOOLS = [
+let SCHOOLS = [
   { name: "University of Arizona",       url: "https://insects.arizona.edu/directory/faculty" },
   { name: "Kansas State University",     url: "https://entomology.k-state.edu/about/people/faculty/" },
   { name: "University of Hawaii (CTAHR)", url: "https://cms.ctahr.hawaii.edu/peps/people/faculty" },
@@ -1453,12 +1453,37 @@ function escapeHtml(str) {
 // ═══════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  USER SCHOOLS — merge schools added via School Finder
+// ═══════════════════════════════════════════
+const USER_SCHOOLS_KEY = "entoprofesso:user_schools";
+
+function mergeUserSchools() {
+  try {
+    const raw = localStorage.getItem(USER_SCHOOLS_KEY);
+    if (!raw) return 0;
+    const userSchools = JSON.parse(raw);
+    const existingUrls = new Set(SCHOOLS.map(s => s.url));
+    let added = 0;
+    for (const s of userSchools) {
+      if (s.name && s.url && !existingUrls.has(s.url)) {
+        SCHOOLS.push({ name: s.name, url: s.url });
+        existingUrls.add(s.url);
+        added++;
+      }
+    }
+    return added;
+  } catch { return 0; }
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
-  await loadFilters();          // restore persisted Field Guide filters
+  await loadFilters();
+  const added = mergeUserSchools();   // pull in any schools from School Finder
   await renderAll();
-  renderFilterStrip();          // show filter strip if a filter was restored
-  applyFilterToAllCards();      // apply filter to any cached results
+  renderFilterStrip();
+  applyFilterToAllCards();
   log("Ento-Professo Search 3000 initialized. " + SCHOOLS.length + " schools loaded.");
+  if (added > 0) log(`+ ${added} school${added > 1 ? "s" : ""} added from School Finder.`);
   if (activeFilters.length > 0) log(`Field Guide filter restored: ${activeFilters.join(", ")}`);
 });
 </script>
