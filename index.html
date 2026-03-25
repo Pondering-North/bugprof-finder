@@ -745,6 +745,68 @@ function scrollMsgs() {
   el.scrollTop = el.scrollHeight;
 }
 
+// ═══════════════════════════════════════════
+//  FIELD GUIDE — known-field helpers
+// ═══════════════════════════════════════════
+
+// Collect every research tag that has actually been scraped into localStorage
+function collectKnownFields() {
+  const fields = new Set();
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith("entoprofesso:school:")) continue;
+    try {
+      const data = JSON.parse(localStorage.getItem(key));
+      if (data && Array.isArray(data.professors)) {
+        for (const p of data.professors) {
+          if (Array.isArray(p.research)) {
+            p.research.forEach(r => { if (r) fields.add(r.toLowerCase().trim()); });
+          }
+        }
+      }
+    } catch {}
+  }
+  return fields;
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m + 1}, (_, i) =>
+    Array.from({length: n + 1}, (_, j) => i ? (j ? 0 : i) : j));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1]
+        ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+// Return closest known field to `term`, or null if nothing close enough
+function findClosestInSet(term, fieldSet) {
+  let best = null, bestDist = Infinity;
+  for (const f of fieldSet) {
+    const d = levenshtein(term, f);
+    const threshold = Math.max(2, Math.floor(Math.max(term.length, f.length) * 0.4));
+    if (d < bestDist && d <= threshold) { bestDist = d; best = f; }
+  }
+  return best;
+}
+
+// Validate pendingFields against knownFields; returns { clean, corrections, unknown }
+function validateFields(fields, knownFields) {
+  const clean = [], corrections = [], unknown = [];
+  for (const f of fields) {
+    if (knownFields.has(f)) {
+      clean.push(f);
+    } else {
+      const suggestion = findClosestInSet(f, knownFields);
+      if (suggestion) corrections.push({ original: f, suggested: suggestion });
+      else unknown.push(f);
+    }
+  }
+  return { clean, corrections, unknown };
+}
+
 async function sendChat() {
   const input = document.getElementById("chat-input");
   const msg = input.value.trim();
@@ -753,8 +815,19 @@ async function sendChat() {
   addUserMsg(msg);
   const lower = msg.toLowerCase().trim();
 
-  // ── awaiting_fields ──────────────────────
+  // ── Global cancel: abort any in-progress flow ────────
+  const CANCEL = ["cancel","stop","quit","exit","abort","nevermind","never mind","reset","back"];
+  if (CANCEL.some(w => lower === w || lower.startsWith(w + " "))) {
+    pendingFields = [];
+    pendingCorrections = [];
+    chatState = "awaiting_fields";
+    addBotMsg("Cancelled! Type research fields whenever you're ready. 🐛");
+    return;
+  }
+
+  // ── awaiting_fields ──────────────────────────────────
   if (chatState === "awaiting_fields") {
+    // Clear filter shortcut
     if (lower.includes("clear filter") || lower === "clear") {
       if (activeFilters.length === 0) {
         addBotMsg("No active filter to clear! Type some research fields to get started.");
@@ -771,21 +844,38 @@ async function sendChat() {
       return;
     }
 
-    pendingCorrections = findCorrections(pendingFields);
-    if (pendingCorrections.length > 0) {
-      const corrList = pendingCorrections
-        .map(c => `"<b>${escapeHtml(c.original)}</b>" → "<b>${escapeHtml(c.suggested)}</b>"`)
-        .join("<br>");
-      addBotMsg(`I noticed some possible misspellings:<br>${corrList}<br><br>Did you mean these? Type <b>yes</b> to use corrected spellings, or <b>no</b> to search as typed.`);
+    // Must have scraped data to validate against
+    const knownFields = collectKnownFields();
+    if (knownFields.size === 0) {
+      addBotMsg("No schools have been scraped yet! Click <b>Search ALL Schools</b> first, then come back to filter by research field.");
+      return;
+    }
+
+    const { clean, corrections, unknown } = validateFields(pendingFields, knownFields);
+
+    if (unknown.length > 0 && corrections.length === 0) {
+      // Completely unrecognized, no close matches
+      addBotMsg(`I don't recognize: ${unknown.map(f => `<b>${escapeHtml(f)}</b>`).join(", ")}. What did you mean? Try a field from the scraped faculty data.`);
+      return; // stay in awaiting_fields
+    }
+
+    if (corrections.length > 0) {
+      pendingCorrections = corrections;
+      const lines = [
+        ...corrections.map(c => `"<b>${escapeHtml(c.original)}</b>" — did you mean <b>${escapeHtml(c.suggested)}</b>?`),
+        ...unknown.map(f => `"<b>${escapeHtml(f)}</b>" — I don't recognize that field.`),
+      ].join("<br>");
+      addBotMsg(`I don't recognize some fields:<br>${lines}<br><br>Type <b>yes</b> to use suggestions, or <b>no</b> to use your original spellings.`);
       chatState = "confirming_corrections";
       return;
     }
 
+    // All recognized
     const list = pendingFields.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
     addBotMsg(`Got it! I'll filter for: ${list}<br><br>Type <b>yes</b> to apply, or enter different fields to change.`);
     chatState = "confirming";
 
-  // ── confirming_clear ─────────────────────
+  // ── confirming_clear ─────────────────────────────────
   } else if (chatState === "confirming_clear") {
     const YES = ["yes","y","yep","yeah"];
     const NO  = ["no","n","nope","nah"];
@@ -800,24 +890,31 @@ async function sendChat() {
       // stay in confirming_clear
     }
 
-  // ── confirming_corrections ───────────────
+  // ── confirming_corrections ───────────────────────────
   } else if (chatState === "confirming_corrections") {
-    if (["yes","y","ok","sure","yep","yeah"].includes(lower)) {
+    const YES = ["yes","y","ok","sure","yep","yeah"];
+    const NO  = ["no","n","nope","nah"];
+    if (YES.includes(lower)) {
       pendingFields = pendingFields.map(f => {
         const fix = pendingCorrections.find(c => c.original === f);
         return fix ? fix.suggested : f;
       });
       addBotMsg(`Corrections applied! ${IMG_CHECK}`);
-    } else {
+    } else if (NO.includes(lower)) {
       addBotMsg("Got it — using your original spellings.");
+    } else {
+      addBotMsg("Please type <b>yes</b> or <b>no</b>.");
+      return; // stay in confirming_corrections
     }
     const list = pendingFields.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
     addBotMsg(`I'll filter for: ${list}<br><br>Type <b>yes</b> to apply.`);
     chatState = "confirming";
 
-  // ── confirming ───────────────────────────
+  // ── confirming ───────────────────────────────────────
   } else if (chatState === "confirming") {
-    if (["yes","y","ok","sure","apply","yep","yeah"].includes(lower)) {
+    const YES = ["yes","y","ok","sure","apply","yep","yeah"];
+    const NO  = ["no","n","nope","nah"];
+    if (YES.includes(lower)) {
       activeFilters = pendingFields;
       await saveFilters();
       renderFilterStrip();
@@ -827,20 +924,33 @@ async function sendChat() {
       addSysMsg("Tip: re-scraping fetches only matching professors from scratch.");
       log(`🔎 Field Guide filter set: ${activeFilters.join(", ")}`);
       chatState = "awaiting_fields";
+    } else if (NO.includes(lower)) {
+      addBotMsg("No problem! Type different fields whenever you're ready.");
+      pendingFields = [];
+      chatState = "awaiting_fields";
     } else {
+      // Treat as new field input — validate against known fields
       pendingFields = parseFields(msg);
       if (pendingFields.length === 0) {
-        addBotMsg("I couldn't parse that. Type <b>yes</b> to confirm, or enter new fields.");
+        addBotMsg("I couldn't parse that. Type <b>yes</b> to confirm, <b>no</b> to cancel, or enter new fields.");
         return;
       }
-      pendingCorrections = findCorrections(pendingFields);
-      if (pendingCorrections.length > 0) {
-        const corrList = pendingCorrections
-          .map(c => `"<b>${escapeHtml(c.original)}</b>" → "<b>${escapeHtml(c.suggested)}</b>"`)
-          .join("<br>");
-        addBotMsg(`Possible misspellings:<br>${corrList}<br><br>Did you mean these? <b>yes</b> or <b>no</b>.`);
-        chatState = "confirming_corrections";
-        return;
+      const knownFields = collectKnownFields();
+      if (knownFields.size > 0) {
+        const { corrections, unknown } = validateFields(pendingFields, knownFields);
+        if (corrections.length > 0) {
+          pendingCorrections = corrections;
+          const lines = corrections
+            .map(c => `"<b>${escapeHtml(c.original)}</b>" → <b>${escapeHtml(c.suggested)}</b>`)
+            .join("<br>");
+          addBotMsg(`I don't recognize some fields:<br>${lines}<br><br>Type <b>yes</b> to use suggestions.`);
+          chatState = "confirming_corrections";
+          return;
+        }
+        if (unknown.length > 0) {
+          addBotMsg(`I don't recognize: ${unknown.map(f => `<b>${escapeHtml(f)}</b>`).join(", ")}. What did you mean?`);
+          return;
+        }
       }
       const list = pendingFields.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
       addBotMsg(`Updated! I'll filter for: ${list}<br><br>Type <b>yes</b> to apply.`);
