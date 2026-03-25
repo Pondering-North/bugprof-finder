@@ -720,7 +720,7 @@ async function sendChat() {
   if (chatState === "awaiting_fields") {
     if (lower.includes("clear filter") || lower === "clear") {
       if (activeFilters.length === 0) {
-        addBotMsg("No active filter to clear! Type some research fields to get started. 🐛");
+        addBotMsg("No active filter to clear! Type some research fields to get started.");
         return;
       }
       addBotMsg(`Are you sure you want to clear the filter (<b>${activeFilters.map(f => escapeHtml(f)).join(", ")}</b>)? Type <b>yes</b> or <b>no</b>.`);
@@ -978,8 +978,8 @@ function renderSchoolCard(school, data) {
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <span class="badge ${badge}" id="badge_${id}">${badgeText}</span>
-          <button class="btn" onclick="scrapeOne(${JSON.stringify(school.name)})" id="btn_${id}">🔄 Scrape</button>
-          <button class="btn btn-danger" onclick="clearOne(${JSON.stringify(school.name)})">🗑 Clear</button>
+          <button class="btn" onclick="scrapeOne(${JSON.stringify(school.name)})" id="btn_${id}"> Scrape</button>
+          <button class="btn btn-danger" onclick="clearOne(${JSON.stringify(school.name)})"> Clear</button>
         </div>
       </div>
       <div id="progress_${id}"></div>
@@ -1067,7 +1067,7 @@ async function scrapeOne(schoolName) {
   const id = "card_" + school.name.replace(/\W/g, "_");
   setBadge(id, "badge-loading", "⏳ Loading...");
   setProgress(id, 20, "Searching faculty directory...");
-  log(`🔍 Starting: ${school.name}`);
+  log(`Starting: ${school.name}`);
   setStatus(`Scraping: ${school.name}`);
 
   const btn = document.getElementById("btn_" + id);
@@ -1283,14 +1283,14 @@ async function exportCSV() {
     r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")
   ).join("\n");
   await saveFile(csv, "entoprofesso_export.csv", "text/csv");
-  log("💾 CSV exported: entoprofesso_export.csv");
+  log("CSV exported: entoprofesso_export.csv");
 }
 
 async function exportJSON() {
   const exportData = await gatherExportData();
   const json = JSON.stringify(exportData, null, 2);
   await saveFile(json, "entoprofesso_export.json", "application/json");
-  log("📄 JSON exported: entoprofesso_export.json");
+  log("JSON exported: entoprofesso_export.json");
 }
 
 // Try native save dialog (File System Access API); fall back to anchor download
@@ -1352,8 +1352,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   await renderAll();
   renderFilterStrip();          // show filter strip if a filter was restored
   applyFilterToAllCards();      // apply filter to any cached results
-  log("🐛 Ento-Professo Search 3000 initialized. " + SCHOOLS.length + " schools loaded.");
-  if (activeFilters.length > 0) log(`🔎 Field Guide filter restored: ${activeFilters.join(", ")}`);
+  log("Ento-Professo Search 3000 initialized. " + SCHOOLS.length + " schools loaded.");
+  if (activeFilters.length > 0) log(`Field Guide filter restored: ${activeFilters.join(", ")}`);
 });
 </script>
 </body>

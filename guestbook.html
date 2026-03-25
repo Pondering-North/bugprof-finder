@@ -172,7 +172,9 @@
 </head>
 <body>
 
-<marquee scrollamount="4">🐛 SIGN THE GUESTBOOK — LET THE WORLD KNOW YOU WERE HERE!! 🐛 WELCOME TO ENTO-PROFESSO SEARCH 3000 🐛 BEST VIEWED IN NETSCAPE NAVIGATOR 4.0 AT 800x600 🐛</marquee>
+<marquee scrollamount="4"><img src="images/space-invader.png" style="height:22px;vertical-align:middle;margin:0 8px;image-rendering:pixelated;"> LET THE WORLD KNOW YOU WERE HERE!! <img src="images/space-invader.png" style="height:22px;vertical-align:middle;margin:0 8px;image-rendering:pixelated;"> WELCOME TO ENTO-PROFESSO SEARCH 3000 <img src="images/space-invader.png" style="height:22px;vertical-align:middle;margin:0 8px;image-rendering:pixelated;"> BEST VIEWED IN NETSCAPE NAVIGATOR 4.0 AT 800x600 <img src="images/space-invader.png" style="height:22px;vertical-align:middle;margin:0 8px;image-rendering:pixelated;"></marquee>
+
+<!-- MAIN WINDOW -->
 
 <div class="win" style="max-width:860px; margin:10px auto;">
   <div class="win-title">
@@ -213,19 +215,19 @@
             <textarea id="inp-msg" maxlength="500" placeholder="Write something... 🐛"></textarea>
           </div>
         </div>
-        <button class="btn btn-sign" onclick="signGuestbook()">Sign Guestbook!!</button>
+        <button class="btn btn-sign" onclick="signGuestbook()">Sign Guestbook!</button>
       </div>
     </div>
 
     <!-- entries -->
     <div class="win">
       <div class="win-title">
-        <span>📜 Visitors (<span id="entry-count">0</span>)</span>
+        <span> Visitors (<span id="entry-count">0</span>)</span>
         <span id="entries-status" style="font-size:13px; color:#ccc;"></span>
       </div>
       <div class="win-body">
         <div id="entries-list">
-          <div class="empty-msg">No entries yet — be the first to sign!</div>
+          <div class="empty-msg">Be the first to sign</div>
         </div>
       </div>
     </div>
@@ -342,7 +344,7 @@ document.getElementById("inp-name").addEventListener("keydown", e => {
 });
 
 renderEntries();
-setStatus("📖 Guestbook loaded — " + loadEntries().length + " entries.");
+setStatus("Guestbook loaded — " + loadEntries().length + " entries.");
 </script>
 </body>
 </html>
