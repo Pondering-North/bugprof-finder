@@ -578,7 +578,7 @@ async function clearFilter() {
   renderFilterStrip();
   applyFilterToAllCards();
   log("🔎 Field Guide filter cleared.");
-  addBotMessage("Filter cleared! Showing all professors again. 🐛 Type new fields anytime.");
+  addBotMsg("Filter cleared! Showing all professors again. 🐛 Type new fields anytime.");
   document.getElementById("chat-notif").classList.remove("show");
 }
 
@@ -1091,6 +1091,8 @@ function renderSchoolCard(school, data) {
   const container = document.getElementById("schools-container");
   if (!container) return;
   const id = "card_" + school.name.replace(/\W/g, "_");
+  // Single-quote safe name for inline onclick attributes
+  const sn = school.name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   const old = document.getElementById(id);
   if (old) old.remove();
 
@@ -1120,7 +1122,7 @@ function renderSchoolCard(school, data) {
       <span>🎓 ${escapeHtml(school.name)}</span>
       <div class="btns">
         <div class="win-btn" id="minbtn_${id}" title="Minimise" onclick="toggleCard('${id}')">_</div>
-        <div class="win-btn" title="Remove school" onclick="removeSchool(${JSON.stringify(school.name)})">✕</div>
+        <div class="win-btn" title="Remove school" onclick="removeSchool('${sn}')">✕</div>
       </div>
     </div>
     <div class="win-body" id="collapsible_${id}">
@@ -1131,8 +1133,8 @@ function renderSchoolCard(school, data) {
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <span class="badge ${badge}" id="badge_${id}">${badgeText}</span>
-          <button class="btn" onclick="scrapeOne(${JSON.stringify(school.name)})" id="btn_${id}"> Scrape</button>
-          <button class="btn btn-danger" onclick="clearOne(${JSON.stringify(school.name)})"> Clear</button>
+          <button class="btn" onclick="scrapeOne('${sn}')" id="btn_${id}"> Scrape</button>
+          <button class="btn btn-danger" onclick="clearOne('${sn}')"> Clear</button>
         </div>
       </div>
       <div id="progress_${id}"></div>
