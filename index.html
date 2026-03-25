@@ -232,6 +232,25 @@
     white-space: pre-wrap; word-break: break-word;
   }
   /* Search bar */
+  /* ── EXPORT DROPDOWN ── */
+  .export-wrap { position: relative; display: inline-block; }
+  .export-menu {
+    display: none;
+    position: absolute; top: 100%; left: 0; z-index: 500;
+    background: var(--bg); min-width: 140px;
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #444; border-bottom: 2px solid #444;
+    box-shadow: 3px 3px 0 #000;
+  }
+  .export-menu.open { display: block; }
+  .export-menu button {
+    display: block; width: 100%; text-align: left;
+    font-family: 'VT323', monospace; font-size: 16px;
+    background: var(--bg); color: #000;
+    border: none; padding: 4px 12px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .export-menu button:hover { background: var(--navy); color: #fff; }
   .search-input {
     font-family: 'VT323', monospace; font-size: 16px;
     background: #fff;
@@ -410,8 +429,16 @@
     <div class="toolbar-sep"></div>
     <button class="btn" onclick="clearAllCache()"> Clear Cache</button>
     <div class="toolbar-sep"></div>
-    <button class="btn" onclick="exportCSV()"> Export CSV</button>
-    <button class="btn" onclick="exportJSON()"> Export JSON</button>
+    <div class="export-wrap">
+      <button class="btn" onclick="toggleExportMenu(event)">📄 Export ▾</button>
+      <div class="export-menu" id="exportMenu">
+        <button onclick="exportCSV();  closeExportMenu()">CSV</button>
+        <button onclick="exportTSV();  closeExportMenu()">TSV</button>
+        <button onclick="exportJSON(); closeExportMenu()">JSON</button>
+        <button onclick="exportHTML(); closeExportMenu()">HTML Table</button>
+        <button onclick="exportVCard();closeExportMenu()">vCard (.vcf)</button>
+      </div>
+    </div>
     <div class="toolbar-sep"></div>
     <label style="font-size:12px; color:#333; font-weight:bold; white-space:nowrap;"> Filter:</label>
     <input type="text" id="searchInput" class="search-input"
@@ -1293,6 +1320,85 @@ async function exportJSON() {
   log("JSON exported: entoprofesso_export.json");
 }
 
+async function exportTSV() {
+  const rows = [["School","Name","Title","Research Areas","Email","Phone","Profile URL"]];
+  const exportData = await gatherExportData();
+  for (const { school, data } of exportData) {
+    if (!data || data.status === "error" || !data.professors) continue;
+    for (const p of data.professors) {
+      rows.push([
+        school, p.name || "", p.title || "",
+        (Array.isArray(p.research) ? p.research : []).join("; "),
+        p.email || "", p.phone || "", p.profileUrl || ""
+      ]);
+    }
+  }
+  const tsv = rows.map(r => r.map(c => String(c).replace(/\t/g, " ")).join("\t")).join("\n");
+  await saveFile(tsv, "entoprofesso_export.tsv", "text/tab-separated-values");
+  log("TSV exported: entoprofesso_export.tsv");
+}
+
+async function exportHTML() {
+  const exportData = await gatherExportData();
+  const cols = ["Name","Title","Research Areas","Email","Phone","Profile URL"];
+  let html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Ento-Professo Export</title>
+<style>body{font-family:sans-serif;font-size:13px}table{border-collapse:collapse;width:100%}
+th{background:#000080;color:#fff;padding:6px 10px;text-align:left}
+td{padding:5px 10px;border:1px solid #ccc}tr:nth-child(even){background:#f0f0f0}
+h2{margin-top:24px;border-bottom:2px solid #000}</style></head><body>
+<h1>Ento-Professo Search 3000 — Export</h1>\n`;
+  for (const { school, data } of exportData) {
+    if (!data || data.status === "error" || !data.professors || !data.professors.length) continue;
+    html += `<h2>${escapeHtml(school)}</h2><table><thead><tr>`;
+    html += cols.map(c => `<th>${c}</th>`).join("") + `</tr></thead><tbody>`;
+    for (const p of data.professors) {
+      const research = (Array.isArray(p.research) ? p.research : []).join(", ");
+      html += `<tr><td>${escapeHtml(p.name||"")}</td><td>${escapeHtml(p.title||"")}</td>
+<td>${escapeHtml(research)}</td><td>${escapeHtml(p.email||"")}</td>
+<td>${escapeHtml(p.phone||"")}</td><td>${escapeHtml(p.profileUrl||"")}</td></tr>`;
+    }
+    html += `</tbody></table>\n`;
+  }
+  html += `</body></html>`;
+  await saveFile(html, "entoprofesso_export.html", "text/html");
+  log("HTML exported: entoprofesso_export.html");
+}
+
+async function exportVCard() {
+  const exportData = await gatherExportData();
+  let vcf = "";
+  for (const { school, data } of exportData) {
+    if (!data || data.status === "error" || !data.professors) continue;
+    for (const p of data.professors) {
+      const nameParts = (p.name || "Unknown").split(" ");
+      const last = nameParts.length > 1 ? nameParts.pop() : "";
+      const first = nameParts.join(" ");
+      vcf += `BEGIN:VCARD\r\nVERSION:3.0\r\n`;
+      vcf += `N:${last};${first};;;\r\n`;
+      vcf += `FN:${p.name || ""}\r\n`;
+      vcf += `TITLE:${p.title || ""}\r\n`;
+      vcf += `ORG:${school}\r\n`;
+      if (p.email) vcf += `EMAIL:${p.email}\r\n`;
+      if (p.phone) vcf += `TEL:${p.phone}\r\n`;
+      if (p.profileUrl) vcf += `URL:${p.profileUrl}\r\n`;
+      if (p.research && p.research.length) vcf += `NOTE:Research: ${p.research.join(", ")}\r\n`;
+      vcf += `END:VCARD\r\n`;
+    }
+  }
+  await saveFile(vcf, "entoprofesso_export.vcf", "text/vcard");
+  log("vCard exported: entoprofesso_export.vcf");
+}
+
+function toggleExportMenu(e) {
+  e.stopPropagation();
+  document.getElementById("exportMenu").classList.toggle("open");
+}
+function closeExportMenu() {
+  document.getElementById("exportMenu").classList.remove("open");
+}
+document.addEventListener("click", () => closeExportMenu());
+
 // Try native save dialog (File System Access API); fall back to anchor download
 async function saveFile(content, suggestedName, mimeType) {
   if ("showSaveFilePicker" in window) {
@@ -1301,7 +1407,7 @@ async function saveFile(content, suggestedName, mimeType) {
       const handle = await window.showSaveFilePicker({
         suggestedName,
         types: [{
-          description: mimeType.includes("csv") ? "CSV File" : "JSON File",
+          description: suggestedName.split(".").pop().toUpperCase() + " File",
           accept: { [mimeType]: ["." + ext] }
         }]
       });
