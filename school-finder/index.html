@@ -172,6 +172,22 @@
   }
   .prog-card.added-to-app .card-added { display: inline; }
 
+  /* ── PAGINATION ── */
+  .pagination {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; margin-top: 12px; font-family: 'VT323', monospace;
+  }
+  .pg-btn {
+    font-family: 'VT323', monospace; font-size: 17px;
+    background: var(--navy); color: #fff;
+    border-top: 2px solid #8888ff; border-left: 2px solid #8888ff;
+    border-right: 2px solid #000; border-bottom: 2px solid #000;
+    padding: 3px 14px; cursor: pointer;
+  }
+  .pg-btn:disabled { background: #888; color: #ccc; cursor: default;
+    border-color: #999; }
+  .pg-info { font-size: 17px; color: #000; }
+
   /* ── STATUSBAR ── */
   .statusbar {
     display: flex; background: var(--bg);
@@ -258,6 +274,12 @@
   <!-- program grid -->
   <div class="win-body">
     <div class="program-grid" id="programGrid"></div>
+    <div class="pagination">
+      <button class="pg-btn" id="pgPrev" onclick="changePage(-1)">◀ Prev</button>
+      <span class="pg-info" id="pgInfo"></span>
+      <button class="pg-btn" id="pgNext" onclick="changePage(1)">Next ▶</button>
+    </div>
+
     <div class="no-results-msg" id="noResults">
       <img src="../images/traffic-cone.png" style="height:20px;vertical-align:middle;image-rendering:pixelated;">
       No programs match that search.
@@ -400,6 +422,9 @@ const PROGRAMS = [
 // ═══════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════
+const PAGE_SIZE = 6;
+let currentPage = 0;
+let visibleIndices = [];       // indices passing the current filter, in order
 let selected = new Set();      // indices of checked cards
 let addedUrls = new Set();     // faculty URLs already sent to main app
 
@@ -416,10 +441,12 @@ function loadAdded() {
 function renderCards() {
   const grid = document.getElementById("programGrid");
   grid.innerHTML = "";
+
+  // Build all cards (hidden by default; applyPage will show the right slice)
   PROGRAMS.forEach((p, i) => {
     const isAdded = addedUrls.has(p.facultyUrl);
     const div = document.createElement("div");
-    div.className = "prog-card" + (isAdded ? " added-to-app" : "");
+    div.className = "prog-card hidden" + (isAdded ? " added-to-app" : "");
     div.id = "card_" + i;
     div.innerHTML = `
       <div class="card-header" onclick="toggleSelect(${i})">
@@ -439,7 +466,49 @@ function renderCards() {
       </div>`;
     grid.appendChild(div);
   });
+
+  rebuildVisible("");
+}
+
+// Recalculate which cards pass the filter, then show page 0
+function rebuildVisible(q) {
+  visibleIndices = PROGRAMS
+    .map((p, i) => i)
+    .filter(i => {
+      if (!q) return true;
+      const hay = [PROGRAMS[i].university, PROGRAMS[i].dept, PROGRAMS[i].blurb, ...PROGRAMS[i].tags]
+        .join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  currentPage = 0;
+  applyPage();
+}
+
+function applyPage() {
+  const totalPages = Math.max(1, Math.ceil(visibleIndices.length / PAGE_SIZE));
+  currentPage = Math.max(0, Math.min(currentPage, totalPages - 1));
+
+  const pageSlice = new Set(
+    visibleIndices.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
+  );
+
+  PROGRAMS.forEach((_, i) => {
+    const card = document.getElementById("card_" + i);
+    if (card) card.classList.toggle("hidden", !pageSlice.has(i));
+  });
+
+  document.getElementById("noResults").classList.toggle("visible", visibleIndices.length === 0);
+  document.getElementById("pgInfo").textContent =
+    `Page ${currentPage + 1} of ${totalPages} (${visibleIndices.length} programs)`;
+  document.getElementById("pgPrev").disabled = currentPage === 0;
+  document.getElementById("pgNext").disabled = currentPage >= totalPages - 1;
+
   updateCounts();
+}
+
+function changePage(dir) {
+  currentPage += dir;
+  applyPage();
 }
 
 // ═══════════════════════════════════════════
@@ -462,8 +531,10 @@ function toggleSelect(i) {
 }
 
 function selectAll() {
-  PROGRAMS.forEach((p, i) => {
-    if (!addedUrls.has(p.facultyUrl) && !document.getElementById("card_" + i).classList.contains("hidden")) {
+  // Select all on the current page
+  const pageSlice = visibleIndices.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+  pageSlice.forEach(i => {
+    if (!addedUrls.has(PROGRAMS[i].facultyUrl)) {
       selected.add(i);
       const chk = document.getElementById("chk_" + i);
       if (chk && !chk.disabled) chk.checked = true;
@@ -496,23 +567,12 @@ function updateCounts() {
 //  FILTER / SEARCH
 // ═══════════════════════════════════════════
 function filterCards(term) {
-  const q = term.toLowerCase().trim();
-  let visible = 0;
-  PROGRAMS.forEach((p, i) => {
-    const card = document.getElementById("card_" + i);
-    if (!card) return;
-    const haystack = [p.university, p.dept, p.blurb, ...p.tags].join(" ").toLowerCase();
-    const show = !q || haystack.includes(q);
-    card.classList.toggle("hidden", !show);
-    if (show) visible++;
-  });
-  document.getElementById("noResults").classList.toggle("visible", visible === 0);
-  updateCounts();
+  rebuildVisible(term.toLowerCase().trim());
 }
 
 function clearFilter() {
   document.getElementById("searchInput").value = "";
-  filterCards("");
+  rebuildVisible("");
 }
 
 // ═══════════════════════════════════════════

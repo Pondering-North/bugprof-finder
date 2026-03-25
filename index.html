@@ -487,12 +487,22 @@
   </div>
 </div>
 
+<div style="text-align:center; margin-top:10px;">
+  <a href="webring/index.html" style="
+    display:inline-block;
+    font-family:'VT323',monospace; font-size:20px;
+    background:#000080; color:#ffff00;
+    border-top:3px solid #8888ff; border-left:3px solid #8888ff;
+    border-right:3px solid #000; border-bottom:3px solid #000;
+    padding:6px 22px; text-decoration:none; letter-spacing:1px;
+    box-shadow:3px 3px 0 #000;
+  ">🌐 Ento-Professo Web Ring — Find More Schools</a>
+</div>
 <p style="text-align:center; font-family:'VT323',monospace; font-size:14px; color:#fff; margin-top:6px;">
-  © 1997–2026 Ento-Professo Search 3000 Research Systems Inc. · Made with 
-  <image src="images/heart.png" style="height:14px; vertical-align:middle; image-rendering: pixelated;"> 
-  and lots of 
+  © 1997–2026 Ento-Professo Search 3000 Research Systems Inc. · Made with
+  <image src="images/heart.png" style="height:14px; vertical-align:middle; image-rendering: pixelated;">
+  and lots of
   <image src="images/space-invader-orange.png" style="height:14px; vertical-align:middle; image-rendering: pixelated;"> ·
-  <a href="webring/index.html" style="color:#ffff00; font-weight:bold;">Web Ring</a> ·
   <a href="guestbook.html" style="color:#ffff00; font-weight:bold;">Sign Guestbook</a>
 </p>
 
@@ -777,12 +787,18 @@ async function sendChat() {
 
   // ── confirming_clear ─────────────────────
   } else if (chatState === "confirming_clear") {
-    if (["yes","y","ok","sure","yep","yeah"].includes(lower)) {
+    const YES = ["yes","y","yep","yeah"];
+    const NO  = ["no","n","nope","nah"];
+    if (YES.includes(lower)) {
       await clearFilter();
-    } else {
+      chatState = "awaiting_fields";
+    } else if (NO.includes(lower)) {
       addBotMsg("OK! Keeping your current filter. Type new fields anytime to update it.");
+      chatState = "awaiting_fields";
+    } else {
+      addBotMsg("Please type <b>yes</b> or <b>no</b>.");
+      // stay in confirming_clear
     }
-    chatState = "awaiting_fields";
 
   // ── confirming_corrections ───────────────
   } else if (chatState === "confirming_corrections") {
@@ -994,7 +1010,7 @@ function renderSchoolCard(school, data) {
       <span>🎓 ${escapeHtml(school.name)}</span>
       <div class="btns">
         <div class="win-btn" id="minbtn_${id}" title="Minimise" onclick="toggleCard('${id}')">_</div>
-        <div class="win-btn" title="Close" onclick="clearOne(${JSON.stringify(school.name)})">✕</div>
+        <div class="win-btn" title="Remove school" onclick="removeSchool(${JSON.stringify(school.name)})">✕</div>
       </div>
     </div>
     <div class="win-body" id="collapsible_${id}">
@@ -1266,6 +1282,35 @@ async function clearOne(schoolName) {
   await deleteSchool(school);
   renderSchoolCard(school, null);
   log(`🗑 Cleared cache for ${school.name}`);
+  await updateHitCounter();
+}
+
+async function removeSchool(schoolName) {
+  const idx = SCHOOLS.findIndex(s => s.name === schoolName);
+  if (idx === -1) return;
+  const school = SCHOOLS[idx];
+
+  // Clear cached data
+  await deleteSchool(school);
+
+  // Remove from runtime array
+  SCHOOLS.splice(idx, 1);
+
+  // Remove from user_schools localStorage if it was added via School Finder
+  try {
+    const raw = localStorage.getItem(USER_SCHOOLS_KEY);
+    if (raw) {
+      const filtered = JSON.parse(raw).filter(s => s.url !== school.url);
+      localStorage.setItem(USER_SCHOOLS_KEY, JSON.stringify(filtered));
+    }
+  } catch {}
+
+  // Remove card from DOM
+  const id = "card_" + school.name.replace(/\W/g, "_");
+  const card = document.getElementById(id);
+  if (card) card.remove();
+
+  log(`🗑 Removed ${school.name} from the list.`);
   await updateHitCounter();
 }
 
