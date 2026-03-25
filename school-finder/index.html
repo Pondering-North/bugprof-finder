@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entomology School Finder — Web Ring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:   #000080;
+    --bg:     #c0c0c0;
+    --log-bg: #000;
+    --log-text: #00ff00;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--navy);
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* ── MARQUEE ── */
+  marquee {
+    background: #000; color: #00ff00;
+    font-family: 'VT323', monospace; font-size: 16px;
+    padding: 3px 0; border-bottom: 2px solid #00aa00;
+  }
+
+  /* ── MAIN WINDOW ── */
+  .app-window {
+    background: var(--bg);
+    border-top: 3px solid #fff; border-left: 3px solid #fff;
+    border-right: 3px solid #444; border-bottom: 3px solid #444;
+    max-width: 1100px; margin: 16px auto; box-shadow: 4px 4px 0 #000;
+  }
+  .win-title {
+    background: linear-gradient(to right, var(--navy), #1084d0);
+    color: #fff; font-family: 'VT323', monospace; font-size: 18px;
+    padding: 4px 8px; display: flex; align-items: center;
+    justify-content: space-between; user-select: none;
+  }
+  .win-title .btns { display: flex; gap: 3px; }
+  .win-btn {
+    width: 16px; height: 14px; background: var(--bg); color: #000;
+    font-size: 10px; font-family: sans-serif; font-weight: bold;
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #444; border-bottom: 2px solid #444;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  /* ── HEADER BANNER ── */
+  .header-banner {
+    background: var(--navy); padding: 18px 12px 14px;
+    text-align: center; border-bottom: 3px solid #1084d0;
+  }
+  .bug-row { margin-bottom: 8px; }
+  .header-banner h1 {
+    font-family: 'VT323', monospace; font-size: 42px; color: #fff;
+    text-shadow: 3px 3px 0 #000, -1px -1px 0 #000;
+  }
+  .header-banner p {
+    font-family: 'VT323', monospace; font-size: 14px; color: #ffff00;
+    margin-top: 4px; font-weight: bold;
+  }
+
+  /* ── TOOLBAR ── */
+  .toolbar {
+    background: var(--bg); padding: 5px 10px;
+    border-bottom: 2px groove #888;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .btn {
+    font-family: 'VT323', monospace; font-size: 16px;
+    background: var(--bg); color: #000;
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #444; border-bottom: 2px solid #444;
+    padding: 3px 10px; cursor: pointer; white-space: nowrap;
+  }
+  .btn:active {
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+  }
+  .btn-primary { background: var(--navy); color: #fff; font-size: 17px; }
+  .btn-primary:active { background: #000066; }
+  .toolbar-sep {
+    width: 2px; height: 22px; background: #888;
+    border-right: 1px solid #fff; margin: 0 2px;
+  }
+  .search-input {
+    font-family: 'VT323', monospace; font-size: 16px;
+    background: #fff; color: #000;
+    border-top: 2px solid #444; border-left: 2px solid #444;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+    padding: 2px 6px; width: 220px;
+  }
+  .search-input:focus { outline: 2px solid var(--navy); }
+  #resultCount {
+    font-family: 'VT323', monospace; font-size: 15px; color: #444;
+  }
+  #selectedCount {
+    font-family: 'VT323', monospace; font-size: 15px;
+    color: var(--navy); font-weight: bold; margin-left: auto;
+  }
+
+  /* ── PROGRAM GRID ── */
+  .win-body { padding: 10px 12px; }
+  .program-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 10px; margin-top: 8px;
+  }
+
+  /* ── PROGRAM CARD ── */
+  .prog-card {
+    background: #fff;
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #444; border-bottom: 2px solid #444;
+    padding: 0; transition: none;
+  }
+  .prog-card.selected {
+    border: 3px solid var(--navy);
+    box-shadow: inset 0 0 0 2px #ffff00;
+  }
+  .prog-card.hidden { display: none; }
+
+  .card-header {
+    background: var(--navy); color: #fff;
+    font-family: 'VT323', monospace; font-size: 17px;
+    padding: 4px 8px; display: flex; align-items: center; gap: 8px;
+    cursor: pointer; user-select: none;
+  }
+  .card-header:hover { background: #1084d0; }
+  .card-checkbox {
+    width: 14px; height: 14px; accent-color: #ffff00;
+    flex-shrink: 0; cursor: pointer;
+  }
+  .card-name { flex: 1; }
+  .card-body { padding: 8px 10px; }
+
+  .card-dept {
+    font-size: 11px; color: #555; font-style: italic;
+    margin-bottom: 5px;
+  }
+  .card-blurb {
+    font-size: 12px; color: #222; line-height: 1.5;
+    margin-bottom: 7px;
+  }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 7px; }
+  .tag {
+    display: inline-block;
+    background: #e8e8ff; border: 2px solid #000080;
+    font-size: 11px; padding: 1px 5px;
+    font-family: 'VT323', monospace; font-size: 13px;
+    color: #000080; font-weight: bold;
+  }
+  .card-footer {
+    border-top: 1px solid #ccc; padding: 5px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-footer a {
+    font-family: 'VT323', monospace; font-size: 15px;
+    color: #0055cc; text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+  .card-footer a:hover { color: var(--navy); }
+  .card-added {
+    font-family: 'VT323', monospace; font-size: 13px;
+    color: #008000; display: none;
+  }
+  .prog-card.added-to-app .card-added { display: inline; }
+
+  /* ── STATUSBAR ── */
+  .statusbar {
+    display: flex; background: var(--bg);
+    border-top: 2px groove #888;
+    font-family: 'VT323', monospace; font-size: 15px;
+  }
+  .status-pane {
+    flex: 1; padding: 2px 8px; border-right: 2px groove #888;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .status-pane:last-child { border-right: none; max-width: 180px; }
+
+  /* ── FOOTER ── */
+  .page-footer {
+    text-align: center; font-family: 'VT323', monospace;
+    font-size: 14px; color: #fff; margin: 10px 0 20px;
+  }
+  .page-footer a { color: #ffff00; font-weight: bold; }
+
+  /* ── NO RESULTS ── */
+  .no-results-msg {
+    font-family: 'VT323', monospace; font-size: 20px;
+    text-align: center; color: #555; padding: 30px;
+    display: none;
+  }
+  .no-results-msg.visible { display: block; }
+</style>
+</head>
+<body>
+
+<marquee scrollamount="3">
+  <img src="../images/space-invader.png" style="height:18px;vertical-align:middle;margin:0 6px;image-rendering:pixelated;">
+  ENTOMOLOGY SCHOOL FINDER — WEB RING EDITION
+  <img src="../images/space-invader.png" style="height:18px;vertical-align:middle;margin:0 6px;image-rendering:pixelated;">
+  FIND THE BEST GRADUATE PROGRAMS IN INSECT SCIENCE
+  <img src="../images/space-invader.png" style="height:18px;vertical-align:middle;margin:0 6px;image-rendering:pixelated;">
+  SELECT SCHOOLS BELOW AND ADD THEM TO ENTO-PROFESSO SEARCH 3000!!
+  <img src="../images/space-invader.png" style="height:18px;vertical-align:middle;margin:0 6px;image-rendering:pixelated;">
+</marquee>
+
+<div class="app-window">
+  <div class="win-title">
+    <span>🔬 Entomology School Finder v1.0 — Web Ring</span>
+    <div class="btns">
+      <div class="win-btn">_</div>
+      <div class="win-btn">□</div>
+      <div class="win-btn">✕</div>
+    </div>
+  </div>
+
+  <!-- header banner -->
+  <div class="header-banner">
+    <div class="bug-row">
+      <img src="../images/worm.png"         style="height:28px;vertical-align:middle;image-rendering:pixelated;">
+      <img src="../images/jewel-wasp.png"   style="height:28px;vertical-align:middle;image-rendering:pixelated;">
+      <img src="../images/bumblebee.png"    style="height:28px;vertical-align:middle;image-rendering:pixelated;">
+      <img src="../images/butterfly-red.png" style="height:28px;vertical-align:middle;image-rendering:pixelated;">
+      <img src="../images/bumblebee.png"    style="height:28px;vertical-align:middle;image-rendering:pixelated;">
+      <img src="../images/jewel-wasp.png"   style="height:28px;vertical-align:middle;image-rendering:pixelated;">
+      <img src="../images/worm.png"         style="height:28px;vertical-align:middle;image-rendering:pixelated;">
+    </div>
+    <h1>Entomology School Finder</h1>
+    <p>Browse top-ranked U.S. entomology programs · Select schools · Add to Ento-Professo Search 3000</p>
+  </div>
+
+  <!-- toolbar -->
+  <div class="toolbar">
+    <button class="btn btn-primary" id="addBtn" onclick="addSelected()" disabled>
+      ➕ Add Selected to Ento-Professo
+    </button>
+    <div class="toolbar-sep"></div>
+    <button class="btn" onclick="selectAll()">☑ Select All</button>
+    <button class="btn" onclick="clearSelected()">☐ Clear</button>
+    <div class="toolbar-sep"></div>
+    <label style="font-family:'VT323',monospace;font-size:15px;color:#333;font-weight:bold;">🔎 Filter:</label>
+    <input type="text" id="searchInput" class="search-input"
+           placeholder="School name or research area..."
+           oninput="filterCards(this.value)" />
+    <button class="btn" onclick="clearFilter()">✕</button>
+    <span id="resultCount"></span>
+    <span id="selectedCount"></span>
+  </div>
+
+  <!-- program grid -->
+  <div class="win-body">
+    <div class="program-grid" id="programGrid"></div>
+    <div class="no-results-msg" id="noResults">
+      <img src="../images/traffic-cone.png" style="height:20px;vertical-align:middle;image-rendering:pixelated;">
+      No programs match that search.
+    </div>
+  </div>
+
+  <!-- statusbar -->
+  <div class="statusbar">
+    <div class="status-pane" id="statusPane">15 programs loaded. Check boxes to select, then click Add.</div>
+    <div class="status-pane" style="max-width:200px;">School Finder v1.0</div>
+  </div>
+</div>
+
+<p class="page-footer">
+  Part of the <b>Ento-Professo Web Ring</b> ·
+  <a href="../index.html">← Ento-Professo Search 3000</a> ·
+  <a href="../guestbook.html">Sign Guestbook</a>
+</p>
+
+<script>
+"use strict";
+
+// ═══════════════════════════════════════════
+//  STORAGE KEY — shared with index.html
+// ═══════════════════════════════════════════
+const USER_SCHOOLS_KEY = "entoprofesso:user_schools";
+
+// ═══════════════════════════════════════════
+//  PROGRAM DATA — sourced from department pages
+// ═══════════════════════════════════════════
+const PROGRAMS = [
+  {
+    university: "University of Florida",
+    dept: "Department of Entomology and Nematology (UF/IFAS)",
+    facultyUrl: "https://entnemdept.ufl.edu/people-directory/all-faculty/",
+    blurb: "One of the largest entomology programs in the country, combining research, extension, and teaching across biological control, medical/veterinary entomology, nematology, pest management, and physiology — supported by the Florida Medical Entomology Laboratory and multiple research/extension centers statewide.",
+    tags: ["biological control", "medical entomology", "nematology", "urban pest management", "vector biology"]
+  },
+  {
+    university: "Cornell University",
+    dept: "Department of Entomology, College of Agriculture and Life Sciences",
+    facultyUrl: "https://entomology.cals.cornell.edu/people/faculty-and-senior-academic-staff",
+    blurb: "Consistently ranked among the world's top insect science programs with 125+ years of history. Benefits from the Cornell University Insect Collection, the Boyce Thompson Institute, and Cornell AgriTech. Strong emphasis on applying fundamental insect biology to real-world agricultural and environmental challenges.",
+    tags: ["insect ecology", "chemical ecology", "systematics & biodiversity", "agricultural entomology", "insect-plant interactions"]
+  },
+  {
+    university: "University of California, Davis",
+    dept: "Department of Entomology and Nematology",
+    facultyUrl: "https://entomology.ucdavis.edu/people",
+    blurb: "A consistently top-ranked program with ~40 faculty spanning integrated pest management, pollination biology, chemical ecology, and nematology. Graduate students may join multiple interdisciplinary Graduate Groups across the UC Davis campus, providing unusual research flexibility.",
+    tags: ["integrated pest management", "pollination biology", "chemical ecology", "nematology", "biological control"]
+  },
+  {
+    university: "University of California, Riverside",
+    dept: "Department of Entomology",
+    facultyUrl: "https://entomology.ucr.edu/directory/current-faculty",
+    blurb: "Ranked #2 in the world by the Center for World University Rankings. Historic and ongoing leadership in biological control (the Vedalia beetle introduction originated here in 1887), chemical ecology, insect vector biology, and urban entomology — supported by a unique Insectary and Quarantine Facility.",
+    tags: ["biological control", "chemical ecology", "vector biology", "insect-plant interactions", "urban entomology"]
+  },
+  {
+    university: "Texas A&M University",
+    dept: "Department of Entomology",
+    facultyUrl: "https://entomology.tamu.edu/faculty-directory/",
+    blurb: "Recognized for outstanding research spanning ecological to molecular scales, with award-winning faculty conducting discovery, translational, and applied research addressing human health protection and global agricultural challenges. Strong extension presence across the state of Texas.",
+    tags: ["agricultural entomology", "medical & veterinary entomology", "integrated pest management", "insect genomics", "extension entomology"]
+  },
+  {
+    university: "North Carolina State University",
+    dept: "Department of Entomology and Plant Pathology, CALS",
+    facultyUrl: "https://cals.ncsu.edu/entomology-and-plant-pathology/group/faculty/",
+    blurb: "Ranked #5 in entomology worldwide. Applies cutting-edge science to manage insect pests and plant pathogens, leveraging beneficial insects and sustainable strategies that protect crops and the environment. Notable strengths in pollinator health and insect toxicology.",
+    tags: ["integrated pest management", "biological control", "insect toxicology", "pollinator health", "plant-insect interactions"]
+  },
+  {
+    university: "Michigan State University",
+    dept: "Department of Entomology, College of Agriculture and Natural Resources",
+    facultyUrl: "https://www.canr.msu.edu/ent/directory/our-faculty",
+    blurb: "A national and international leader in arthropod biology, ecology, and management. Research spans agriculture, natural ecosystems, and urban environments, with strong extension and global outreach components. Known for collaborative, translational science with real-world impact.",
+    tags: ["biological control", "agricultural entomology", "urban entomology", "insect ecology", "extension & outreach"]
+  },
+  {
+    university: "Penn State University",
+    dept: "Department of Entomology",
+    facultyUrl: "https://ento.psu.edu/directory/faculty",
+    blurb: "Addresses fundamental and applied questions from the molecular to the population level, with particular strengths in pollinator biology, chemical ecology, and insect-plant interactions. Benefits from Penn State's broader life sciences community and the Center for Chemical Ecology.",
+    tags: ["pollinator biology", "chemical ecology", "insect-plant interactions", "biological control", "molecular entomology"]
+  },
+  {
+    university: "The Ohio State University",
+    dept: "Department of Entomology",
+    facultyUrl: "https://entomology.osu.edu/our-people/faculty",
+    blurb: "One of the oldest entomology departments in the U.S. (est. 1891) and the only Ohio university offering an entomology major. Excels in integrated pest management, pollinator health and toxicology, vector biology (West Nile virus), urban ecology, and forest entomology.",
+    tags: ["integrated pest management", "pollinator health", "vector biology", "urban ecology", "forest entomology"]
+  },
+  {
+    university: "Kansas State University",
+    dept: "Department of Entomology",
+    facultyUrl: "https://entomology.k-state.edu/about/people/faculty/",
+    blurb: "Ranked 4th in the world and receiving $3.2M in annual extramural funding. Strong emphasis on protecting crops from insect pests in the field and post-harvest, arthropod-borne disease transmission, and arthropod biodiversity and conservation. A national leader in stored-grain pest research.",
+    tags: ["stored-grain entomology", "crop protection", "vector-borne disease", "biodiversity & conservation", "extension entomology"]
+  },
+  {
+    university: "Purdue University",
+    dept: "Department of Entomology",
+    facultyUrl: "https://ag.purdue.edu/department/entm/directory.html",
+    blurb: "With roots going back to 1879, Purdue Entomology is known for its premier urban pest management program, insect genetics and genomics, insect-plant interactions research using proteomics and metabolomics, and biodiversity studies — all aimed at improving quality of life regionally and globally.",
+    tags: ["urban entomology", "insect genetics & genomics", "insect-plant interactions", "biodiversity & ecology", "pest management"]
+  },
+  {
+    university: "Iowa State University",
+    dept: "Department of Plant Pathology, Entomology and Microbiology",
+    facultyUrl: "https://www.ppem.iastate.edu/people/faculty",
+    blurb: "An interdisciplinary department focused on research, teaching, and extension aimed at improving pest management in the north-central agricultural region. Faculty address insect biology, plant resistance mechanisms, pest management strategies, and climate-related impacts on arthropods.",
+    tags: ["crop entomology", "pest management", "insect-plant interactions", "extension entomology", "climate change & insects"]
+  },
+  {
+    university: "University of Georgia",
+    dept: "Department of Entomology, College of Agricultural and Environmental Sciences",
+    facultyUrl: "https://ent.uga.edu/people/faculty.html",
+    blurb: "Offers cutting-edge graduate research across nine core areas, with particular strengths in apiculture and pollination, integrated pest management, evolutionary biology, and vector biology. Strong response to invasive pests affecting agriculture and human health in the southeastern U.S.",
+    tags: ["apiculture & pollination", "vector biology", "integrated pest management", "evolutionary biology", "invasive species"]
+  },
+  {
+    university: "University of Minnesota",
+    dept: "Department of Entomology",
+    facultyUrl: "https://entomology.umn.edu/faculty",
+    blurb: "Founded in 1888, Minnesota Entomology emphasizes systematics, biodiversity, biology, and ecology of insects in relation to human welfare and environmental health. Supported by a major insect collection and strong ties to north-central agriculture, with growing focus on pollinator conservation.",
+    tags: ["systematics & biodiversity", "insect ecology", "pollinator conservation", "agricultural entomology", "forest entomology"]
+  },
+  {
+    university: "University of Arizona",
+    dept: "Entomology & Insect Science Graduate Program",
+    facultyUrl: "https://insects.arizona.edu/faculty-directory",
+    blurb: "A global leader in insect science combining genomics, ecology, and evolutionary principles to address insect behavior, biodiversity conservation, integrated pest management, disease vector control, and sustainable insect production. An interdisciplinary graduate program drawing faculty from across campus.",
+    tags: ["insect behavior", "vector biology & disease control", "biodiversity conservation", "chemical ecology", "sustainable insect production"]
+  }
+];
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let selected = new Set();      // indices of checked cards
+let addedUrls = new Set();     // faculty URLs already sent to main app
+
+function loadAdded() {
+  try {
+    const raw = localStorage.getItem(USER_SCHOOLS_KEY);
+    if (raw) JSON.parse(raw).forEach(s => addedUrls.add(s.url));
+  } catch {}
+}
+
+// ═══════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════
+function renderCards() {
+  const grid = document.getElementById("programGrid");
+  grid.innerHTML = "";
+  PROGRAMS.forEach((p, i) => {
+    const isAdded = addedUrls.has(p.facultyUrl);
+    const div = document.createElement("div");
+    div.className = "prog-card" + (isAdded ? " added-to-app" : "");
+    div.id = "card_" + i;
+    div.innerHTML = `
+      <div class="card-header" onclick="toggleSelect(${i})">
+        <input type="checkbox" class="card-checkbox" id="chk_${i}"
+               onclick="event.stopPropagation(); toggleSelect(${i})"
+               ${isAdded ? "checked disabled" : ""}>
+        <span class="card-name">${escapeHtml(p.university)}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-dept">${escapeHtml(p.dept)}</div>
+        <div class="card-blurb">${escapeHtml(p.blurb)}</div>
+        <div class="card-tags">${p.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>
+      </div>
+      <div class="card-footer">
+        <a href="${escapeHtml(p.facultyUrl)}" target="_blank" rel="noopener">🔗 View Faculty Directory</a>
+        <span class="card-added">✔ Added</span>
+      </div>`;
+    grid.appendChild(div);
+  });
+  updateCounts();
+}
+
+// ═══════════════════════════════════════════
+//  SELECTION
+// ═══════════════════════════════════════════
+function toggleSelect(i) {
+  if (addedUrls.has(PROGRAMS[i].facultyUrl)) return; // already added, lock it
+  const chk = document.getElementById("chk_" + i);
+  const card = document.getElementById("card_" + i);
+  if (selected.has(i)) {
+    selected.delete(i);
+    chk.checked = false;
+    card.classList.remove("selected");
+  } else {
+    selected.add(i);
+    chk.checked = true;
+    card.classList.add("selected");
+  }
+  updateCounts();
+}
+
+function selectAll() {
+  PROGRAMS.forEach((p, i) => {
+    if (!addedUrls.has(p.facultyUrl) && !document.getElementById("card_" + i).classList.contains("hidden")) {
+      selected.add(i);
+      const chk = document.getElementById("chk_" + i);
+      if (chk && !chk.disabled) chk.checked = true;
+      document.getElementById("card_" + i).classList.add("selected");
+    }
+  });
+  updateCounts();
+}
+
+function clearSelected() {
+  selected.forEach(i => {
+    const chk = document.getElementById("chk_" + i);
+    if (chk && !chk.disabled) chk.checked = false;
+    document.getElementById("card_" + i).classList.remove("selected");
+  });
+  selected.clear();
+  updateCounts();
+}
+
+function updateCounts() {
+  const total = document.querySelectorAll(".prog-card:not(.hidden)").length;
+  document.getElementById("resultCount").textContent = total + " programs";
+  const sel = selected.size;
+  document.getElementById("selectedCount").textContent =
+    sel > 0 ? sel + " selected" : "";
+  document.getElementById("addBtn").disabled = sel === 0;
+}
+
+// ═══════════════════════════════════════════
+//  FILTER / SEARCH
+// ═══════════════════════════════════════════
+function filterCards(term) {
+  const q = term.toLowerCase().trim();
+  let visible = 0;
+  PROGRAMS.forEach((p, i) => {
+    const card = document.getElementById("card_" + i);
+    if (!card) return;
+    const haystack = [p.university, p.dept, p.blurb, ...p.tags].join(" ").toLowerCase();
+    const show = !q || haystack.includes(q);
+    card.classList.toggle("hidden", !show);
+    if (show) visible++;
+  });
+  document.getElementById("noResults").classList.toggle("visible", visible === 0);
+  updateCounts();
+}
+
+function clearFilter() {
+  document.getElementById("searchInput").value = "";
+  filterCards("");
+}
+
+// ═══════════════════════════════════════════
+//  ADD TO ENTO-PROFESSO
+//  Writes selected schools to localStorage so index.html can pick them up
+// ═══════════════════════════════════════════
+function addSelected() {
+  if (selected.size === 0) return;
+
+  // Load existing user schools
+  let existing = [];
+  try {
+    const raw = localStorage.getItem(USER_SCHOOLS_KEY);
+    if (raw) existing = JSON.parse(raw);
+  } catch {}
+
+  const existingUrls = new Set(existing.map(s => s.url));
+  let added = 0;
+
+  selected.forEach(i => {
+    const p = PROGRAMS[i];
+    if (!existingUrls.has(p.facultyUrl)) {
+      existing.push({ name: p.university, url: p.facultyUrl });
+      existingUrls.add(p.facultyUrl);
+      addedUrls.add(p.facultyUrl);
+      added++;
+    }
+    // Mark card as added
+    document.getElementById("card_" + i).classList.add("added-to-app");
+    document.getElementById("card_" + i).classList.remove("selected");
+    const chk = document.getElementById("chk_" + i);
+    if (chk) { chk.checked = true; chk.disabled = true; }
+  });
+
+  localStorage.setItem(USER_SCHOOLS_KEY, JSON.stringify(existing));
+  selected.clear();
+  updateCounts();
+
+  const msg = added > 0
+    ? `✔ ${added} school${added > 1 ? "s" : ""} added! Open Ento-Professo Search 3000 and click "Search ALL Schools".`
+    : "Those schools were already added.";
+  document.getElementById("statusPane").textContent = msg;
+}
+
+// ═══════════════════════════════════════════
+//  UTILITY
+// ═══════════════════════════════════════════
+function escapeHtml(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+loadAdded();
+renderCards();
+</script>
+</body>
+</html>
