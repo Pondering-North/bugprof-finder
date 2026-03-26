@@ -462,19 +462,6 @@
   <!-- schools -->
   <div class="win-body">
 
-    <!-- add school form -->
-    <div style="display:flex; align-items:flex-end; gap:6px; flex-wrap:wrap; margin-bottom:10px; padding:6px 8px; background:#e8e8ff; border-top:2px solid #fff; border-left:2px solid #fff; border-right:2px solid #444; border-bottom:2px solid #444;">
-      <div>
-        <label style="font-family:'VT323',monospace; font-size:14px; display:block; margin-bottom:2px;">School name:</label>
-        <input id="addSchoolName" type="text" class="search-input" style="width:180px;" placeholder="e.g. Cornell University" />
-      </div>
-      <div style="flex:1; min-width:200px;">
-        <label style="font-family:'VT323',monospace; font-size:14px; display:block; margin-bottom:2px;">Faculty page URL:</label>
-        <input id="addSchoolUrl" type="url" class="search-input" style="width:100%;" placeholder="https://..." />
-      </div>
-      <button class="btn" onclick="addSchoolManual()" style="white-space:nowrap;">+ Add School</button>
-    </div>
-
     <div id="schools-container"></div>
 
     <div class="under-construction" style="margin-top:12px;">
@@ -1478,39 +1465,6 @@ async function clearOne(schoolName) {
   await updateHitCounter();
 }
 
-function addSchoolManual() {
-  const nameInput = document.getElementById("addSchoolName");
-  const urlInput  = document.getElementById("addSchoolUrl");
-  const name = nameInput.value.trim();
-  const url  = urlInput.value.trim();
-
-  if (!name) { nameInput.focus(); return; }
-  if (!url || (!url.startsWith("http://") && !url.startsWith("https://"))) {
-    urlInput.focus(); return;
-  }
-  if (SCHOOLS.some(s => s.name === name || s.url === url)) {
-    log(`⚠ "${name}" is already in the list.`);
-    return;
-  }
-
-  const school = { name, url };
-  SCHOOLS.push(school);
-
-  // Persist to user_schools so it survives page reload
-  try {
-    const raw = localStorage.getItem(USER_SCHOOLS_KEY);
-    const existing = raw ? JSON.parse(raw) : [];
-    existing.push(school);
-    localStorage.setItem(USER_SCHOOLS_KEY, JSON.stringify(existing));
-  } catch {}
-
-  renderSchoolCard(school, null);
-  nameInput.value = "";
-  urlInput.value  = "";
-  log(`+ Added "${name}". Click Scrape to fetch faculty.`);
-  updateHitCounter();
-}
-
 async function removeSchool(schoolName) {
   const idx = SCHOOLS.findIndex(s => s.name === schoolName);
   if (idx === -1) return;
@@ -1756,11 +1710,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   log("Ento-Professo Search 3000 initialized. " + SCHOOLS.length + " schools loaded.");
   if (added > 0) log(`+ ${added} school${added > 1 ? "s" : ""} added from School Finder.`);
   if (activeFilters.length > 0) log(`Field Guide filter restored: ${activeFilters.join(", ")}`);
-
-  // Enter on URL field submits the add-school form
-  document.getElementById("addSchoolUrl").addEventListener("keydown", e => {
-    if (e.key === "Enter") addSchoolManual();
-  });
 });
 </script>
 </body>

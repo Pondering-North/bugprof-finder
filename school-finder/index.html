@@ -334,8 +334,6 @@ body {
 <!-- Top utility bar -->
 <div class="top-bar">
   <a href="../index.html">Ento-Professo</a>
-  <a href="../webring/index.html">Web Ring</a>
-  <a href="../guestbook.html">Guestbook</a>
 </div>
 
 <!-- Header banner -->
@@ -361,9 +359,7 @@ body {
     <div class="sidebar-label">Navigate</div>
     <a class="sidebar-item active" href="#">Search Programs</a>
     <a class="sidebar-item" href="#how-it-works">How It Works</a>
-    <a class="sidebar-item" href="../webring/index.html">Web Ring</a>
     <a class="sidebar-item" href="../index.html">Ento-Professo</a>
-    <a class="sidebar-item" href="../guestbook.html">Guestbook</a>
 
     <div class="sidebar-label" style="margin-top:16px;">Quick Searches</div>
     <button class="sidebar-item" onclick="quickSearch('best PhD programs in entomology')">Entomology</button>
@@ -433,7 +429,16 @@ body {
 
     <div class="spotlight-header" style="margin-top:8px;">Web Ring</div>
     <div class="spotlight-section">
-      <p><a href="../webring/index.html">★ Visit the Ento-Professo Web Ring →</a></p>
+      <a href="../webring/index.html" style="
+        display:block; text-align:center;
+        background: linear-gradient(to bottom, #2a6a2a, #1a4a1a);
+        color:#ccff99; font-size:13px; font-weight:bold;
+        padding:10px 8px; border-radius:4px;
+        border:1px solid #44aa44;
+        text-decoration:none; letter-spacing:0.5px;
+        box-shadow: 0 0 8px rgba(80,200,80,0.3);
+      ">★ Ento-Professo Web Ring ★<br>
+      <span style="font-size:11px; font-weight:normal; color:#88cc88;">Explore more tools →</span></a>
     </div>
 
     <div class="spotlight-header" style="margin-top:8px;">Program Spotlight</div>
@@ -450,13 +455,14 @@ body {
 <div class="footer">
   <a href="../index.html">Ento-Professo Search 3000</a>
   <a href="../webring/index.html">Web Ring</a>
-  <a href="../guestbook.html">Guestbook</a>
   <br><br>
   GradSearch 20/20 &mdash; Powered by Artificial Intelligence &amp; HyperText Technology
 </div>
 
 <script>
 const USER_SCHOOLS_KEY = "entoprofesso:user_schools";
+let _lastResults = [];
+let _lastQuery   = "";
 
 async function callClaude(prompt) {
   const resp = await fetch("/api/claude", {
@@ -542,6 +548,9 @@ function renderResults(schools, query) {
     ${schools.length} program${schools.length !== 1 ? "s" : ""} found for: <em>"${escHtml(query)}"</em>
   </div>`;
 
+  _lastResults = schools;
+  _lastQuery   = query;
+
   schools.forEach((s, i) => {
     const name     = s.name        || "Unknown University";
     const location = s.location    || "";
@@ -551,13 +560,10 @@ function renderResults(schools, query) {
     const website  = s.website     || "#";
     const tags     = Array.isArray(s.highlights) ? s.highlights : [];
 
-    const safeName = name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-    const safeUrl  = website.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-
-    const tagHtml  = tags.map(t => `<span class="highlight-tag">${escHtml(t)}</span>`).join("");
+    const tagHtml = tags.map(t => `<span class="highlight-tag">${escHtml(t)}</span>`).join("");
 
     html += `
-      <div class="school-card">
+      <div class="school-card" id="card-${i}">
         <span class="school-num">#${i + 1}</span>
         <div class="school-name">${escHtml(name)}</div>
         <div class="school-meta">${escHtml(type)}${type && location ? " &bull; " : ""}${escHtml(location)}</div>
@@ -568,7 +574,7 @@ function renderResults(schools, query) {
           <a class="school-link" href="${escAttr(website)}" target="_blank" rel="noopener noreferrer">
             Visit website &rarr;
           </a>
-          <button class="add-btn" onclick="addToEntoProfesso('${safeName}', '${safeUrl}')">
+          <button class="add-btn" id="addbtn-${i}" onclick="addToEntoProfesso(${i})">
             + Add to Ento-Professo
           </button>
         </div>
@@ -578,20 +584,50 @@ function renderResults(schools, query) {
   results.innerHTML = html;
 }
 
-function addToEntoProfesso(name, url) {
-  try {
-    const raw      = localStorage.getItem(USER_SCHOOLS_KEY);
-    const existing = raw ? JSON.parse(raw) : [];
-    if (existing.some(s => s.name === name)) {
-      alert(`"${name}" is already in your Ento-Professo list.`);
-      return;
-    }
-    existing.push({ name, url });
-    localStorage.setItem(USER_SCHOOLS_KEY, JSON.stringify(existing));
-    alert(`"${name}" added!\n\nGo to Ento-Professo and click "Search ALL Schools" to scrape faculty.`);
-  } catch (e) {
-    alert("Could not save: " + e.message);
+async function addToEntoProfesso(idx) {
+  const s    = _lastResults[idx];
+  const name = s.name || "Unknown University";
+
+  const raw      = localStorage.getItem(USER_SCHOOLS_KEY);
+  const existing = raw ? JSON.parse(raw) : [];
+  if (existing.some(e => e.name === name)) {
+    alert(`"${name}" is already in your Ento-Professo list.`);
+    return;
   }
+
+  const btn = document.getElementById(`addbtn-${idx}`);
+  if (btn) { btn.disabled = true; btn.textContent = "Finding faculty page..."; }
+
+  // Ask Claude for the specific department faculty page URL
+  let facultyUrl = s.website || "#";
+  try {
+    const prompt = `You are helping find a direct faculty directory URL for a graduate program.
+
+University: "${name}"
+Program/Department: "${s.program || ""}"
+University homepage: "${s.website || ""}"
+Search context: "${_lastQuery}"
+
+Return ONLY a JSON object — no markdown, no explanation:
+{"facultyUrl": "https://..."}
+
+Return the URL of the faculty or people listing page for this specific program or department (e.g. the /people or /faculty page for that department). If you are not confident in a specific URL, return the university homepage. The URL must start with https://.`;
+
+    const text  = await callClaude(prompt);
+    const clean = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+    const parsed = JSON.parse(clean);
+    if (parsed.facultyUrl && parsed.facultyUrl.startsWith("http")) {
+      facultyUrl = parsed.facultyUrl;
+    }
+  } catch (_) { /* fall back to homepage */ }
+
+  existing.push({ name, url: facultyUrl });
+  localStorage.setItem(USER_SCHOOLS_KEY, JSON.stringify(existing));
+
+  if (btn) { btn.textContent = "✓ Added!"; btn.style.background = "linear-gradient(to bottom,#44aa44,#226622)"; }
+  setTimeout(() => {
+    if (btn) { btn.textContent = "+ Add to Ento-Professo"; btn.style.background = ""; btn.disabled = false; }
+  }, 2500);
 }
 
 function escHtml(str) {
