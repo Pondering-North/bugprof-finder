@@ -3,635 +3,608 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Entomo-Professo University Search </title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<title>GradSearch 20/20 :: Vision for Your Future</title>
 <style>
-  :root {
-    --navy:   #000080;
-    --bg:     #c0c0c0;
-    --log-bg: #000;
-    --log-text: #00ff00;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--navy);
-    font-family: 'Arial', sans-serif;
-    font-size: 13px;
-    min-height: 100vh;
-  }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  background: #b8c8b0;
+  color: #111;
+  min-height: 100vh;
+}
 
-  /* ── MARQUEE ── */
-  marquee {
-    background: #000; color: #00ff00;
-    font-family: 'VT323', monospace; font-size: 16px;
-    padding: 3px 0; border-bottom: 2px solid #00aa00;
-  }
+/* ── TOP UTILITY BAR ── */
+.top-bar {
+  background: #1a2e4a;
+  color: #99bbd8;
+  font-size: 11px;
+  text-align: right;
+  padding: 3px 16px;
+  border-bottom: 1px solid #0d1f33;
+}
+.top-bar a {
+  color: #99bbd8; text-decoration: none;
+  margin-left: 16px; letter-spacing: 0.5px;
+}
+.top-bar a:hover { color: #fff; text-decoration: underline; }
 
-  /* ── MAIN WINDOW ── */
-  .app-window {
-    background: var(--bg);
-    border-top: 3px solid #fff; border-left: 3px solid #fff;
-    border-right: 3px solid #444; border-bottom: 3px solid #444;
-    max-width: 1100px; margin: 16px auto; box-shadow: 4px 4px 0 #000;
-  }
-  .win-title {
-    background: linear-gradient(to right, var(--navy), #1084d0);
-    color: #fff; font-family: 'VT323', monospace; font-size: 18px;
-    padding: 4px 8px; display: flex; align-items: center;
-    justify-content: space-between; user-select: none;
-  }
-  .win-title .btns { display: flex; gap: 3px; }
-  .win-btn {
-    width: 16px; height: 14px; background: var(--bg); color: #000;
-    font-size: 10px; font-family: sans-serif; font-weight: bold;
-    border-top: 2px solid #fff; border-left: 2px solid #fff;
-    border-right: 2px solid #444; border-bottom: 2px solid #444;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-  }
+/* ── HEADER BANNER ── */
+.header {
+  background: linear-gradient(to right,
+    #001f6b 0%, #0044bb 20%, #006688 45%, #228844 65%, #88bb00 85%, #ccdd00 100%);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 22px;
+  min-height: 88px;
+  position: relative;
+}
+.header-logo {
+  font-size: 42px;
+  font-weight: 900;
+  font-style: italic;
+  color: #fff;
+  letter-spacing: -2px;
+  text-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+  white-space: nowrap;
+  line-height: 1;
+}
+.header-logo .accent { color: #ffee00; }
+.header-logo .num    { font-size: 28px; vertical-align: super; color: #ffee00; }
+.header-tagline {
+  color: #fff;
+  font-size: 24px;
+  font-style: italic;
+  font-weight: bold;
+  text-shadow: 1px 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: 1px;
+  line-height: 1.2;
+}
+.header-tagline .future { color: #ffee00; font-size: 28px; }
+.header-search-hint {
+  margin-left: auto;
+  color: rgba(255,255,255,0.75);
+  font-size: 11px;
+  text-align: right;
+  line-height: 1.6;
+  max-width: 180px;
+}
 
-  /* ── HEADER BANNER ── */
-  .header-banner {
-    background: var(--navy); padding: 18px 12px 14px;
-    text-align: center; border-bottom: 3px solid #1084d0;
-  }
-  .bug-row { margin-bottom: 8px; }
-  .header-banner h1 {
-    font-family: 'VT323', monospace; font-size: 42px; color: #fff;
-    text-shadow: 3px 3px 0 #000, -1px -1px 0 #000;
-  }
-  .header-banner p {
-    font-family: 'VT323', monospace; font-size: 14px; color: #ffff00;
-    margin-top: 4px; font-weight: bold;
-  }
+/* ── MAIN THREE-COLUMN LAYOUT ── */
+.layout {
+  display: flex;
+  min-height: calc(100vh - 130px);
+}
 
-  /* ── TOOLBAR ── */
-  .toolbar {
-    background: var(--bg); padding: 5px 10px;
-    border-bottom: 2px groove #888;
-    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-  }
-  .btn {
-    font-family: 'VT323', monospace; font-size: 16px;
-    background: var(--bg); color: #000;
-    border-top: 2px solid #fff; border-left: 2px solid #fff;
-    border-right: 2px solid #444; border-bottom: 2px solid #444;
-    padding: 3px 10px; cursor: pointer; white-space: nowrap;
-  }
-  .btn:active {
-    border-top: 2px solid #444; border-left: 2px solid #444;
-    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
-  }
-  .btn-primary { background: var(--navy); color: #fff; font-size: 17px; }
-  .btn-primary:active { background: #000066; }
-  .toolbar-sep {
-    width: 2px; height: 22px; background: #888;
-    border-right: 1px solid #fff; margin: 0 2px;
-  }
-  .search-input {
-    font-family: 'VT323', monospace; font-size: 16px;
-    background: #fff; color: #000;
-    border-top: 2px solid #444; border-left: 2px solid #444;
-    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
-    padding: 2px 6px; width: 220px;
-  }
-  .search-input:focus { outline: 2px solid var(--navy); }
-  #resultCount {
-    font-family: 'VT323', monospace; font-size: 15px; color: #444;
-  }
-  #selectedCount {
-    font-family: 'VT323', monospace; font-size: 15px;
-    color: var(--navy); font-weight: bold; margin-left: auto;
-  }
+/* ── LEFT SIDEBAR ── */
+.sidebar {
+  width: 165px;
+  flex-shrink: 0;
+  background: #1a3a5c;
+  border-right: 3px solid #0d2236;
+}
+.sidebar-label {
+  background: #0d2236;
+  color: #88bbdd;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 7px 10px;
+}
+.sidebar-item {
+  display: block;
+  background: linear-gradient(to bottom, #2d6299, #1a4a7a);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-bottom: 1px solid #0d2236;
+  border-top: 1px solid #3d7aaa;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.1s;
+  text-align: left;
+  width: 100%;
+  font-family: Arial, sans-serif;
+}
+.sidebar-item:hover { background: linear-gradient(to bottom, #4d88cc, #2d66aa); }
+.sidebar-item.active { background: linear-gradient(to bottom, #5599dd, #3377bb); }
 
-  /* ── PROGRAM GRID ── */
-  .win-body { padding: 10px 12px; }
-  .program-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 10px; margin-top: 8px;
-  }
+/* ── MAIN CONTENT ── */
+.content {
+  flex: 1;
+  padding: 20px 24px;
+  background: #f5f5ee;
+  border-left: 1px solid #8899aa;
+}
 
-  /* ── PROGRAM CARD ── */
-  .prog-card {
-    background: #fff;
-    border-top: 2px solid #fff; border-left: 2px solid #fff;
-    border-right: 2px solid #444; border-bottom: 2px solid #444;
-    padding: 0; transition: none;
-  }
-  .prog-card.selected {
-    border: 3px solid var(--navy);
-    box-shadow: inset 0 0 0 2px #ffff00;
-  }
-  .prog-card.hidden { display: none; }
+.section-heading {
+  color: #3a5500;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #779922;
+}
 
-  .card-header {
-    background: var(--navy); color: #fff;
-    font-family: 'VT323', monospace; font-size: 17px;
-    padding: 4px 8px; display: flex; align-items: center; gap: 8px;
-    cursor: pointer; user-select: none;
-  }
-  .card-header:hover { background: #1084d0; }
-  .card-checkbox {
-    width: 14px; height: 14px; accent-color: #ffff00;
-    flex-shrink: 0; cursor: pointer;
-  }
-  .card-name { flex: 1; }
-  .card-body { padding: 8px 10px; }
+/* ── SEARCH BOX ── */
+.search-box {
+  background: #fff;
+  border: 1px solid #aabbaa;
+  border-top: 3px solid #779922;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.08);
+}
+.search-box p {
+  color: #334422;
+  font-size: 13px;
+  margin-bottom: 12px;
+  line-height: 1.7;
+}
+.search-row { display: flex; gap: 8px; }
+.search-input {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 2px inset #aaa;
+  background: #fffffc;
+  font-family: Arial, sans-serif;
+  outline: none;
+}
+.search-input:focus { border-color: #4477aa; }
+.search-btn {
+  background: linear-gradient(to bottom, #5588cc, #2255aa);
+  color: #fff;
+  border: none;
+  border-top: 2px solid #88aaee;
+  border-left: 2px solid #88aaee;
+  border-right: 2px solid #112244;
+  border-bottom: 2px solid #112244;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  font-family: Arial, sans-serif;
+}
+.search-btn:hover { background: linear-gradient(to bottom, #77aaee, #4477cc); }
+.search-btn:active {
+  border-top: 2px solid #112244; border-left: 2px solid #112244;
+  border-right: 2px solid #88aaee; border-bottom: 2px solid #88aaee;
+}
+.search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .card-dept {
-    font-size: 11px; color: #555; font-style: italic;
-    margin-bottom: 5px;
-  }
-  .card-blurb {
-    font-size: 12px; color: #222; line-height: 1.5;
-    margin-bottom: 7px;
-  }
-  .card-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 7px; }
-  .tag {
-    display: inline-block;
-    background: #e8e8ff; border: 2px solid #000080;
-    font-size: 11px; padding: 1px 5px;
-    font-family: 'VT323', monospace; font-size: 13px;
-    color: #000080; font-weight: bold;
-  }
-  .card-footer {
-    border-top: 1px solid #ccc; padding: 5px 10px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .card-footer a {
-    font-family: 'VT323', monospace; font-size: 15px;
-    color: #0055cc; text-decoration: underline;
-    text-decoration-thickness: 2px;
-  }
-  .card-footer a:hover { color: var(--navy); }
-  .card-added {
-    font-family: 'VT323', monospace; font-size: 13px;
-    color: #008000; display: none;
-  }
-  .prog-card.added-to-app .card-added { display: inline; }
+/* ── RESULTS ── */
+#results { margin-top: 4px; }
 
-  /* ── PAGINATION ── */
-  .pagination {
-    display: flex; align-items: center; justify-content: center;
-    gap: 8px; margin-top: 12px; font-family: 'VT323', monospace;
-  }
-  .pg-btn {
-    font-family: 'VT323', monospace; font-size: 17px;
-    background: var(--navy); color: #fff;
-    border-top: 2px solid #8888ff; border-left: 2px solid #8888ff;
-    border-right: 2px solid #000; border-bottom: 2px solid #000;
-    padding: 3px 14px; cursor: pointer;
-  }
-  .pg-btn:disabled { background: #888; color: #ccc; cursor: default;
-    border-color: #999; }
-  .pg-info { font-size: 17px; color: #000; }
+.result-count {
+  color: #223300;
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 14px;
+  padding: 6px 10px;
+  background: #eef5dd;
+  border-left: 3px solid #779922;
+}
 
-  /* ── STATUSBAR ── */
-  .statusbar {
-    display: flex; background: var(--bg);
-    border-top: 2px groove #888;
-    font-family: 'VT323', monospace; font-size: 15px;
-  }
-  .status-pane {
-    flex: 1; padding: 2px 8px; border-right: 2px groove #888;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .status-pane:last-child { border-right: none; max-width: 180px; }
+.school-card {
+  background: #fff;
+  border: 1px solid #bbccaa;
+  border-left: 5px solid #4477cc;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.07);
+}
+.school-card:nth-child(odd)  { border-left-color: #4477cc; }
+.school-card:nth-child(even) { border-left-color: #33aa66; }
 
-  /* ── FOOTER ── */
-  .page-footer {
-    text-align: center; font-family: 'VT323', monospace;
-    font-size: 14px; color: #fff; margin: 10px 0 20px;
-  }
-  .page-footer a { color: #ffff00; font-weight: bold; }
+.school-num  { color: #666; font-size: 12px; float: right; }
+.school-name {
+  font-size: 16px; font-weight: bold; color: #0f2a5c; margin-bottom: 4px;
+}
+.school-meta {
+  color: #3a5528; font-size: 12px; margin-bottom: 8px;
+}
+.school-program {
+  color: #223300; font-weight: bold; font-size: 13px; margin-bottom: 7px;
+}
+.school-desc {
+  color: #222; font-size: 13px; line-height: 1.7; margin-bottom: 10px;
+}
+.school-highlights {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 11px;
+}
+.highlight-tag {
+  background: #cce8aa; color: #223300;
+  border: 1px solid #99bb55;
+  padding: 3px 9px; font-size: 12px; font-weight: bold;
+}
+.card-footer {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  border-top: 1px solid #cce8aa; padding-top: 9px;
+}
+.school-link {
+  color: #0033aa; font-size: 12px; text-decoration: none;
+}
+.school-link:hover { text-decoration: underline; }
+.add-btn {
+  background: linear-gradient(to bottom, #88cc44, #557722);
+  color: #fff;
+  border: none;
+  border-top: 2px solid #aaee66;
+  border-left: 2px solid #aaee66;
+  border-right: 2px solid #223300;
+  border-bottom: 2px solid #223300;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-family: Arial, sans-serif;
+}
+.add-btn:hover { background: linear-gradient(to bottom, #aaee55, #779933); }
+.add-btn:active {
+  border-top: 2px solid #223300; border-left: 2px solid #223300;
+  border-right: 2px solid #aaee66; border-bottom: 2px solid #aaee66;
+}
 
-  /* ── NO RESULTS ── */
-  .no-results-msg {
-    font-family: 'VT323', monospace; font-size: 20px;
-    text-align: center; color: #555; padding: 30px;
-    display: none;
-  }
-  .no-results-msg.visible { display: block; }
+/* ── LOADING / ERROR ── */
+.loading {
+  text-align: center; padding: 36px; color: #445533; font-style: italic;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
+.spinner {
+  width: 18px; height: 18px;
+  border: 3px solid #bccfaa; border-top-color: #4477aa;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-box {
+  background: #ffeeee; border: 1px solid #cc8888;
+  padding: 12px 16px; color: #880000; font-size: 12px;
+}
+
+/* ── HOW IT WORKS SECTION ── */
+.info-box {
+  background: #fff; border: 1px solid #bbccaa;
+  border-top: 3px solid #4477cc;
+  padding: 18px 20px; margin-top: 24px;
+  font-size: 13px; line-height: 1.75; color: #222;
+}
+.info-box h3 { color: #2a4400; margin-bottom: 8px; font-size: 15px; }
+.info-box p  { margin-bottom: 12px; }
+.info-box p:last-child { margin-bottom: 0; }
+
+/* ── RIGHT SPOTLIGHT PANEL ── */
+.spotlight {
+  width: 190px;
+  flex-shrink: 0;
+  background: #1a2a1a;
+  border-left: 3px solid #0d1a0d;
+  padding: 0;
+}
+.spotlight-header {
+  background: linear-gradient(to bottom, #2a5a2a, #1a3a1a);
+  color: #ccff99;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 9px 12px;
+  text-align: center;
+  border-bottom: 1px solid #0d1a0d;
+}
+.spotlight-section {
+  padding: 11px 13px;
+  border-bottom: 1px solid #2a3a2a;
+}
+.spotlight-section p {
+  font-size: 12px; color: #bbddbb;
+  line-height: 1.65;
+}
+.spotlight-section strong { color: #ddf0aa; }
+.spotlight-section a {
+  color: #99ee99; text-decoration: none; font-size: 12px;
+}
+.spotlight-section a:hover { text-decoration: underline; color: #ccffcc; }
+
+/* ── FOOTER ── */
+.footer {
+  background: #1a2e4a;
+  color: #99bbdd;
+  font-size: 12px;
+  text-align: center;
+  padding: 14px;
+  border-top: 2px solid #0d1f33;
+}
+.footer a { color: #aaccee; text-decoration: none; margin: 0 6px; }
+.footer a:hover { color: #fff; text-decoration: underline; }
 </style>
 </head>
 <body>
 
-<marquee scrollamount="3">
-  <img src="../images/space-invader.png" style="height:18px;vertical-align:middle;margin:0 6px;image-rendering:pixelated;">
-  ENTO-PROFESSO - UNIVERSITY SEARCH
-  <img src="../images/space-invader.png" style="height:18px;vertical-align:middle;margin:0 6px;image-rendering:pixelated;">
-  FIND THE BEST GRADUATE PROGRAMS IN ENTOMOLOGY
-  <img src="../images/space-invader.png" style="height:18px;vertical-align:middle;margin:0 6px;image-rendering:pixelated;">
-  SELECT SCHOOLS BELOW AND ADD THEM TO ENTO-PROFESSO SEARCH 3000
-  <img src="../images/space-invader.png" style="height:18px;vertical-align:middle;margin:0 6px;image-rendering:pixelated;">
-</marquee>
+<!-- Top utility bar -->
+<div class="top-bar">
+  <a href="../index.html">Ento-Professo</a>
+  <a href="../webring/index.html">Web Ring</a>
+  <a href="../guestbook.html">Guestbook</a>
+</div>
 
-<div class="app-window">
-  <div class="win-title">
-    <span> Entomo-Professo v1.0 — University Edition</span>
-    <div class="btns">
-      <div class="win-btn">_</div>
-      <div class="win-btn">□</div>
-      <div class="win-btn">✕</div>
-    </div>
+<!-- Header banner -->
+<div class="header">
+  <div class="header-logo">
+    GRAD<span class="accent">SEARCH</span>&nbsp;<span class="num">20/20</span>
   </div>
-
-  <!-- header banner -->
-  <div class="header-banner">
-    <div class="bug-row">
-      <img src="../images/worm.png"         style="height:28px;vertical-align:middle;image-rendering:pixelated;">
-      <img src="../images/jewel-wasp.png"   style="height:28px;vertical-align:middle;image-rendering:pixelated;">
-      <img src="../images/bumblebee.png"    style="height:28px;vertical-align:middle;image-rendering:pixelated;">
-      <img src="../images/butterfly-red.png" style="height:28px;vertical-align:middle;image-rendering:pixelated;">
-      <img src="../images/bumblebee.png"    style="height:28px;vertical-align:middle;image-rendering:pixelated;">
-      <img src="../images/jewel-wasp.png"   style="height:28px;vertical-align:middle;image-rendering:pixelated;">
-      <img src="../images/worm.png"         style="height:28px;vertical-align:middle;image-rendering:pixelated;">
-    </div>
-    <h1>Entomology School Finder</h1>
-    <p>Browse top-ranked U.S. entomology programs · Select schools · Add to Ento-Professo Search 3000</p>
+  <div class="header-tagline">
+    Vision for Your <span class="future">Future</span>
   </div>
-
-  <!-- toolbar -->
-  <div class="toolbar">
-    <button class="btn btn-primary" id="addBtn" onclick="addSelected()" disabled>
-      ➕ Add Selected to Ento-Professo
-    </button>
-    <div class="toolbar-sep"></div>
-    <button class="btn" onclick="selectAll()">☑ Select All</button>
-    <button class="btn" onclick="clearSelected()">☐ Clear</button>
-    <div class="toolbar-sep"></div>
-    <label style="font-family:'VT323',monospace;font-size:15px;color:#333;font-weight:bold;">🔎 Filter:</label>
-    <input type="text" id="searchInput" class="search-input"
-           placeholder="School name or research area..."
-           oninput="filterCards(this.value)" />
-    <button class="btn" onclick="clearFilter()">✕</button>
-    <span id="resultCount"></span>
-    <span id="selectedCount"></span>
-  </div>
-
-  <!-- program grid -->
-  <div class="win-body">
-    <div class="program-grid" id="programGrid"></div>
-    <div class="pagination">
-      <button class="pg-btn" id="pgPrev" onclick="changePage(-1)">◀ Prev</button>
-      <span class="pg-info" id="pgInfo"></span>
-      <button class="pg-btn" id="pgNext" onclick="changePage(1)">Next ▶</button>
-    </div>
-
-    <div class="no-results-msg" id="noResults">
-      <img src="../images/traffic-cone.png" style="height:20px;vertical-align:middle;image-rendering:pixelated;">
-      No programs match that search.
-    </div>
-  </div>
-
-  <!-- statusbar -->
-  <div class="statusbar">
-    <div class="status-pane" id="statusPane">15 programs loaded.</div>
-    <div class="status-pane" style="max-width:200px;">University Edition v1.0</div>
+  <div class="header-search-hint">
+    Search any field, any school<br>
+    US &amp; Canadian universities<br>
+    Powered by AI
   </div>
 </div>
 
-<p class="page-footer">
-  Part of the <b>Ento-Professo Web Ring</b> ·
-  <a href="../webring/index.html">← Web Ring</a> ·
-  <a href="../index.html">Ento-Professo Search 3000</a> ·
-  <a href="../guestbook.html">Sign Guestbook</a>
-</p>
+<!-- Main layout -->
+<div class="layout">
+
+  <!-- Left sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-label">Navigate</div>
+    <a class="sidebar-item active" href="#">Search Programs</a>
+    <a class="sidebar-item" href="#how-it-works">How It Works</a>
+    <a class="sidebar-item" href="../webring/index.html">Web Ring</a>
+    <a class="sidebar-item" href="../index.html">Ento-Professo</a>
+    <a class="sidebar-item" href="../guestbook.html">Guestbook</a>
+
+    <div class="sidebar-label" style="margin-top:16px;">Quick Searches</div>
+    <button class="sidebar-item" onclick="quickSearch('best PhD programs in entomology')">Entomology</button>
+    <button class="sidebar-item" onclick="quickSearch('top graduate programs in ecology and environmental science')">Ecology</button>
+    <button class="sidebar-item" onclick="quickSearch('best marine biology graduate programs')">Marine Biology</button>
+    <button class="sidebar-item" onclick="quickSearch('top public health graduate programs')">Public Health</button>
+    <button class="sidebar-item" onclick="quickSearch('best neuroscience PhD programs')">Neuroscience</button>
+    <button class="sidebar-item" onclick="quickSearch('top computer science PhD programs')">Computer Science</button>
+    <button class="sidebar-item" onclick="quickSearch('best veterinary science graduate programs Canada')">Vet Science</button>
+    <button class="sidebar-item" onclick="quickSearch('top chemistry graduate programs US and Canada')">Chemistry</button>
+  </nav>
+
+  <!-- Main content -->
+  <div class="content">
+
+    <div class="section-heading">Find Your Graduate Program</div>
+
+    <div class="search-box">
+      <p>
+        Ask anything — a field, a specialty, a career goal, or a country preference.
+        For example: <em>"best PhD programs in chemical ecology"</em>,
+        <em>"top schools for wildlife conservation in Canada"</em>, or
+        <em>"where should I go for a master's in public health?"</em>
+      </p>
+      <div class="search-row">
+        <input id="queryInput" class="search-input" type="text"
+               placeholder="e.g. best entomology PhD programs in the US"
+               onkeydown="if(event.key==='Enter') doSearch()" />
+        <button id="searchBtn" class="search-btn" onclick="doSearch()">Search</button>
+      </div>
+    </div>
+
+    <div id="results"></div>
+
+    <div class="info-box" id="how-it-works">
+      <h3>OUR PURPOSE:</h3>
+      <p>GradSearch 20/20 uses artificial intelligence to match your interests to graduate programs
+      across the United States and Canada. Type any question — a field, a specialty, a career goal —
+      and get a ranked list of relevant programs.</p>
+      <h3>OUR METHOD:</h3>
+      <p>Results are generated by Claude AI from its knowledge of US and Canadian research universities.
+      Click <strong>Add to Ento-Professo</strong> on any card to send that school to the main
+      faculty search tool, where you can scrape and browse actual faculty profiles.</p>
+    </div>
+
+  </div>
+
+  <!-- Right spotlight panel -->
+  <aside class="spotlight">
+    <div class="spotlight-header">Search Tips</div>
+    <div class="spotlight-section">
+      <p><strong>Be specific:</strong><br>
+      "best PhD programs in chemical ecology" beats "best biology schools"</p>
+    </div>
+    <div class="spotlight-section">
+      <p><strong>Try Canada:</strong><br>
+      Add "in Canada" to find programs at Canadian universities</p>
+    </div>
+    <div class="spotlight-section">
+      <p><strong>Career goals work:</strong><br>
+      "schools for someone who wants to work in wildlife conservation"</p>
+    </div>
+    <div class="spotlight-section">
+      <p><strong>Add to Ento-Professo:</strong><br>
+      Found a school? Click the green button to send it to the faculty browser</p>
+    </div>
+
+    <div class="spotlight-header" style="margin-top:8px;">Web Ring</div>
+    <div class="spotlight-section">
+      <p><a href="../webring/index.html">★ Visit the Ento-Professo Web Ring →</a></p>
+    </div>
+
+    <div class="spotlight-header" style="margin-top:8px;">Program Spotlight</div>
+    <div class="spotlight-section">
+      <p style="color:#ccee99; font-size:12px; font-weight:bold;">2026</p>
+      <p style="color:#ccee99; font-size:16px; font-weight:bold; line-height:1.2;">GRAD<br>SEARCH<br>20/20</p>
+      <p style="margin-top:6px;">AI-Powered<br>University Search</p>
+    </div>
+  </aside>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <a href="../index.html">Ento-Professo Search 3000</a>
+  <a href="../webring/index.html">Web Ring</a>
+  <a href="../guestbook.html">Guestbook</a>
+  <br><br>
+  GradSearch 20/20 &mdash; Powered by Artificial Intelligence &amp; HyperText Technology
+</div>
 
 <script>
-"use strict";
-
-// ═══════════════════════════════════════════
-//  STORAGE KEY — shared with index.html
-// ═══════════════════════════════════════════
 const USER_SCHOOLS_KEY = "entoprofesso:user_schools";
 
-// ═══════════════════════════════════════════
-//  PROGRAM DATA — sourced from department pages
-// ═══════════════════════════════════════════
-const PROGRAMS = [
-  {
-    university: "University of Florida",
-    dept: "Department of Entomology and Nematology (UF/IFAS)",
-    facultyUrl: "https://entnemdept.ufl.edu/people-directory/all-faculty/",
-    blurb: "One of the largest entomology programs in the country, combining research, extension, and teaching across biological control, medical/veterinary entomology, nematology, pest management, and physiology — supported by the Florida Medical Entomology Laboratory and multiple research/extension centers statewide.",
-    tags: ["biological control", "medical entomology", "nematology", "urban pest management", "vector biology"]
-  },
-  {
-    university: "Cornell University",
-    dept: "Department of Entomology, College of Agriculture and Life Sciences",
-    facultyUrl: "https://entomology.cals.cornell.edu/people/faculty-and-senior-academic-staff",
-    blurb: "Consistently ranked among the world's top insect science programs with 125+ years of history. Benefits from the Cornell University Insect Collection, the Boyce Thompson Institute, and Cornell AgriTech. Strong emphasis on applying fundamental insect biology to real-world agricultural and environmental challenges.",
-    tags: ["insect ecology", "chemical ecology", "systematics & biodiversity", "agricultural entomology", "insect-plant interactions"]
-  },
-  {
-    university: "University of California, Davis",
-    dept: "Department of Entomology and Nematology",
-    facultyUrl: "https://entomology.ucdavis.edu/people",
-    blurb: "A consistently top-ranked program with ~40 faculty spanning integrated pest management, pollination biology, chemical ecology, and nematology. Graduate students may join multiple interdisciplinary Graduate Groups across the UC Davis campus, providing unusual research flexibility.",
-    tags: ["integrated pest management", "pollination biology", "chemical ecology", "nematology", "biological control"]
-  },
-  {
-    university: "University of California, Riverside",
-    dept: "Department of Entomology",
-    facultyUrl: "https://entomology.ucr.edu/directory/current-faculty",
-    blurb: "Ranked #2 in the world by the Center for World University Rankings. Historic and ongoing leadership in biological control (the Vedalia beetle introduction originated here in 1887), chemical ecology, insect vector biology, and urban entomology — supported by a unique Insectary and Quarantine Facility.",
-    tags: ["biological control", "chemical ecology", "vector biology", "insect-plant interactions", "urban entomology"]
-  },
-  {
-    university: "Texas A&M University",
-    dept: "Department of Entomology",
-    facultyUrl: "https://entomology.tamu.edu/faculty-directory/",
-    blurb: "Recognized for outstanding research spanning ecological to molecular scales, with award-winning faculty conducting discovery, translational, and applied research addressing human health protection and global agricultural challenges. Strong extension presence across the state of Texas.",
-    tags: ["agricultural entomology", "medical & veterinary entomology", "integrated pest management", "insect genomics", "extension entomology"]
-  },
-  {
-    university: "North Carolina State University",
-    dept: "Department of Entomology and Plant Pathology, CALS",
-    facultyUrl: "https://cals.ncsu.edu/entomology-and-plant-pathology/group/faculty/",
-    blurb: "Ranked #5 in entomology worldwide. Applies cutting-edge science to manage insect pests and plant pathogens, leveraging beneficial insects and sustainable strategies that protect crops and the environment. Notable strengths in pollinator health and insect toxicology.",
-    tags: ["integrated pest management", "biological control", "insect toxicology", "pollinator health", "plant-insect interactions"]
-  },
-  {
-    university: "Michigan State University",
-    dept: "Department of Entomology, College of Agriculture and Natural Resources",
-    facultyUrl: "https://www.canr.msu.edu/ent/directory/our-faculty",
-    blurb: "A national and international leader in arthropod biology, ecology, and management. Research spans agriculture, natural ecosystems, and urban environments, with strong extension and global outreach components. Known for collaborative, translational science with real-world impact.",
-    tags: ["biological control", "agricultural entomology", "urban entomology", "insect ecology", "extension & outreach"]
-  },
-  {
-    university: "Penn State University",
-    dept: "Department of Entomology",
-    facultyUrl: "https://ento.psu.edu/directory/faculty",
-    blurb: "Addresses fundamental and applied questions from the molecular to the population level, with particular strengths in pollinator biology, chemical ecology, and insect-plant interactions. Benefits from Penn State's broader life sciences community and the Center for Chemical Ecology.",
-    tags: ["pollinator biology", "chemical ecology", "insect-plant interactions", "biological control", "molecular entomology"]
-  },
-  {
-    university: "The Ohio State University",
-    dept: "Department of Entomology",
-    facultyUrl: "https://entomology.osu.edu/our-people/faculty",
-    blurb: "One of the oldest entomology departments in the U.S. (est. 1891) and the only Ohio university offering an entomology major. Excels in integrated pest management, pollinator health and toxicology, vector biology (West Nile virus), urban ecology, and forest entomology.",
-    tags: ["integrated pest management", "pollinator health", "vector biology", "urban ecology", "forest entomology"]
-  },
-  {
-    university: "Kansas State University",
-    dept: "Department of Entomology",
-    facultyUrl: "https://entomology.k-state.edu/about/people/faculty/",
-    blurb: "Ranked 4th in the world and receiving $3.2M in annual extramural funding. Strong emphasis on protecting crops from insect pests in the field and post-harvest, arthropod-borne disease transmission, and arthropod biodiversity and conservation. A national leader in stored-grain pest research.",
-    tags: ["stored-grain entomology", "crop protection", "vector-borne disease", "biodiversity & conservation", "extension entomology"]
-  },
-  {
-    university: "Purdue University",
-    dept: "Department of Entomology",
-    facultyUrl: "https://ag.purdue.edu/department/entm/directory.html",
-    blurb: "With roots going back to 1879, Purdue Entomology is known for its premier urban pest management program, insect genetics and genomics, insect-plant interactions research using proteomics and metabolomics, and biodiversity studies — all aimed at improving quality of life regionally and globally.",
-    tags: ["urban entomology", "insect genetics & genomics", "insect-plant interactions", "biodiversity & ecology", "pest management"]
-  },
-  {
-    university: "Iowa State University",
-    dept: "Department of Plant Pathology, Entomology and Microbiology",
-    facultyUrl: "https://www.ppem.iastate.edu/people/faculty",
-    blurb: "An interdisciplinary department focused on research, teaching, and extension aimed at improving pest management in the north-central agricultural region. Faculty address insect biology, plant resistance mechanisms, pest management strategies, and climate-related impacts on arthropods.",
-    tags: ["crop entomology", "pest management", "insect-plant interactions", "extension entomology", "climate change & insects"]
-  },
-  {
-    university: "University of Georgia",
-    dept: "Department of Entomology, College of Agricultural and Environmental Sciences",
-    facultyUrl: "https://ent.uga.edu/people/faculty.html",
-    blurb: "Offers cutting-edge graduate research across nine core areas, with particular strengths in apiculture and pollination, integrated pest management, evolutionary biology, and vector biology. Strong response to invasive pests affecting agriculture and human health in the southeastern U.S.",
-    tags: ["apiculture & pollination", "vector biology", "integrated pest management", "evolutionary biology", "invasive species"]
-  },
-  {
-    university: "University of Minnesota",
-    dept: "Department of Entomology",
-    facultyUrl: "https://entomology.umn.edu/faculty",
-    blurb: "Founded in 1888, Minnesota Entomology emphasizes systematics, biodiversity, biology, and ecology of insects in relation to human welfare and environmental health. Supported by a major insect collection and strong ties to north-central agriculture, with growing focus on pollinator conservation.",
-    tags: ["systematics & biodiversity", "insect ecology", "pollinator conservation", "agricultural entomology", "forest entomology"]
-  },
-  {
-    university: "University of Arizona",
-    dept: "Entomology & Insect Science Graduate Program",
-    facultyUrl: "https://insects.arizona.edu/faculty-directory",
-    blurb: "A global leader in insect science combining genomics, ecology, and evolutionary principles to address insect behavior, biodiversity conservation, integrated pest management, disease vector control, and sustainable insect production. An interdisciplinary graduate program drawing faculty from across campus.",
-    tags: ["insect behavior", "vector biology & disease control", "biodiversity conservation", "chemical ecology", "sustainable insect production"]
-  }
-];
-
-// ═══════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════
-const PAGE_SIZE = 6;
-let currentPage = 0;
-let visibleIndices = [];       // indices passing the current filter, in order
-let selected = new Set();      // indices of checked cards
-let addedUrls = new Set();     // faculty URLs already sent to main app
-
-function loadAdded() {
-  try {
-    const raw = localStorage.getItem(USER_SCHOOLS_KEY);
-    if (raw) JSON.parse(raw).forEach(s => addedUrls.add(s.url));
-  } catch {}
+async function callClaude(prompt) {
+  const resp = await fetch("/api/claude", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-5",
+      max_tokens: 4096,
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+  if (!resp.ok) throw new Error("API error " + resp.status);
+  const data = await resp.json();
+  return data.content[0].text;
 }
 
-// ═══════════════════════════════════════════
-//  RENDER
-// ═══════════════════════════════════════════
-function renderCards() {
-  const grid = document.getElementById("programGrid");
-  grid.innerHTML = "";
+function doSearch() {
+  const query = document.getElementById("queryInput").value.trim();
+  if (!query) { document.getElementById("queryInput").focus(); return; }
+  runSearch(query);
+}
 
-  // Build all cards (hidden by default; applyPage will show the right slice)
-  PROGRAMS.forEach((p, i) => {
-    const isAdded = addedUrls.has(p.facultyUrl);
-    const div = document.createElement("div");
-    div.className = "prog-card hidden" + (isAdded ? " added-to-app" : "");
-    div.id = "card_" + i;
-    div.innerHTML = `
-      <div class="card-header" onclick="toggleSelect(${i})">
-        <input type="checkbox" class="card-checkbox" id="chk_${i}"
-               onclick="event.stopPropagation(); toggleSelect(${i})"
-               ${isAdded ? "checked disabled" : ""}>
-        <span class="card-name">${escapeHtml(p.university)}</span>
-      </div>
-      <div class="card-body">
-        <div class="card-dept">${escapeHtml(p.dept)}</div>
-        <div class="card-blurb">${escapeHtml(p.blurb)}</div>
-        <div class="card-tags">${p.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>
-      </div>
-      <div class="card-footer">
-        <a href="${escapeHtml(p.facultyUrl)}" target="_blank" rel="noopener">🔗 View Faculty Directory</a>
-        <span class="card-added">✔ Added</span>
+function quickSearch(query) {
+  document.getElementById("queryInput").value = query;
+  runSearch(query);
+}
+
+async function runSearch(query) {
+  const btn     = document.getElementById("searchBtn");
+  const results = document.getElementById("results");
+
+  btn.disabled = true;
+  results.innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      Searching graduate programs for: <em>${escHtml(query)}</em>
+    </div>`;
+
+  const prompt = `You are a graduate school advisor with comprehensive knowledge of US and Canadian universities.
+
+The user is searching for: "${query}"
+
+Return a JSON array of 8 to 10 relevant graduate programs. Output ONLY the raw JSON array — no markdown, no code fences, no explanation.
+
+Each element must be an object with exactly these fields:
+{
+  "name": "Full University Name",
+  "location": "City, State/Province, Country",
+  "type": "Public" or "Private",
+  "program": "Name of the specific graduate program or department",
+  "description": "2-3 sentences on why this school is strong for this query and what makes it notable.",
+  "highlights": ["strength 1", "strength 2", "strength 3"],
+  "website": "https://university-homepage.edu"
+}
+
+Requirements:
+- Focus on US and Canadian universities; prioritize R1/R2 research universities and Canada's U15
+- Match the query closely — return schools genuinely known for the queried field
+- Highlights should each be 3-5 words
+- Websites must be real, correct university domains
+- Return only the JSON array, nothing else`;
+
+  try {
+    const raw = await callClaude(prompt);
+    const clean = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+    const schools = JSON.parse(clean);
+    renderResults(schools, query);
+  } catch (err) {
+    results.innerHTML = `<div class="error-box"><strong>Search failed:</strong> ${escHtml(err.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderResults(schools, query) {
+  const results = document.getElementById("results");
+  if (!Array.isArray(schools) || schools.length === 0) {
+    results.innerHTML = '<div class="error-box">No programs found. Try a different search.</div>';
+    return;
+  }
+
+  let html = `<div class="result-count">
+    ${schools.length} program${schools.length !== 1 ? "s" : ""} found for: <em>"${escHtml(query)}"</em>
+  </div>`;
+
+  schools.forEach((s, i) => {
+    const name     = s.name        || "Unknown University";
+    const location = s.location    || "";
+    const type     = s.type        || "";
+    const program  = s.program     || "";
+    const desc     = s.description || "";
+    const website  = s.website     || "#";
+    const tags     = Array.isArray(s.highlights) ? s.highlights : [];
+
+    const safeName = name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const safeUrl  = website.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+
+    const tagHtml  = tags.map(t => `<span class="highlight-tag">${escHtml(t)}</span>`).join("");
+
+    html += `
+      <div class="school-card">
+        <span class="school-num">#${i + 1}</span>
+        <div class="school-name">${escHtml(name)}</div>
+        <div class="school-meta">${escHtml(type)}${type && location ? " &bull; " : ""}${escHtml(location)}</div>
+        <div class="school-program">${escHtml(program)}</div>
+        <div class="school-desc">${escHtml(desc)}</div>
+        <div class="school-highlights">${tagHtml}</div>
+        <div class="card-footer">
+          <a class="school-link" href="${escAttr(website)}" target="_blank" rel="noopener noreferrer">
+            Visit website &rarr;
+          </a>
+          <button class="add-btn" onclick="addToEntoProfesso('${safeName}', '${safeUrl}')">
+            + Add to Ento-Professo
+          </button>
+        </div>
       </div>`;
-    grid.appendChild(div);
   });
 
-  rebuildVisible("");
+  results.innerHTML = html;
 }
 
-// Recalculate which cards pass the filter, then show page 0
-function rebuildVisible(q) {
-  visibleIndices = PROGRAMS
-    .map((p, i) => i)
-    .filter(i => {
-      if (!q) return true;
-      const hay = [PROGRAMS[i].university, PROGRAMS[i].dept, PROGRAMS[i].blurb, ...PROGRAMS[i].tags]
-        .join(" ").toLowerCase();
-      return hay.includes(q);
-    });
-  currentPage = 0;
-  applyPage();
-}
-
-function applyPage() {
-  const totalPages = Math.max(1, Math.ceil(visibleIndices.length / PAGE_SIZE));
-  currentPage = Math.max(0, Math.min(currentPage, totalPages - 1));
-
-  const pageSlice = new Set(
-    visibleIndices.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
-  );
-
-  PROGRAMS.forEach((_, i) => {
-    const card = document.getElementById("card_" + i);
-    if (card) card.classList.toggle("hidden", !pageSlice.has(i));
-  });
-
-  document.getElementById("noResults").classList.toggle("visible", visibleIndices.length === 0);
-  document.getElementById("pgInfo").textContent =
-    `Page ${currentPage + 1} of ${totalPages} (${visibleIndices.length} programs)`;
-  document.getElementById("pgPrev").disabled = currentPage === 0;
-  document.getElementById("pgNext").disabled = currentPage >= totalPages - 1;
-
-  updateCounts();
-}
-
-function changePage(dir) {
-  currentPage += dir;
-  applyPage();
-}
-
-// ═══════════════════════════════════════════
-//  SELECTION
-// ═══════════════════════════════════════════
-function toggleSelect(i) {
-  if (addedUrls.has(PROGRAMS[i].facultyUrl)) return; // already added, lock it
-  const chk = document.getElementById("chk_" + i);
-  const card = document.getElementById("card_" + i);
-  if (selected.has(i)) {
-    selected.delete(i);
-    chk.checked = false;
-    card.classList.remove("selected");
-  } else {
-    selected.add(i);
-    chk.checked = true;
-    card.classList.add("selected");
-  }
-  updateCounts();
-}
-
-function selectAll() {
-  // Select all on the current page
-  const pageSlice = visibleIndices.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
-  pageSlice.forEach(i => {
-    if (!addedUrls.has(PROGRAMS[i].facultyUrl)) {
-      selected.add(i);
-      const chk = document.getElementById("chk_" + i);
-      if (chk && !chk.disabled) chk.checked = true;
-      document.getElementById("card_" + i).classList.add("selected");
-    }
-  });
-  updateCounts();
-}
-
-function clearSelected() {
-  selected.forEach(i => {
-    const chk = document.getElementById("chk_" + i);
-    if (chk && !chk.disabled) chk.checked = false;
-    document.getElementById("card_" + i).classList.remove("selected");
-  });
-  selected.clear();
-  updateCounts();
-}
-
-function updateCounts() {
-  const total = document.querySelectorAll(".prog-card:not(.hidden)").length;
-  document.getElementById("resultCount").textContent = total + " programs";
-  const sel = selected.size;
-  document.getElementById("selectedCount").textContent =
-    sel > 0 ? sel + " selected" : "";
-  document.getElementById("addBtn").disabled = sel === 0;
-}
-
-// ═══════════════════════════════════════════
-//  FILTER / SEARCH
-// ═══════════════════════════════════════════
-function filterCards(term) {
-  rebuildVisible(term.toLowerCase().trim());
-}
-
-function clearFilter() {
-  document.getElementById("searchInput").value = "";
-  rebuildVisible("");
-}
-
-// ═══════════════════════════════════════════
-//  ADD TO ENTO-PROFESSO
-//  Writes selected schools to localStorage so index.html can pick them up
-// ═══════════════════════════════════════════
-function addSelected() {
-  if (selected.size === 0) return;
-
-  // Load existing user schools
-  let existing = [];
+function addToEntoProfesso(name, url) {
   try {
-    const raw = localStorage.getItem(USER_SCHOOLS_KEY);
-    if (raw) existing = JSON.parse(raw);
-  } catch {}
-
-  const existingUrls = new Set(existing.map(s => s.url));
-  let added = 0;
-
-  selected.forEach(i => {
-    const p = PROGRAMS[i];
-    if (!existingUrls.has(p.facultyUrl)) {
-      existing.push({ name: p.university, url: p.facultyUrl });
-      existingUrls.add(p.facultyUrl);
-      addedUrls.add(p.facultyUrl);
-      added++;
+    const raw      = localStorage.getItem(USER_SCHOOLS_KEY);
+    const existing = raw ? JSON.parse(raw) : [];
+    if (existing.some(s => s.name === name)) {
+      alert(`"${name}" is already in your Ento-Professo list.`);
+      return;
     }
-    // Mark card as added
-    document.getElementById("card_" + i).classList.add("added-to-app");
-    document.getElementById("card_" + i).classList.remove("selected");
-    const chk = document.getElementById("chk_" + i);
-    if (chk) { chk.checked = true; chk.disabled = true; }
-  });
-
-  localStorage.setItem(USER_SCHOOLS_KEY, JSON.stringify(existing));
-  selected.clear();
-  updateCounts();
-
-  const msg = added > 0
-    ? `✔ ${added} school${added > 1 ? "s" : ""} added! Open Ento-Professo Search 3000 and click "Search ALL Schools".`
-    : "Those schools were already added.";
-  document.getElementById("statusPane").textContent = msg;
+    existing.push({ name, url });
+    localStorage.setItem(USER_SCHOOLS_KEY, JSON.stringify(existing));
+    alert(`"${name}" added!\n\nGo to Ento-Professo and click "Search ALL Schools" to scrape faculty.`);
+  } catch (e) {
+    alert("Could not save: " + e.message);
+  }
 }
 
-// ═══════════════════════════════════════════
-//  UTILITY
-// ═══════════════════════════════════════════
-function escapeHtml(str) {
-  if (str == null) return "";
+function escHtml(str) {
   return String(str)
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
-
-// ═══════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════
-loadAdded();
-renderCards();
+function escAttr(str) {
+  return String(str).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 </script>
+
 </body>
 </html>

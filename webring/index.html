@@ -3,218 +3,348 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ento-Professo Web Ring</title>
-<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<title>The Web Ring</title>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Black+Ops+One&display=swap" rel="stylesheet">
 <style>
-  :root { --navy: #000080; --bg: #c0c0c0; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--navy); font-family: Arial, sans-serif; font-size: 13px; min-height: 100vh; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  marquee {
-    background: #000; color: #00ff00;
-    font-family: 'VT323', monospace; font-size: 16px;
-    padding: 3px 0; border-bottom: 2px solid #00aa00;
-  }
+body {
+  background: #000;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #fff;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  .app-window {
-    background: var(--bg);
-    border-top: 3px solid #fff; border-left: 3px solid #fff;
-    border-right: 3px solid #444; border-bottom: 3px solid #444;
-    max-width: 700px; margin: 24px auto; box-shadow: 4px 4px 0 #000;
-  }
-  .win-title {
-    background: linear-gradient(to right, var(--navy), #1084d0);
-    color: #fff; font-family: 'VT323', monospace; font-size: 18px;
-    padding: 4px 8px; display: flex; align-items: center; justify-content: space-between;
-  }
-  .win-btn {
-    width: 16px; height: 14px; background: var(--bg); color: #000;
-    font-size: 10px; font-weight: bold;
-    border-top: 2px solid #fff; border-left: 2px solid #fff;
-    border-right: 2px solid #444; border-bottom: 2px solid #444;
-    display: inline-flex; align-items: center; justify-content: center;
-    margin-left: 2px;
-  }
+/* ── STARFIELD ── */
+#starfield {
+  position: fixed; inset: 0;
+  z-index: 0; pointer-events: none;
+}
 
-  .header-banner {
-    background: var(--navy); padding: 20px 12px 16px;
-    text-align: center; border-bottom: 3px solid #1084d0;
-  }
-  .header-banner h1 {
-    font-family: 'VT323', monospace; font-size: 48px; color: #fff;
-    text-shadow: 3px 3px 0 #000;
-  }
-  .header-banner p {
-    font-family: 'VT323', monospace; font-size: 15px; color: #ffff00;
-    margin-top: 6px;
-  }
-  .ring-badge {
-    display: inline-block; margin-top: 12px;
-    background: #000; color: #ffff00;
-    font-family: 'VT323', monospace; font-size: 14px;
-    border: 3px dashed #ffff00; padding: 4px 14px;
-    letter-spacing: 2px;
-  }
+/* ── PAGE WRAPPER ── */
+.page {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 30px 20px 60px;
+}
 
-  .win-body { padding: 16px 18px; }
+/* ── TOP LINKS ── */
+.top-links {
+  align-self: flex-end;
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+.top-links a {
+  color: #bb8800;
+  text-decoration: underline;
+  margin-left: 16px;
+}
+.top-links a:hover { color: #ffcc00; }
 
-  .intro {
-    font-family: 'VT323', monospace; font-size: 17px; color: #000;
-    margin-bottom: 14px; line-height: 1.5;
-    border-bottom: 2px groove #888; padding-bottom: 10px;
-  }
 
-  /* ── RING SITE CARDS ── */
-  .site-card {
-    background: #fff;
-    border-top: 2px solid #fff; border-left: 2px solid #fff;
-    border-right: 2px solid #444; border-bottom: 2px solid #444;
-    margin-bottom: 10px;
-  }
-  .site-card-header {
-    background: var(--navy); color: #fff;
-    font-family: 'VT323', monospace; font-size: 18px;
-    padding: 4px 10px; display: flex; align-items: center; gap: 8px;
-  }
-  .site-num {
-    background: #ffff00; color: #000;
-    font-size: 13px; padding: 0 5px; font-weight: bold;
-  }
-  .site-card-body { padding: 8px 12px; }
-  .site-desc {
-    font-size: 12px; color: #222; line-height: 1.5; margin-bottom: 8px;
-  }
-  .site-card-footer {
-    border-top: 1px solid #ccc; padding: 6px 12px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .visit-btn {
-    font-family: 'VT323', monospace; font-size: 16px;
-    background: var(--navy); color: #fff;
-    border-top: 2px solid #8888ff; border-left: 2px solid #8888ff;
-    border-right: 2px solid #000; border-bottom: 2px solid #000;
-    padding: 3px 14px; text-decoration: none; display: inline-block;
-  }
-  .visit-btn:hover { background: #1084d0; }
-  .site-url {
-    font-family: 'VT323', monospace; font-size: 13px; color: #555;
-  }
+/* ─────────────────────────────────────────
+   NEON TEXT HELPERS
+   Crisp white core → tight neon colour → soft outer bloom
+   ───────────────────────────────────────── */
+.neon-orange {
+  color: #fff8f0;
+  text-shadow:
+    0 0 2px  #fff,
+    0 0 6px  #ffcc44,
+    0 0 18px #ff8800,
+    0 0 38px rgba(255,100,0,0.45);
+}
+.neon-pink {
+  color: #fff0f8;
+  text-shadow:
+    0 0 2px  #fff,
+    0 0 6px  #ff88ee,
+    0 0 18px #ff00bb,
+    0 0 38px rgba(200,0,150,0.45);
+}
+.neon-cyan {
+  color: #f0ffff;
+  text-shadow:
+    0 0 2px  #fff,
+    0 0 6px  #88eeff,
+    0 0 18px #00ccee,
+    0 0 38px rgba(0,160,220,0.45);
+}
+.neon-yellow {
+  color: #fffff0;
+  text-shadow:
+    0 0 2px  #fff,
+    0 0 6px  #ffff88,
+    0 0 18px #dddd00,
+    0 0 38px rgba(180,180,0,0.45);
+}
 
-  /* ── RING NAVIGATION ── */
-  .ring-nav {
-    margin-top: 16px; padding: 10px 12px;
-    background: #000; color: #ffff00;
-    font-family: 'VT323', monospace; font-size: 15px;
-    border: 3px solid #ffff00;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 6px;
-  }
-  .ring-nav span { color: #00ff00; }
-  .ring-nav a {
-    color: #ffff00; text-decoration: none; font-size: 17px;
-    border: 2px solid #ffff00; padding: 2px 10px;
-  }
-  .ring-nav a:hover { background: #ffff00; color: #000; }
+/* ─────────────────────────────────────────
+   NEON SIGN CARDS
+   ───────────────────────────────────────── */
+.signs-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 48px;
+  margin: 24px 0 48px;
+}
 
-  .statusbar {
-    display: flex; background: var(--bg); border-top: 2px groove #888;
-    font-family: 'VT323', monospace; font-size: 15px;
-  }
-  .status-pane {
-    flex: 1; padding: 2px 8px; border-right: 2px groove #888;
-  }
-  .status-pane:last-child { border-right: none; max-width: 160px; }
+.neon-sign {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  padding: 32px 40px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: filter 0.2s;
+  position: relative;
+  min-width: 240px;
+  background: rgba(0,0,0,0.55);
+}
+.neon-sign:hover { filter: brightness(1.18); }
 
-  .page-footer {
-    text-align: center; font-family: 'VT323', monospace;
-    font-size: 14px; color: #fff; margin: 10px 0 20px;
-  }
-  .page-footer a { color: #ffff00; font-weight: bold; }
+/* Neon border glow — color set per sign */
+.neon-sign-orange {
+  border: 2px solid #ff8800;
+  box-shadow: 0 0 8px #ff8800, 0 0 20px #ff6600,
+              inset 0 0 12px rgba(255,120,0,0.08);
+}
+.neon-sign-pink {
+  border: 2px solid #ff00bb;
+  box-shadow: 0 0 8px #ff00bb, 0 0 20px #cc0099,
+              inset 0 0 12px rgba(255,0,180,0.08);
+}
+.neon-sign-cyan {
+  border: 2px solid #00ccee;
+  box-shadow: 0 0 8px #00ccee, 0 0 20px #0088cc,
+              inset 0 0 12px rgba(0,200,255,0.08);
+}
+
+/* Site number badge */
+.sign-num {
+  position: absolute;
+  top: -12px; left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  padding: 0 10px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: bold;
+}
+
+/* Site label above the name */
+.sign-label {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 10px;
+  font-family: Arial, sans-serif;
+}
+
+/* Main site name — big neon script */
+.sign-name {
+  font-family: 'Pacifico', cursive;
+  font-size: 44px;
+  line-height: 1.2;
+}
+
+/* Smaller descriptor below */
+.sign-desc {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: #888;
+  margin-top: 12px;
+  letter-spacing: 1px;
+  max-width: 200px;
+}
+
+/* ─────────────────────────────────────────
+   MAIN TITLE
+   ───────────────────────────────────────── */
+.ring-title-wrap {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.ring-title {
+  font-family: 'Black Ops One', Arial Black, sans-serif;
+  font-size: 80px;
+  letter-spacing: 4px;
+  line-height: 1;
+}
+.ring-sub {
+  font-family: 'Pacifico', cursive;
+  font-size: 22px;
+  margin-top: 8px;
+  opacity: 0.8;
+}
+.ring-byline {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #446688;
+  margin-top: 10px;
+}
+
+/* ─────────────────────────────────────────
+   RING NAVIGATION
+   ───────────────────────────────────────── */
+.ring-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 36px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ring-nav-label {
+  font-family: 'Black Ops One', sans-serif;
+  font-size: 14px;
+  letter-spacing: 3px;
+}
+.nav-btn {
+  display: inline-block;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-decoration: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  border: 2px solid #00ccee;
+  transition: filter 0.15s;
+}
+.nav-btn:hover { filter: brightness(1.3); }
+
+/* ── GUESTBOOK / FOOTER LINKS ── */
+.footer-links {
+  color: #334455;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 8px;
+  line-height: 2.2;
+}
+.footer-links a { color: #336699; text-decoration: none; margin: 0 8px; }
+.footer-links a:hover { color: #aaccff; text-decoration: underline; }
+
+.awards {
+  color: #334455;
+  font-size: 11px;
+  text-align: center;
+  margin-top: 36px;
+  line-height: 2;
+}
 </style>
 </head>
 <body>
 
-<marquee scrollamount="3">
-  ★ FIND RESOURCES FOR YOUR RESEARCH ★ EST. 2026 ★ CLICK A SITE BELOW TO EXPLORE ★
-</marquee>
+<canvas id="starfield"></canvas>
 
-<div class="app-window">
-  <div class="win-title">
-    <span> Ento-Professo Web Ring — Hub</span>
-    <div>
-      <span class="win-btn">_</span>
-      <span class="win-btn">□</span>
-      <span class="win-btn">✕</span>
-    </div>
+<div class="page">
+
+  <!-- Top links -->
+  <div class="top-links">
+    <a href="../index.html">Text Version</a>
+    <a href="../guestbook.html">Sign Guestbook</a>
   </div>
 
-  <div class="header-banner">
-    <h1>Ento-Professo Web Ring</h1>
-    <p>A curated circle of apps to aid in searching for entomology graduate programs.</p>
-    <div class="ring-badge">★ MEMBER SITES: 2 ★</div>
+  <!-- Main title -->
+  <div class="ring-title-wrap">
+    <div class="ring-title">
+      <span class="neon-orange">WEB</span>&nbsp;<span class="neon-pink">RING</span>
+    </div>
+    <div class="ring-sub neon-cyan">Est. 2026</div>
+    <div class="ring-byline">a curated circle of research tools &bull; click a site below to explore</div>
   </div>
 
-  <div class="win-body">
-    <p class="intro">
-      Welcome to the <b>Web Ring</b>!
-      Click <b>Visit Site →</b> to jump to your desired site, or use the bar below to travel the ring in order.
-    </p>
+  <!-- Neon signs -->
+  <div class="signs-row">
 
-    <!-- Site 1 -->
-    <div class="site-card">
-      <div class="site-card-header">
-        <span class="site-num">01</span>
-        Ento-Professo Search 3000
-      </div>
-      <div class="site-card-body">
-        <div class="site-desc">
-          A quick and easy way to search and filter for entomology faculty to contact. Includes customizable filters
-          and the option to export results in a variety of formats.
-          Powered by Artificial Intelligence &amp; HyperText Technology.
-        </div>
-      </div>
-      <div class="site-card-footer">
-        <span class="site-url">../index.html</span>
-        <a class="visit-btn" href="../index.html">Visit Site →</a>
-      </div>
-    </div>
+    <!-- Site 01 — Ento-Professo -->
+    <a class="neon-sign neon-sign-orange" href="../index.html">
+      <div class="sign-num neon-orange">SITE 01</div>
+      <div class="sign-label neon-orange">visit site</div>
+      <div class="sign-name neon-orange">Ento-Professo</div>
+      <div class="sign-desc" style="color:#cc8833;">Search 3000 &bull; Faculty Finder &bull; AI-Powered</div>
+    </a>
 
-    <!-- Site 2 -->
-    <div class="site-card">
-      <div class="site-card-header">
-        <span class="site-num">02</span>
-        Entomology School Finder
-      </div>
-      <div class="site-card-body">
-        <div class="site-desc">
-          Pick and choose from ca list of schools with credited entomology graduate programs. An easy
-          resource for grad students still doing research.
-        </div>
-      </div>
-      <div class="site-card-footer">
-        <span class="site-url">../school-finder/index.html</span>
-        <a class="visit-btn" href="../school-finder/index.html">Visit Site →</a>
-      </div>
-    </div>
+    <!-- Site 02 — GradSearch -->
+    <a class="neon-sign neon-sign-pink" href="../school-finder/index.html">
+      <div class="sign-num neon-pink">SITE 02</div>
+      <div class="sign-label neon-pink">visit site</div>
+      <div class="sign-name neon-pink">GradSearch</div>
+      <div class="sign-name neon-yellow" style="font-size:28px; margin-top:-6px;">20/20</div>
+      <div class="sign-desc" style="color:#aa4499;">University Search &bull; US &amp; Canada</div>
+    </a>
 
-    <!-- Ring navigation -->
-    <div class="ring-nav">
-      <a href="../index.html">◀◀ Previous</a>
-      <span>★ ENTO-PROFESSO WEB RING ★</span>
-      <a href="../school-finder/index.html">Next ▶▶</a>
-    </div>
   </div>
 
-  <div class="statusbar">
-    <div class="status-pane">2 sites in this ring.</div>
-    <div class="status-pane">Web Ring Hub v1.0</div>
+  <!-- Ring navigation -->
+  <div class="ring-nav">
+    <a class="nav-btn neon-cyan" href="../index.html">&#9668;&#9668; Previous</a>
+    <div class="ring-nav-label neon-cyan">&#9733;&nbsp;WEB RING&nbsp;&#9733;</div>
+    <a class="nav-btn neon-cyan" href="../school-finder/index.html">Next &#9658;&#9658;</a>
   </div>
+
+  <!-- Footer links -->
+  <div class="footer-links">
+    <a href="../guestbook.html">Sign the Guestbook</a>
+    <a href="../index.html">Ento-Professo</a>
+    <a href="../school-finder/index.html">GradSearch 20/20</a>
+  </div>
+
+  <div class="awards">
+    2026 &mdash; Best Research Tools Web Ring, HyperText Computing Weekly<br>
+    2026 &mdash; Finalist, Artificial Intelligence Utility Awards<br>
+    <span style="font-size:10px;">{click for magazine quotes}</span>
+  </div>
+
 </div>
 
-<p class="page-footer">
-  Ento-Professo Web Ring · Est. 1997 ·
-  <a href="../index.html">← Back to Ento-Professo</a>
-</p>
+<script>
+// ── STARFIELD ──
+const canvas = document.getElementById("starfield");
+const ctx    = canvas.getContext("2d");
+
+function resizeCanvas() {
+  canvas.width  = window.innerWidth;
+  canvas.height = Math.max(document.body.scrollHeight, window.innerHeight);
+}
+
+function drawStars() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const count = Math.floor((canvas.width * canvas.height) / 4000);
+  for (let i = 0; i < count; i++) {
+    const x    = Math.random() * canvas.width;
+    const y    = Math.random() * canvas.height;
+    const r    = Math.random() * 1.4 + 0.2;
+    const glow = Math.random() > 0.93;
+    const a    = glow ? 1.0 : 0.3 + Math.random() * 0.6;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = glow ? `rgba(180,210,255,${a})` : `rgba(255,255,255,${a})`;
+    ctx.fill();
+    if (glow) {
+      ctx.beginPath();
+      ctx.arc(x, y, r * 3, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(150,180,255,0.06)";
+      ctx.fill();
+    }
+  }
+}
+
+resizeCanvas();
+drawStars();
+window.addEventListener("resize", () => { resizeCanvas(); drawStars(); });
+</script>
 
 </body>
 </html>

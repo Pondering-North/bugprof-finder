@@ -1331,20 +1331,9 @@ describe("12. File Save API", it => {
 //  SUITE 13 — School Config (matches entoprofesso.html SCHOOLS array)
 // ═══════════════════════════════════════════════════════════
 const SCHOOLS = [
-  {
-    name:    "University of Arizona",
-    url:     "https://insects.arizona.edu/",
-  },
-  {
-    name:    "University of California Davis",
-    url:     "https://entomology.ucdavis.edu/",
-    gradUrl: "https://entomology.ucdavis.edu/graduate-programs",
-  },
-  {
-    name:    "University of Hawaii (CTAHR)",
-    url:     "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology",
-    gradUrl: "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology",
-  },
+  { name: "University of Arizona",        url: "https://insects.arizona.edu/directory/faculty" },
+  { name: "Kansas State University",      url: "https://entomology.k-state.edu/about/people/faculty/" },
+  { name: "University of Hawaii (CTAHR)", url: "https://cms.ctahr.hawaii.edu/peps/people/faculty" },
 ];
 
 describe("13. School Config Integrity", it => {
@@ -1360,11 +1349,9 @@ describe("13. School Config Integrity", it => {
     }
   });
 
-  it("all gradUrls (when present) use https://", () => {
+  it("no school has a hardcoded gradUrl (Agent 1 must search for all)", () => {
     for (const s of SCHOOLS) {
-      if (s.gradUrl) {
-        assert(s.gradUrl.startsWith("https://"), `gradUrl must use https: ${s.name} → ${s.gradUrl}`);
-      }
+      assert(!s.gradUrl, `gradUrl should be absent so Agent 1 searches: ${s.name}`);
     }
   });
 
@@ -1383,34 +1370,19 @@ describe("13. School Config Integrity", it => {
   it("University of Arizona has correct base URL", () => {
     const s = SCHOOLS.find(s => s.name === "University of Arizona");
     assert(s !== undefined, "School not found");
-    assertEqual(s.url, "https://insects.arizona.edu/");
+    assertEqual(s.url, "https://insects.arizona.edu/directory/faculty");
   });
 
-  it("University of Arizona has no hardcoded gradUrl (Agent 1 must search)", () => {
-    const s = SCHOOLS.find(s => s.name === "University of Arizona");
-    assert(!s.gradUrl, "Arizona gradUrl should be undefined so Agent 1 searches");
-  });
-
-  it("UC Davis has correct base URL", () => {
-    const s = SCHOOLS.find(s => s.name === "University of California Davis");
+  it("Kansas State University has correct url", () => {
+    const s = SCHOOLS.find(s => s.name === "Kansas State University");
     assert(s !== undefined, "School not found");
-    assertEqual(s.url, "https://entomology.ucdavis.edu/");
-  });
-
-  it("UC Davis has correct known gradUrl", () => {
-    const s = SCHOOLS.find(s => s.name === "University of California Davis");
-    assertEqual(s.gradUrl, "https://entomology.ucdavis.edu/graduate-programs");
+    assertEqual(s.url, "https://entomology.k-state.edu/about/people/faculty/");
   });
 
   it("Hawaii has correct base URL", () => {
     const s = SCHOOLS.find(s => s.name === "University of Hawaii (CTAHR)");
     assert(s !== undefined, "School not found");
-    assertEqual(s.url, "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology");
-  });
-
-  it("Hawaii gradUrl points directly to entomology grad page", () => {
-    const s = SCHOOLS.find(s => s.name === "University of Hawaii (CTAHR)");
-    assertContains(s.gradUrl, "Entomology");
+    assertEqual(s.url, "https://cms.ctahr.hawaii.edu/peps/people/faculty");
   });
 
   it("storageKey for each school is unique and stable", () => {
@@ -1437,28 +1409,28 @@ describe("14. Agent 1 gradUrl Short-Circuit", it => {
     return mockCallClaude ? await mockCallClaude() : school.url;
   }
 
-  it("UC Davis returns known gradUrl without calling Claude", async () => {
-    const ucdavis = SCHOOLS.find(s => s.name === "University of California Davis");
-    let claudeCalled = false;
-    const result = await agent1_shortCircuit(ucdavis, () => { claudeCalled = true; return "should-not-be-called"; });
-    assertEqual(result, "https://entomology.ucdavis.edu/graduate-programs");
-    assert(!claudeCalled, "Claude should NOT be called when gradUrl is known");
-  });
-
-  it("Hawaii returns known gradUrl without calling Claude", async () => {
-    const hawaii = SCHOOLS.find(s => s.name === "University of Hawaii (CTAHR)");
-    let claudeCalled = false;
-    const result = await agent1_shortCircuit(hawaii, () => { claudeCalled = true; return "should-not-be-called"; });
-    assertEqual(result, "https://cms.ctahr.hawaii.edu/peps/GRADUATE/Entomology");
-    assert(!claudeCalled, "Claude should NOT be called when gradUrl is known");
-  });
-
   it("Arizona falls through to Claude (no gradUrl)", async () => {
     const arizona = SCHOOLS.find(s => s.name === "University of Arizona");
     let claudeCalled = false;
     const result = await agent1_shortCircuit(arizona, async () => { claudeCalled = true; return "https://insects.arizona.edu/grad"; });
     assert(claudeCalled, "Claude SHOULD be called when gradUrl is not set");
     assertEqual(result, "https://insects.arizona.edu/grad");
+  });
+
+  it("Kansas State University falls through to Claude (no gradUrl)", async () => {
+    const ksu = SCHOOLS.find(s => s.name === "Kansas State University");
+    let claudeCalled = false;
+    const result = await agent1_shortCircuit(ksu, async () => { claudeCalled = true; return "https://entomology.k-state.edu/grad"; });
+    assert(claudeCalled, "Claude SHOULD be called when gradUrl is not set");
+    assertEqual(result, "https://entomology.k-state.edu/grad");
+  });
+
+  it("Hawaii falls through to Claude (no gradUrl)", async () => {
+    const hawaii = SCHOOLS.find(s => s.name === "University of Hawaii (CTAHR)");
+    let claudeCalled = false;
+    const result = await agent1_shortCircuit(hawaii, async () => { claudeCalled = true; return "https://cms.ctahr.hawaii.edu/peps/grad"; });
+    assert(claudeCalled, "Claude SHOULD be called when gradUrl is not set");
+    assertEqual(result, "https://cms.ctahr.hawaii.edu/peps/grad");
   });
 
   it("gradUrl is returned verbatim (no mutation)", async () => {
@@ -1485,9 +1457,9 @@ describe("15. Real School Storage Round-Trip", it => {
       { name: "Dr. Gene Hall", title: "Professor", research: ["integrated pest management", "stored product insects"], email: "ghall@arizona.edu", phone: null, profileUrl: "https://insects.arizona.edu/people/gene-hall" },
       { name: "Dr. Yves Carrière", title: "Regents Professor", research: ["Bt resistance", "population genetics", "insect ecology"], email: "carriery@arizona.edu", phone: null, profileUrl: "https://insects.arizona.edu/people/yves-carriere" },
     ],
-    "University of California Davis": [
-      { name: "Dr. Walter Leal", title: "Distinguished Professor", research: ["chemical ecology", "olfaction", "mosquito repellent"], email: "wsleal@ucdavis.edu", phone: null, profileUrl: "https://entomology.ucdavis.edu/people/faculty/walter-leal" },
-      { name: "Dr. James Carey", title: "Professor", research: ["demography", "longevity", "Mediterranean fruit fly"], email: "jrcarey@ucdavis.edu", phone: null, profileUrl: null },
+    "Kansas State University": [
+      { name: "Dr. Ludek Zurek", title: "Professor", research: ["microbiology", "filth fly biology", "vector-borne pathogens"], email: "lzurek@ksu.edu", phone: null, profileUrl: "https://entomology.k-state.edu/people/faculty/zurek-ludek.html" },
+      { name: "Dr. Brian Ritter", title: "Assistant Professor", research: ["urban entomology", "cockroach biology"], email: "britter@ksu.edu", phone: null, profileUrl: null },
     ],
     "University of Hawaii (CTAHR)": [
       { name: "Dr. Mark Wright", title: "Professor", research: ["biological control", "invasive species", "tephritid flies"], email: "wrightm@hawaii.edu", phone: null, profileUrl: null },
@@ -1502,11 +1474,11 @@ describe("15. Real School Storage Round-Trip", it => {
     assertEqual(d.professors[0].name, "Dr. Gene Hall");
   });
 
-  it("can store and retrieve UC Davis profs", async () => {
+  it("can store and retrieve Kansas State University profs", async () => {
     clearMockStore();
-    await storageSet("University of California Davis", { status: "ok", professors: SAMPLE_PROFS["University of California Davis"] });
-    const d = await storageGet("University of California Davis");
-    assertEqual(d.professors[0].email, "wsleal@ucdavis.edu");
+    await storageSet("Kansas State University", { status: "ok", professors: SAMPLE_PROFS["Kansas State University"] });
+    const d = await storageGet("Kansas State University");
+    assertEqual(d.professors[0].email, "lzurek@ksu.edu");
   });
 
   it("can store and retrieve Hawaii profs", async () => {
@@ -1534,7 +1506,7 @@ describe("15. Real School Storage Round-Trip", it => {
     }));
     const csv = buildCSV([], exportData);
     assertContains(csv, "Dr. Gene Hall");
-    assertContains(csv, "Dr. Walter Leal");
+    assertContains(csv, "Dr. Ludek Zurek");
     assertContains(csv, "Dr. Mark Wright");
   });
 
@@ -1551,10 +1523,10 @@ describe("15. Real School Storage Round-Trip", it => {
     assertEqual(totalVisible, 1);
   });
 
-  it("search on UC Davis research area works", () => {
-    const profs = SAMPLE_PROFS["University of California Davis"];
-    const container = buildSandboxDOM([{ name: "University of California Davis", profs }]);
-    const { totalVisible } = applySearchTest(container, "demography");
+  it("search on Kansas State University research area works", () => {
+    const profs = SAMPLE_PROFS["Kansas State University"];
+    const container = buildSandboxDOM([{ name: "Kansas State University", profs }]);
+    const { totalVisible } = applySearchTest(container, "cockroach biology");
     assertEqual(totalVisible, 1);
   });
 
@@ -1585,9 +1557,9 @@ describe("15. Real School Storage Round-Trip", it => {
     assertContains(html, "href=\"https://insects.arizona.edu/people/gene-hall\"");
   });
 
-  it("buildProfTable handles UC Davis null profileUrl gracefully", () => {
-    const html = buildProfTable(SAMPLE_PROFS["University of California Davis"]);
-    assertContains(html, "Dr. James Carey");
+  it("buildProfTable handles Kansas State University null profileUrl gracefully", () => {
+    const html = buildProfTable(SAMPLE_PROFS["Kansas State University"]);
+    assertContains(html, "Dr. Brian Ritter");
     // null profileUrl → dash, not a broken link
     assertNotContains(html, 'href="null"');
   });

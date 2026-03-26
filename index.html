@@ -461,6 +461,20 @@
 
   <!-- schools -->
   <div class="win-body">
+
+    <!-- add school form -->
+    <div style="display:flex; align-items:flex-end; gap:6px; flex-wrap:wrap; margin-bottom:10px; padding:6px 8px; background:#e8e8ff; border-top:2px solid #fff; border-left:2px solid #fff; border-right:2px solid #444; border-bottom:2px solid #444;">
+      <div>
+        <label style="font-family:'VT323',monospace; font-size:14px; display:block; margin-bottom:2px;">School name:</label>
+        <input id="addSchoolName" type="text" class="search-input" style="width:180px;" placeholder="e.g. Cornell University" />
+      </div>
+      <div style="flex:1; min-width:200px;">
+        <label style="font-family:'VT323',monospace; font-size:14px; display:block; margin-bottom:2px;">Faculty page URL:</label>
+        <input id="addSchoolUrl" type="url" class="search-input" style="width:100%;" placeholder="https://..." />
+      </div>
+      <button class="btn" onclick="addSchoolManual()" style="white-space:nowrap;">+ Add School</button>
+    </div>
+
     <div id="schools-container"></div>
 
     <div class="under-construction" style="margin-top:12px;">
@@ -664,11 +678,30 @@ function levenshtein(a, b) {
   return dp[m][n];
 }
 
-// Merge KNOWN_FIELDS with any research tags currently rendered in the DOM.
+// Merge KNOWN_FIELDS + DOM tags + localStorage scraped tags into a Set.
 function collectKnownFields() {
-  const fromDOM = Array.from(document.querySelectorAll(".tag-research"))
-    .map(el => el.textContent.toLowerCase().trim());
-  return [...new Set([...KNOWN_FIELDS, ...fromDOM])];
+  const fields = new Set(KNOWN_FIELDS);
+  // Add DOM-rendered tags
+  document.querySelectorAll(".tag-research").forEach(el => {
+    const t = el.textContent.toLowerCase().trim();
+    if (t) fields.add(t);
+  });
+  // Add localStorage scraped tags
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith("entoprofesso:school:")) continue;
+    try {
+      const data = JSON.parse(localStorage.getItem(key));
+      if (data && Array.isArray(data.professors)) {
+        for (const p of data.professors) {
+          if (Array.isArray(p.research)) {
+            p.research.forEach(r => { if (r) fields.add(r.toLowerCase().trim()); });
+          }
+        }
+      }
+    } catch {}
+  }
+  return fields;
 }
 
 // For each field term, find the closest known match.
@@ -676,7 +709,7 @@ function collectKnownFields() {
 function findCorrections(fields) {
   const known = collectKnownFields();
   return fields.flatMap(field => {
-    if (known.includes(field)) return [];
+    if (known.has(field)) return [];
     let bestDist = Infinity, bestMatch = null;
     for (const k of known) {
       const d = levenshtein(field, k);
@@ -695,6 +728,9 @@ function findCorrections(fields) {
 let chatState = "awaiting_fields";
 let pendingFields = [];
 let pendingCorrections = [];
+let pendingPartials = [];      // [{term, matches:[...]}]
+let resolvedFromPartials = []; // field strings expanded from partial terms
+let cleanFromParsed = [];      // exact-match fields from the same parse
 
 function toggleChat() {
   const box = document.getElementById("chatbox");
@@ -749,26 +785,6 @@ function scrollMsgs() {
 //  FIELD GUIDE — known-field helpers
 // ═══════════════════════════════════════════
 
-// Collect every research tag that has actually been scraped into localStorage
-function collectKnownFields() {
-  const fields = new Set();
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key || !key.startsWith("entoprofesso:school:")) continue;
-    try {
-      const data = JSON.parse(localStorage.getItem(key));
-      if (data && Array.isArray(data.professors)) {
-        for (const p of data.professors) {
-          if (Array.isArray(p.research)) {
-            p.research.forEach(r => { if (r) fields.add(r.toLowerCase().trim()); });
-          }
-        }
-      }
-    } catch {}
-  }
-  return fields;
-}
-
 function levenshtein(a, b) {
   const m = a.length, n = b.length;
   const dp = Array.from({length: m + 1}, (_, i) =>
@@ -792,19 +808,47 @@ function findClosestInSet(term, fieldSet) {
   return best;
 }
 
-// Validate pendingFields against knownFields; returns { clean, corrections, unknown }
+// Find known fields that contain `term` as a complete word/phrase (not just any substring).
+// Only triggers when term length >= 3 and at least 2 matches exist.
+function findPartialMatches(term, knownFields) {
+  if (term.length < 3 || knownFields.has(term)) return [];
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`(?:^|\\s)${escaped}(?:\\s|$)`);
+  const results = [];
+  for (const f of knownFields) {
+    if (f !== term && re.test(f)) results.push(f);
+  }
+  return results;
+}
+
+// Validate pendingFields against knownFields; returns { clean, corrections, unknown, partials }
 function validateFields(fields, knownFields) {
-  const clean = [], corrections = [], unknown = [];
+  const clean = [], corrections = [], unknown = [], partials = [];
   for (const f of fields) {
     if (knownFields.has(f)) {
       clean.push(f);
     } else {
-      const suggestion = findClosestInSet(f, knownFields);
-      if (suggestion) corrections.push({ original: f, suggested: suggestion });
-      else unknown.push(f);
+      const matches = findPartialMatches(f, knownFields);
+      if (matches.length >= 2) {
+        partials.push({ term: f, matches });
+      } else {
+        const suggestion = findClosestInSet(f, knownFields);
+        if (suggestion) corrections.push({ original: f, suggested: suggestion });
+        else unknown.push(f);
+      }
     }
   }
-  return { clean, corrections, unknown };
+  return { clean, corrections, unknown, partials };
+}
+
+// Show the clarification prompt for the current first pending partial.
+function askAboutPartial() {
+  const { term, matches } = pendingPartials[0];
+  const list = matches.map(m => `<b>${escapeHtml(m)}</b>`).join(", ");
+  addBotMsg(
+    `"<b>${escapeHtml(term)}</b>" matches several fields: ${list}.<br><br>` +
+    `Type <b>broad</b> to search across all of them, or type the specific field you want.`
+  );
 }
 
 async function sendChat() {
@@ -820,6 +864,9 @@ async function sendChat() {
   if (CANCEL.some(w => lower === w || lower.startsWith(w + " "))) {
     pendingFields = [];
     pendingCorrections = [];
+    pendingPartials = [];
+    resolvedFromPartials = [];
+    cleanFromParsed = [];
     chatState = "awaiting_fields";
     addBotMsg("Cancelled! Type research fields whenever you're ready. 🐛");
     return;
@@ -851,12 +898,21 @@ async function sendChat() {
       return;
     }
 
-    const { clean, corrections, unknown } = validateFields(pendingFields, knownFields);
+    const { clean, corrections, unknown, partials } = validateFields(pendingFields, knownFields);
 
-    if (unknown.length > 0 && corrections.length === 0) {
+    if (unknown.length > 0 && corrections.length === 0 && partials.length === 0) {
       // Completely unrecognized, no close matches
       addBotMsg(`I don't recognize: ${unknown.map(f => `<b>${escapeHtml(f)}</b>`).join(", ")}. What did you mean? Try a field from the scraped faculty data.`);
       return; // stay in awaiting_fields
+    }
+
+    if (partials.length > 0) {
+      cleanFromParsed = clean;
+      resolvedFromPartials = [];
+      pendingPartials = partials;
+      askAboutPartial();
+      chatState = "confirming_partial";
+      return;
     }
 
     if (corrections.length > 0) {
@@ -871,6 +927,31 @@ async function sendChat() {
     }
 
     // All recognized
+    const list = pendingFields.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
+    addBotMsg(`Got it! I'll filter for: ${list}<br><br>Type <b>yes</b> to apply, or enter different fields to change.`);
+    chatState = "confirming";
+
+  // ── confirming_partial ───────────────────────────────
+  } else if (chatState === "confirming_partial") {
+    const { term, matches } = pendingPartials[0];
+    if (lower === "broad") {
+      // Expand to all matching fields
+      resolvedFromPartials.push(...matches);
+    } else if (matches.includes(lower)) {
+      // User picked a specific field
+      resolvedFromPartials.push(lower);
+    } else {
+      addBotMsg(`Please type <b>broad</b> to match all, or one of the listed fields (e.g. <b>${escapeHtml(matches[0])}</b>).`);
+      return;
+    }
+    pendingPartials.shift();
+    if (pendingPartials.length > 0) {
+      // More partials to resolve
+      askAboutPartial();
+      return;
+    }
+    // All partials resolved — merge with clean fields and proceed to confirm
+    pendingFields = [...cleanFromParsed, ...resolvedFromPartials];
     const list = pendingFields.map(f => `<b>${escapeHtml(f)}</b>`).join(", ");
     addBotMsg(`Got it! I'll filter for: ${list}<br><br>Type <b>yes</b> to apply, or enter different fields to change.`);
     chatState = "confirming";
@@ -1153,7 +1234,7 @@ function safeUrl(url) {
 
 function buildProfTable(profs) {
   if (!profs || profs.length === 0) {
-    return `<div class="no-results">${IMG_CONE} No faculty data found for this school.</div>`;
+    return `<div class="no-results">${IMG_CONE} No faculty data found. The faculty page may load via JavaScript (try scraping again), or the URL may need updating.</div>`;
   }
   const rows = profs.map(p => {
     const research = Array.isArray(p.research) ? p.research : [];
@@ -1293,8 +1374,8 @@ async function fetchPageText(url) {
   if (text.includes("error 403") || text.includes("error 404") || text.length < 300) {
     throw new Error(`Could not retrieve page content from ${url} (blocked or empty).`);
   }
-  // Cap at 30k chars to stay within token budget (faculty content can start late in page)
-  return text.slice(0, 30000);
+  // Cap at 60k chars — faculty listings can appear deep in pages with long nav/boilerplate
+  return text.slice(0, 60000);
 }
 
 // ═══════════════════════════════════════════
@@ -1307,7 +1388,7 @@ async function agentFindFaculty(school) {
 
   const prompt = `The following is text scraped from the faculty directory page of ${school.name} (${school.url}).
 
-Extract every faculty member you can find. For each person return:
+Extract every faculty member you can find. Look for names with academic titles (Professor, Dr., PhD), staff listings, directory entries, or any person listed under a people/faculty/staff section. For each person return:
 - name: full name
 - title: academic rank (Professor, Associate Professor, Assistant Professor, Researcher, Lecturer, etc.)
 - research: array of 2–5 research topic keywords (infer from their bio if not listed explicitly)
@@ -1395,6 +1476,39 @@ async function clearOne(schoolName) {
   renderSchoolCard(school, null);
   log(`🗑 Cleared cache for ${school.name}`);
   await updateHitCounter();
+}
+
+function addSchoolManual() {
+  const nameInput = document.getElementById("addSchoolName");
+  const urlInput  = document.getElementById("addSchoolUrl");
+  const name = nameInput.value.trim();
+  const url  = urlInput.value.trim();
+
+  if (!name) { nameInput.focus(); return; }
+  if (!url || (!url.startsWith("http://") && !url.startsWith("https://"))) {
+    urlInput.focus(); return;
+  }
+  if (SCHOOLS.some(s => s.name === name || s.url === url)) {
+    log(`⚠ "${name}" is already in the list.`);
+    return;
+  }
+
+  const school = { name, url };
+  SCHOOLS.push(school);
+
+  // Persist to user_schools so it survives page reload
+  try {
+    const raw = localStorage.getItem(USER_SCHOOLS_KEY);
+    const existing = raw ? JSON.parse(raw) : [];
+    existing.push(school);
+    localStorage.setItem(USER_SCHOOLS_KEY, JSON.stringify(existing));
+  } catch {}
+
+  renderSchoolCard(school, null);
+  nameInput.value = "";
+  urlInput.value  = "";
+  log(`+ Added "${name}". Click Scrape to fetch faculty.`);
+  updateHitCounter();
 }
 
 async function removeSchool(schoolName) {
@@ -1642,6 +1756,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   log("Ento-Professo Search 3000 initialized. " + SCHOOLS.length + " schools loaded.");
   if (added > 0) log(`+ ${added} school${added > 1 ? "s" : ""} added from School Finder.`);
   if (activeFilters.length > 0) log(`Field Guide filter restored: ${activeFilters.join(", ")}`);
+
+  // Enter on URL field submits the add-school form
+  document.getElementById("addSchoolUrl").addEventListener("keydown", e => {
+    if (e.key === "Enter") addSchoolManual();
+  });
 });
 </script>
 </body>

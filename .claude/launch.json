@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "ento-professo",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "7821", "--directory", "/Users/olivia/Desktop/Programmed Apps/bugprof-finder"],
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "7821", "/Users/olivia/Desktop/Programmed Apps/bugprof-finder"],
       "port": 7821
     }
   ]
