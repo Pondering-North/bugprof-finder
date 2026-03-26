@@ -1,0 +1,9 @@
+{
+  "name": "bugprof-finder",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@sparticuz/chromium-min": "^121.0.0",
+    "puppeteer-core": "^21.11.0"
+  }
+}

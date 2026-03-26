@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GradSearch 20/20 :: Vision for Your Future</title>
+<title>GradSpy 20/20 :: The Vision for Your Future</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -327,6 +327,38 @@ body {
 }
 .footer a { color: #aaccee; text-decoration: none; margin: 0 6px; }
 .footer a:hover { color: #fff; text-decoration: underline; }
+
+/* ── MOBILE ── */
+@media (max-width: 700px) {
+  /* Stack header items */
+  .header { flex-wrap: wrap; gap: 10px; min-height: auto; padding: 12px 14px; }
+  .header-logo { font-size: 30px; letter-spacing: -1px; }
+  .header-tagline { font-size: 17px; }
+  .header-tagline .future { font-size: 20px; }
+  .header-search-hint { display: none; }
+
+  /* Stack sidebar → top nav bar */
+  .layout { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 3px solid #0d2236;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .sidebar-label { width: 100%; }
+  .sidebar-item { flex: 1 1 auto; border-bottom: none; border-right: 1px solid #0d2236; text-align: center; }
+
+  /* Spotlight moves below content */
+  .spotlight { width: 100%; border-left: none; border-top: 3px solid #0d1a0d; }
+
+  /* Search row stacks */
+  .search-row { flex-direction: column; }
+  .search-btn { width: 100%; }
+
+  /* Content padding */
+  .content { padding: 14px 12px; }
+}
 </style>
 </head>
 <body>
@@ -342,10 +374,10 @@ body {
     GRAD<span class="accent">SEARCH</span>&nbsp;<span class="num">20/20</span>
   </div>
   <div class="header-tagline">
-    Vision for Your <span class="future">Future</span>
+    The Vision for Your <span class="future">Future</span>
   </div>
   <div class="header-search-hint">
-    Search any field, any school<br>
+    Search any field or school<br>
     US &amp; Canadian universities<br>
     Powered by AI
   </div>
@@ -359,7 +391,6 @@ body {
     <div class="sidebar-label">Navigate</div>
     <a class="sidebar-item active" href="#">Search Programs</a>
     <a class="sidebar-item" href="#how-it-works">How It Works</a>
-    <a class="sidebar-item" href="../index.html">Ento-Professo</a>
 
     <div class="sidebar-label" style="margin-top:16px;">Quick Searches</div>
     <button class="sidebar-item" onclick="quickSearch('best PhD programs in entomology')">Entomology</button>
@@ -375,11 +406,11 @@ body {
   <!-- Main content -->
   <div class="content">
 
-    <div class="section-heading">Find Your Graduate Program</div>
+    <div class="section-heading">Find Your Ideal Graduate Program</div>
 
     <div class="search-box">
       <p>
-        Ask anything — a field, a specialty, a career goal, or a country preference.
+        Ask about a field, a specialty, a specific program, or a country.
         For example: <em>"best PhD programs in chemical ecology"</em>,
         <em>"top schools for wildlife conservation in Canada"</em>, or
         <em>"where should I go for a master's in public health?"</em>
@@ -437,7 +468,7 @@ body {
         border:1px solid #44aa44;
         text-decoration:none; letter-spacing:0.5px;
         box-shadow: 0 0 8px rgba(80,200,80,0.3);
-      ">★ Ento-Professo Web Ring ★<br>
+      ">★ Web Ring ★<br>
       <span style="font-size:11px; font-weight:normal; color:#88cc88;">Explore more tools →</span></a>
     </div>
 

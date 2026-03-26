@@ -22,7 +22,7 @@
   body {
     background-color: #000080;
     background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%230000aa' /%3E%3C/svg%3E");
-    font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+    font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
     color: #000;
     min-height: 100vh;
     padding: 10px;
@@ -73,7 +73,7 @@
   .main-header p { font-size: 13px; color: #ddd; margin-top: 4px; }
   .bug-row { font-size: 28px; letter-spacing: 6px; margin: 6px 0; }
   .btn {
-    font-family: 'Comic Sans MS', cursive;
+    font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
     font-size: 13px;
     background: var(--bg);
     border-top: 2px solid #fff; border-left: 2px solid #fff;
@@ -333,7 +333,7 @@
     padding: 8px; display: flex; flex-direction: column; gap: 7px;
   }
   .chat-bubble {
-    font-family: 'Comic Sans MS', cursive; font-size: 12px;
+    font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; font-size: 12px;
     padding: 6px 9px; max-width: 88%; line-height: 1.5;
   }
   /* FIX 2: bot bubble gets a solid left accent bar; user bubble gets a right accent bar —
@@ -378,6 +378,27 @@
 
   /* Hide table rows that don't match the active field filter */
   tr.filter-hidden { display: none; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 640px) {
+    body { padding: 6px; }
+    .main-header h1 { font-size: 36px; letter-spacing: 1px; }
+    .bug-row { font-size: 20px; letter-spacing: 3px; }
+    .toolbar { gap: 4px; padding: 6px; }
+    .search-input { width: 100%; min-width: 0; }
+    /* Field Guide chatbox fills most of the screen width */
+    #chatbox {
+      width: calc(100vw - 36px);
+      right: 18px;
+      bottom: 58px;
+    }
+    /* Larger tap targets for toolbar buttons */
+    .btn { padding: 6px 10px; font-size: 14px; }
+    /* School card headers stack */
+    .school-header { flex-direction: column; align-items: flex-start; }
+    /* Log box a little shorter */
+    #log-box { height: 90px; }
+  }
 </style>
 </head>
 <body>
@@ -497,7 +518,7 @@
     border-right:3px solid #000; border-bottom:3px solid #000;
     padding:6px 22px; text-decoration:none; letter-spacing:1px;
     box-shadow:3px 3px 0 #000;
-  ">🌐 Ento-Professo Web Ring — Find More Schools</a>
+  ">🌐 Web Ring </a>
 </div>
 <p style="text-align:center; font-family:'VT323',monospace; font-size:14px; color:#fff; margin-top:6px;">
   © 1997–2026 Ento-Professo Search 3000 Research Systems Inc. · Made with
@@ -1353,6 +1374,23 @@ function setProgress(id, pct, label) {
 //  and returns clean markdown text
 // ═══════════════════════════════════════════
 async function fetchPageText(url) {
+  // Try headless-browser scrape first (handles JS-rendered pages)
+  try {
+    const scrapeResp = await fetch("/api/scrape", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+      signal: AbortSignal.timeout(55000),
+    });
+    if (scrapeResp.ok) {
+      const { text } = await scrapeResp.json();
+      if (text && text.length >= 300) {
+        return text.slice(0, 80000);
+      }
+    }
+  } catch (_) { /* fall through to Jina */ }
+
+  // Fallback: Jina Reader (works for static / SSR pages)
   const resp = await fetch(`https://r.jina.ai/${url}`, {
     headers: { "Accept": "text/plain" },
     signal: AbortSignal.timeout(20000)

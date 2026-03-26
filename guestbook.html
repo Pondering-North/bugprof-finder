@@ -178,7 +178,7 @@
 
 <div class="win" style="max-width:860px; margin:10px auto;">
   <div class="win-title">
-    <span>📖 Ento-Professo Guestbook — Sign Your Name!!</span>
+    <span> Sign Your Name in the Guestbook! </span>
     <div class="btns">
       <a class="win-btn" href="index.html" title="Back to main app">←</a>
     </div>
@@ -197,7 +197,7 @@
       <img src="images/worm.png" style="height:32px; vertical-align:middle;">
     </div>
     <h1>Ento-Professo Guestbook</h1>
-    <div class="sub">Sign your name and leave a note for fellow bug enthusiasts!!</div>
+    <div class="sub">Sign your name and leave a note for fellow bug enthusiasts.</div>
   </div>
 
   <!-- sign form -->
@@ -208,11 +208,11 @@
         <div class="form-row">
           <div>
             <label for="inp-name">Your Name: *</label>
-            <input id="inp-name" type="text" maxlength="80" placeholder="e.g. Jane Entomologist" />
+            <input id="inp-name" type="text" maxlength="80" placeholder="e.g. Jane Doe" />
           </div>
           <div style="flex:1; min-width:200px;">
             <label for="inp-msg">Message (optional):</label>
-            <textarea id="inp-msg" maxlength="500" placeholder="Write something... 🐛"></textarea>
+            <textarea id="inp-msg" maxlength="500" placeholder="Write something... "></textarea>
           </div>
         </div>
         <button class="btn btn-sign" onclick="signGuestbook()">Sign Guestbook!</button>
@@ -227,7 +227,7 @@
       </div>
       <div class="win-body">
         <div id="entries-list">
-          <div class="empty-msg">Be the first to sign</div>
+          <div class="empty-msg">Be the first to sign!</div>
         </div>
       </div>
     </div>
@@ -241,7 +241,7 @@
 </div>
 
 <p style="text-align:center; font-family:'VT323',monospace; font-size:14px; color:#fff; margin-top:6px;">
-  © 1997–2026 Ento-Professo Search 3000 Research Systems Inc. · Made with 
+  © 2026–2026 Ento-Professo Search 3000 Research Systems Inc. · Made with 
   <image src="images/heart.png" style="height:14px; vertical-align:middle; image-rendering: pixelated;"> 
   and lots of 
   <image src="images/space-invader-orange.png" style="height:14px; vertical-align:middle; image-rendering: pixelated;"> ·
@@ -337,7 +337,7 @@ function signGuestbook() {
   nameInput.value = "";
   msgInput.value = "";
   renderEntries();
-  showToast(`${GB_CHECK} You've signed the guestbook!!`);
+  showToast(`${GB_CHECK} Guestbook signed!`);
   setStatus(`${GB_CHECK} Welcome, ${name}! Entry #${entries.length} saved.`);
 }
 

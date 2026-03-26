@@ -1,5 +1,8 @@
 {
   "rewrites": [
     { "source": "/", "destination": "/bugprof.html" }
-  ]
+  ],
+  "functions": {
+    "api/scrape.js": { "maxDuration": 60 }
+  }
 }
