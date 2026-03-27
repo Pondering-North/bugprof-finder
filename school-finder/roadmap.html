@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap :: GradSearch 20/20</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  background: #b8c8b0;
+  color: #111;
+  min-height: 100vh;
+}
+
+/* ── TOP UTILITY BAR ── */
+.top-bar {
+  background: #1a2e4a;
+  color: #99bbd8;
+  font-size: 11px;
+  text-align: right;
+  padding: 3px 16px;
+  border-bottom: 1px solid #0d1f33;
+}
+.top-bar a {
+  color: #99bbd8; text-decoration: none;
+  margin-left: 16px; letter-spacing: 0.5px;
+}
+.top-bar a:hover { color: #fff; text-decoration: underline; }
+
+/* ── HEADER BANNER ── */
+.header {
+  background: linear-gradient(to right,
+    #001f6b 0%, #0044bb 20%, #006688 45%, #228844 65%, #88bb00 85%, #ccdd00 100%);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 22px;
+  min-height: 88px;
+}
+.header-logo {
+  font-size: 42px;
+  font-weight: 900;
+  font-style: italic;
+  color: #fff;
+  letter-spacing: -2px;
+  text-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+  white-space: nowrap;
+  line-height: 1;
+}
+.header-logo .accent { color: #ffee00; }
+.header-logo .num    { font-size: 28px; vertical-align: super; color: #ffee00; }
+.header-tagline {
+  color: #fff;
+  font-size: 24px;
+  font-style: italic;
+  font-weight: bold;
+  text-shadow: 1px 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: 1px;
+  line-height: 1.2;
+}
+.header-tagline .future { color: #ffee00; font-size: 28px; }
+.header-badge {
+  margin-left: auto;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+
+/* ── MAIN LAYOUT ── */
+.layout {
+  display: flex;
+  min-height: calc(100vh - 130px);
+}
+
+/* ── LEFT SIDEBAR ── */
+.sidebar {
+  width: 165px;
+  flex-shrink: 0;
+  background: #1a3a5c;
+  border-right: 3px solid #0d2236;
+}
+.sidebar-label {
+  background: #0d2236;
+  color: #88bbdd;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 7px 10px;
+}
+.sidebar-item {
+  display: block;
+  background: linear-gradient(to bottom, #2d6299, #1a4a7a);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-bottom: 1px solid #0d2236;
+  border-top: 1px solid #3d7aaa;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.1s;
+  text-align: left;
+  width: 100%;
+  font-family: Arial, sans-serif;
+}
+.sidebar-item:hover { background: linear-gradient(to bottom, #4d88cc, #2d66aa); }
+.sidebar-item.active { background: linear-gradient(to bottom, #5599dd, #3377bb); border-left: 3px solid #ffee00; }
+
+/* ── MAIN CONTENT ── */
+.content {
+  flex: 1;
+  padding: 20px 24px;
+  background: #f5f5ee;
+  border-left: 1px solid #8899aa;
+}
+
+.section-heading {
+  color: #3a5500;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #779922;
+}
+
+/* ── INTAKE FORM ── */
+.intake-form {
+  background: #fff;
+  border: 1px solid #aabbaa;
+  border-top: 3px solid #779922;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.08);
+}
+.intake-form p {
+  color: #334422;
+  font-size: 13px;
+  margin-bottom: 16px;
+  line-height: 1.7;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+.form-field.full { grid-column: 1 / -1; }
+.form-label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #2a4400;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.form-label .req { color: #cc4400; margin-left: 2px; }
+.form-textarea {
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 2px inset #aaa;
+  background: #fffffc;
+  font-family: Arial, sans-serif;
+  resize: vertical;
+  min-height: 72px;
+  color: #111;
+  outline: none;
+  line-height: 1.5;
+}
+.form-textarea:focus { border-color: #4477aa; }
+.form-textarea::placeholder { color: #999; font-style: italic; }
+.form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.generate-btn {
+  background: linear-gradient(to bottom, #5588cc, #2255aa);
+  color: #fff;
+  border: none;
+  border-top: 2px solid #88aaee;
+  border-left: 2px solid #88aaee;
+  border-right: 2px solid #112244;
+  border-bottom: 2px solid #112244;
+  padding: 10px 28px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: Arial, sans-serif;
+}
+.generate-btn:hover { background: linear-gradient(to bottom, #77aaee, #4477cc); }
+.generate-btn:active {
+  border-top: 2px solid #112244; border-left: 2px solid #112244;
+  border-right: 2px solid #88aaee; border-bottom: 2px solid #88aaee;
+}
+.generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.clear-btn {
+  background: linear-gradient(to bottom, #cc6644, #992211);
+  color: #fff;
+  border: none;
+  border-top: 2px solid #ee9977;
+  border-left: 2px solid #ee9977;
+  border-right: 2px solid #440000;
+  border-bottom: 2px solid #440000;
+  padding: 10px 18px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: Arial, sans-serif;
+}
+.clear-btn:hover { background: linear-gradient(to bottom, #ee8866, #bb3322); }
+
+/* ── LOADING / ERROR ── */
+.loading {
+  text-align: center; padding: 36px; color: #445533; font-style: italic;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.spinner {
+  width: 28px; height: 28px;
+  border: 4px solid #bccfaa; border-top-color: #4477aa;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-box {
+  background: #ffeeee; border: 1px solid #cc8888;
+  padding: 12px 16px; color: #880000; font-size: 12px;
+}
+
+/* ── ROADMAP DISPLAY ── */
+.roadmap-output {
+  display: none;
+}
+.roadmap-output.visible { display: block; }
+
+/* Saved badge */
+.saved-banner {
+  background: #eef5dd;
+  border: 1px solid #99bb55;
+  border-left: 4px solid #557711;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #334400;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.saved-banner strong { color: #2a3a00; }
+.redo-btn {
+  background: linear-gradient(to bottom, #cc9933, #996611);
+  color: #fff;
+  border: none;
+  border-top: 2px solid #eebb55;
+  border-left: 2px solid #eebb55;
+  border-right: 2px solid #443300;
+  border-bottom: 2px solid #443300;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: Arial, sans-serif;
+  white-space: nowrap;
+}
+.redo-btn:hover { background: linear-gradient(to bottom, #eebb44, #bb8822); }
+
+/* Roadmap sections */
+.roadmap-section {
+  background: #fff;
+  border: 1px solid #bbccaa;
+  margin-bottom: 16px;
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.07);
+}
+.roadmap-section-header {
+  background: linear-gradient(to right, #1a3a5c, #2d5a8c);
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 9px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.roadmap-section-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.roadmap-section-body {
+  padding: 16px 18px;
+  font-size: 13px;
+  color: #222;
+  line-height: 1.75;
+}
+
+/* Profile summary */
+.profile-summary {
+  font-style: italic;
+  color: #334422;
+  background: #f8fbf4;
+  border-left: 4px solid #779922;
+  padding: 10px 14px;
+  line-height: 1.75;
+}
+
+/* Degree recommendation */
+.degree-badge {
+  display: inline-block;
+  background: linear-gradient(to bottom, #0044bb, #002277);
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
+  font-style: italic;
+  padding: 8px 22px;
+  margin-bottom: 12px;
+  border-bottom: 3px solid #001155;
+  letter-spacing: 1px;
+}
+.degree-detail {
+  margin-bottom: 12px;
+}
+.degree-detail h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #445533;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+.degree-detail p { color: #222; font-size: 13px; line-height: 1.7; }
+
+/* Fields */
+.field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.field-item { border-left: 4px solid #779922; padding: 8px 12px; background: #f8fbf4; }
+.field-name { font-weight: bold; color: #1a3a00; font-size: 14px; margin-bottom: 4px; }
+.field-why  { color: #334422; font-size: 13px; line-height: 1.65; }
+
+/* Timeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.timeline-row {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #ddeebb;
+}
+.timeline-row:last-child { border-bottom: none; }
+.timeline-period {
+  background: linear-gradient(to bottom, #2a5500, #1a3a00);
+  color: #ccff99;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 12px;
+  width: 130px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  line-height: 1.3;
+}
+.timeline-actions {
+  padding: 10px 14px;
+  background: #f8fbf4;
+  flex: 1;
+}
+.timeline-actions ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.timeline-actions li {
+  font-size: 13px;
+  color: #222;
+  line-height: 1.55;
+  padding-left: 18px;
+  position: relative;
+}
+.timeline-actions li::before {
+  content: "›";
+  position: absolute;
+  left: 5px;
+  color: #779922;
+  font-weight: bold;
+}
+
+/* Suggested searches */
+.search-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.suggestion-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fbf4;
+  border: 1px solid #bbccaa;
+  padding: 10px 14px;
+}
+.suggestion-label {
+  flex: 1;
+  font-size: 13px;
+  color: #223300;
+  line-height: 1.5;
+}
+.suggestion-label em {
+  display: block;
+  font-size: 12px;
+  color: #667755;
+  font-style: italic;
+  margin-top: 2px;
+}
+.suggestion-btn {
+  background: linear-gradient(to bottom, #5588cc, #2255aa);
+  color: #fff;
+  border: none;
+  border-top: 2px solid #88aaee;
+  border-left: 2px solid #88aaee;
+  border-right: 2px solid #112244;
+  border-bottom: 2px solid #112244;
+  padding: 7px 16px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-family: Arial, sans-serif;
+  text-decoration: none;
+  display: inline-block;
+}
+.suggestion-btn:hover { background: linear-gradient(to bottom, #77aaee, #4477cc); }
+
+/* Action items */
+.action-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  counter-reset: action-counter;
+}
+.action-list li {
+  counter-increment: action-counter;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 8px 12px;
+  background: #f8fbf4;
+  border: 1px solid #ccddb8;
+}
+.action-list li::before {
+  content: counter(action-counter);
+  background: #3a6600;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── RIGHT SPOTLIGHT PANEL ── */
+.spotlight {
+  width: 190px;
+  flex-shrink: 0;
+  background: #1a2a1a;
+  border-left: 3px solid #0d1a0d;
+}
+.spotlight-header {
+  background: linear-gradient(to bottom, #2a5a2a, #1a3a1a);
+  color: #ccff99;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 9px 12px;
+  text-align: center;
+  border-bottom: 1px solid #0d1a0d;
+}
+.spotlight-section {
+  padding: 11px 13px;
+  border-bottom: 1px solid #2a3a2a;
+}
+.spotlight-section p {
+  font-size: 12px; color: #bbddbb;
+  line-height: 1.65;
+}
+.spotlight-section strong { color: #ddf0aa; }
+.spotlight-section a {
+  color: #99ee99; text-decoration: none; font-size: 12px;
+}
+.spotlight-section a:hover { text-decoration: underline; color: #ccffcc; }
+
+/* ── FOOTER ── */
+.footer {
+  background: #1a2e4a;
+  color: #99bbdd;
+  font-size: 12px;
+  text-align: center;
+  padding: 14px;
+  border-top: 2px solid #0d1f33;
+}
+.footer a { color: #aaccee; text-decoration: none; margin: 0 6px; }
+.footer a:hover { color: #fff; text-decoration: underline; }
+
+/* ── MOBILE ── */
+@media (max-width: 700px) {
+  .header { flex-wrap: wrap; gap: 10px; min-height: auto; padding: 12px 14px; }
+  .header-logo { font-size: 30px; letter-spacing: -1px; }
+  .header-tagline { font-size: 17px; }
+  .header-tagline .future { font-size: 20px; }
+  .header-badge { display: none; }
+
+  .layout { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 3px solid #0d2236;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .sidebar-label { width: 100%; }
+  .sidebar-item { flex: 1 1 auto; border-bottom: none; border-right: 1px solid #0d2236; text-align: center; }
+
+  .spotlight { width: 100%; border-left: none; border-top: 3px solid #0d1a0d; }
+  .content { padding: 14px 12px; }
+
+  .form-grid { grid-template-columns: 1fr; }
+  .timeline-period { width: 90px; font-size: 10px; }
+  .suggestion-row { flex-direction: column; align-items: flex-start; }
+  .suggestion-btn { width: 100%; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top utility bar -->
+<div class="top-bar">
+  <a href="../index.html">Ento-Professo</a>
+</div>
+
+<!-- Header banner -->
+<div class="header">
+  <div class="header-logo">
+    GRAD<span class="accent">SEARCH</span>&nbsp;<span class="num">20/20</span>
+  </div>
+  <div class="header-tagline">
+    The Vision for Your <span class="future">Future</span>
+  </div>
+  <div class="header-badge">⬥ Roadmap</div>
+</div>
+
+<!-- Main layout -->
+<div class="layout">
+
+  <!-- Left sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-label">Navigate</div>
+    <a class="sidebar-item" href="index.html">Search Programs</a>
+    <a class="sidebar-item active" href="roadmap.html">My Roadmap</a>
+    <a class="sidebar-item" href="index.html#how-it-works">How It Works</a>
+
+    <div class="sidebar-label" style="margin-top:16px;">Quick Searches</div>
+    <a class="sidebar-item" href="index.html?q=best+PhD+programs+in+entomology">Entomology</a>
+    <a class="sidebar-item" href="index.html?q=top+graduate+programs+in+ecology">Ecology</a>
+    <a class="sidebar-item" href="index.html?q=best+marine+biology+graduate+programs">Marine Biology</a>
+    <a class="sidebar-item" href="index.html?q=top+public+health+graduate+programs">Public Health</a>
+    <a class="sidebar-item" href="index.html?q=best+neuroscience+PhD+programs">Neuroscience</a>
+  </nav>
+
+  <!-- Main content -->
+  <div class="content">
+
+    <!-- INTAKE FORM (shown when no roadmap exists) -->
+    <div id="formPanel">
+      <div class="section-heading">Build Your Graduate Roadmap</div>
+      <div class="intake-form">
+        <p>
+          Tell us about yourself and your goals. The more detail you provide, the more tailored
+          your roadmap will be. Your answers are saved locally and never leave your browser.
+        </p>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label" for="fieldBackground">
+              Your Background <span class="req">*</span>
+            </label>
+            <textarea id="fieldBackground" class="form-textarea"
+              placeholder="e.g. Finishing a B.Sc. in biology, 3.5 GPA, some undergraduate research experience in insect ecology, one published paper"
+              rows="4"></textarea>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="fieldInterests">
+              Your Interests <span class="req">*</span>
+            </label>
+            <textarea id="fieldInterests" class="form-textarea"
+              placeholder="e.g. Insect biodiversity, field work, chemical ecology, love being outdoors — hate pipetting all day"
+              rows="4"></textarea>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="fieldGoal">
+              Career End Goal <span class="req">*</span>
+            </label>
+            <textarea id="fieldGoal" class="form-textarea"
+              placeholder="e.g. Work as a research scientist for a conservation NGO, or become a professor, or go into biotech industry R&amp;D"
+              rows="4"></textarea>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="fieldConstraints">
+              Constraints &amp; Preferences
+            </label>
+            <textarea id="fieldConstraints" class="form-textarea"
+              placeholder="e.g. Need funding / TA stipend, prefer US or Canada, ideally warmer climate, want to finish within 5 years"
+              rows="4"></textarea>
+          </div>
+
+          <div class="form-field full">
+            <label class="form-label" for="fieldExtra">
+              Anything Else?
+            </label>
+            <textarea id="fieldExtra" class="form-textarea"
+              placeholder="e.g. Interested in interdisciplinary work, have a family so prefer part-time options, strong stats background, hoping to do fieldwork abroad"
+              rows="3"></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="generate-btn" id="generateBtn" onclick="generateRoadmap()">
+            ▶ Generate My Roadmap
+          </button>
+          <span id="formHint" style="font-size:12px; color:#667755; font-style:italic;">
+            Fields marked <span style="color:#cc4400">*</span> are required
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div id="loadingPanel" style="display:none;">
+      <div class="section-heading">Building Your Roadmap&hellip;</div>
+      <div class="loading">
+        <div class="spinner"></div>
+        <div>
+          Analysing your background and goals&hellip;<br>
+          <span style="font-size:12px;">This may take 15–25 seconds.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="errorPanel" style="display:none;">
+      <div class="section-heading">Something went wrong</div>
+      <div class="error-box" id="errorMsg"></div>
+      <div style="margin-top:14px;">
+        <button class="generate-btn" onclick="showForm()">← Try Again</button>
+      </div>
+    </div>
+
+    <!-- ROADMAP OUTPUT -->
+    <div id="roadmapOutput" class="roadmap-output">
+      <div class="section-heading">Your Graduate Roadmap</div>
+
+      <div class="saved-banner">
+        <span><strong>✓ Roadmap saved.</strong> This is stored in your browser and will be here when you return.</span>
+        <button class="redo-btn" onclick="redoRoadmap()">↺ Start Over</button>
+      </div>
+
+      <!-- Sections injected by JS -->
+      <div id="sectionSummary"></div>
+      <div id="sectionDegree"></div>
+      <div id="sectionFields"></div>
+      <div id="sectionTimeline"></div>
+      <div id="sectionSearches"></div>
+      <div id="sectionActions"></div>
+    </div>
+
+  </div>
+
+  <!-- Right spotlight panel -->
+  <aside class="spotlight">
+    <div class="spotlight-header">About Roadmap</div>
+    <div class="spotlight-section">
+      <p><strong>Personalised for you:</strong><br>
+      Your roadmap is generated by AI based solely on what you tell us about yourself.</p>
+    </div>
+    <div class="spotlight-section">
+      <p><strong>Saved locally:</strong><br>
+      Your answers and roadmap are stored in your browser — nothing is sent to a server.</p>
+    </div>
+    <div class="spotlight-section">
+      <p><strong>Suggested searches:</strong><br>
+      Each roadmap includes pre-built searches — click them to jump straight into GradSearch results.</p>
+    </div>
+    <div class="spotlight-section">
+      <p><strong>Not set in stone:</strong><br>
+      Use this as a starting point. Hit "Start Over" any time to rebuild with new answers.</p>
+    </div>
+
+    <div class="spotlight-header" style="margin-top:8px;">Web Ring</div>
+    <div class="spotlight-section">
+      <a href="../webring/index.html" style="
+        display:block; text-align:center;
+        background: linear-gradient(to bottom, #2a6a2a, #1a4a1a);
+        color:#ccff99; font-size:13px; font-weight:bold;
+        padding:10px 8px; border-radius:4px;
+        border:1px solid #44aa44;
+        text-decoration:none; letter-spacing:0.5px;
+        box-shadow: 0 0 8px rgba(80,200,80,0.3);
+      ">★ Web Ring ★<br>
+      <span style="font-size:11px; font-weight:normal; color:#88cc88;">Explore more tools →</span></a>
+    </div>
+  </aside>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <a href="../index.html">Ento-Professo Search 3000</a>
+  <a href="index.html">GradSearch 20/20</a>
+  <a href="../webring/index.html">Web Ring</a>
+  <br><br>
+  GradSearch 20/20 — Roadmap &mdash; Powered by Artificial Intelligence &amp; HyperText Technology
+</div>
+
+<script>
+const ROADMAP_KEY = "gradsearch:roadmap";
+
+/* ── BOOT ── */
+window.addEventListener("DOMContentLoaded", () => {
+  const saved = loadSaved();
+  if (saved) {
+    renderRoadmap(saved.roadmap);
+    hideForm();
+  }
+});
+
+/* ── PERSISTENCE ── */
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(ROADMAP_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) { return null; }
+}
+
+function saveSaved(inputs, roadmap) {
+  try {
+    localStorage.setItem(ROADMAP_KEY, JSON.stringify({ inputs, roadmap, savedAt: Date.now() }));
+  } catch (_) {}
+}
+
+function clearSaved() {
+  localStorage.removeItem(ROADMAP_KEY);
+}
+
+/* ── UI STATE ── */
+function hideForm() {
+  document.getElementById("formPanel").style.display = "none";
+  document.getElementById("loadingPanel").style.display = "none";
+  document.getElementById("errorPanel").style.display = "none";
+  document.getElementById("roadmapOutput").classList.add("visible");
+}
+
+function showForm() {
+  document.getElementById("formPanel").style.display = "";
+  document.getElementById("loadingPanel").style.display = "none";
+  document.getElementById("errorPanel").style.display = "none";
+  document.getElementById("roadmapOutput").classList.remove("visible");
+}
+
+function showLoading() {
+  document.getElementById("formPanel").style.display = "none";
+  document.getElementById("loadingPanel").style.display = "";
+  document.getElementById("errorPanel").style.display = "none";
+  document.getElementById("roadmapOutput").classList.remove("visible");
+}
+
+function showError(msg) {
+  document.getElementById("formPanel").style.display = "none";
+  document.getElementById("loadingPanel").style.display = "none";
+  document.getElementById("errorPanel").style.display = "";
+  document.getElementById("errorMsg").textContent = msg;
+  document.getElementById("roadmapOutput").classList.remove("visible");
+}
+
+/* ── REDO ── */
+function redoRoadmap() {
+  if (!confirm("Clear your current roadmap and start over?")) return;
+  clearSaved();
+  showForm();
+}
+
+/* ── GENERATE ── */
+async function generateRoadmap() {
+  const background   = document.getElementById("fieldBackground").value.trim();
+  const interests    = document.getElementById("fieldInterests").value.trim();
+  const goal         = document.getElementById("fieldGoal").value.trim();
+  const constraints  = document.getElementById("fieldConstraints").value.trim();
+  const extra        = document.getElementById("fieldExtra").value.trim();
+
+  if (!background) { alert("Please fill in Your Background."); document.getElementById("fieldBackground").focus(); return; }
+  if (!interests)  { alert("Please fill in Your Interests.");  document.getElementById("fieldInterests").focus();  return; }
+  if (!goal)       { alert("Please fill in Your Career Goal."); document.getElementById("fieldGoal").focus();      return; }
+
+  const inputs = { background, interests, goal, constraints, extra };
+
+  document.getElementById("generateBtn").disabled = true;
+  showLoading();
+
+  const prompt = buildPrompt(inputs);
+
+  try {
+    const raw  = await callClaude(prompt);
+    const clean = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+    const roadmap = JSON.parse(clean);
+    saveSaved(inputs, roadmap);
+    renderRoadmap(roadmap);
+    hideForm();
+  } catch (err) {
+    showError("Failed to generate roadmap: " + err.message + ". Please try again.");
+  } finally {
+    document.getElementById("generateBtn").disabled = false;
+  }
+}
+
+/* ── PROMPT ── */
+function buildPrompt(inputs) {
+  return `You are an expert graduate school advisor. A prospective graduate student has submitted the following profile:
+
+BACKGROUND:
+${inputs.background}
+
+INTERESTS:
+${inputs.interests}
+
+CAREER GOAL:
+${inputs.goal}
+
+CONSTRAINTS & PREFERENCES:
+${inputs.constraints || "None specified."}
+
+ADDITIONAL NOTES:
+${inputs.extra || "None."}
+
+Generate a thorough, detailed, personalised graduate school roadmap for this student.
+
+Return ONLY a raw JSON object — no markdown, no code fences, no explanation. The JSON must match this exact structure:
+
+{
+  "summary": "3-4 sentence personalised profile summary — what you understand about this student and their trajectory.",
+
+  "degreeRecommendation": {
+    "type": "e.g. PhD, MS, MS then PhD, Professional Master's, etc.",
+    "rationale": "3-4 sentences explaining exactly why this degree type fits their background, goal, and constraints.",
+    "duration": "e.g. '5–6 years for a funded PhD' or '2 years for a thesis-based MS'",
+    "fundingOutlook": "2-3 sentences on realistic funding options: TAships, RAships, fellowships (NSF GRFP, NSERC, etc.), typical stipend ranges for their field."
+  },
+
+  "fieldsAndSpecialisations": [
+    {
+      "field": "Specific subfield or specialisation name",
+      "why": "2-3 sentences explaining why this matches their interests and career goal, and what research areas within it they should explore."
+    }
+  ],
+
+  "timeline": [
+    {
+      "period": "Short label, e.g. 'Now – 3 months'",
+      "actions": ["Specific action item 1", "Specific action item 2", "Specific action item 3"]
+    }
+  ],
+
+  "suggestedSearches": [
+    {
+      "label": "Short descriptive label for this search",
+      "description": "One sentence on why this search is relevant to them",
+      "query": "The exact search query string to pass to GradSearch 20/20"
+    }
+  ],
+
+  "actionItems": [
+    "Specific, concrete action item with enough detail to be immediately actionable"
+  ]
+}
+
+Requirements:
+- fieldsAndSpecialisations: include 4-6 fields, highly specific to their interests (not just 'biology')
+- timeline: include 6-8 periods covering from now through degree completion and into career entry
+- suggestedSearches: include exactly 5 searches, each a specific GradSearch query string that will yield useful results
+- actionItems: include 8-12 concrete, prioritised action items (application prep, networking, exams, deadlines, skills to develop, etc.)
+- Be specific and personalised — avoid generic advice; tie every recommendation back to their stated background, interests, and goal
+- For funding, name real fellowships and programmes relevant to their field
+- Return only the JSON object, nothing else`;
+}
+
+/* ── RENDER ── */
+function renderRoadmap(r) {
+  renderSummary(r.summary);
+  renderDegree(r.degreeRecommendation);
+  renderFields(r.fieldsAndSpecialisations);
+  renderTimeline(r.timeline);
+  renderSearches(r.suggestedSearches);
+  renderActions(r.actionItems);
+}
+
+function renderSummary(summary) {
+  document.getElementById("sectionSummary").innerHTML = `
+    <div class="roadmap-section">
+      <div class="roadmap-section-header">
+        <span class="roadmap-section-icon">👤</span>
+        Your Profile
+      </div>
+      <div class="roadmap-section-body">
+        <div class="profile-summary">${escHtml(summary)}</div>
+      </div>
+    </div>`;
+}
+
+function renderDegree(d) {
+  if (!d) return;
+  document.getElementById("sectionDegree").innerHTML = `
+    <div class="roadmap-section">
+      <div class="roadmap-section-header">
+        <span class="roadmap-section-icon">🎓</span>
+        Recommended Degree Path
+      </div>
+      <div class="roadmap-section-body">
+        <div class="degree-badge">${escHtml(d.type || "")}</div>
+
+        <div class="degree-detail">
+          <h4>Why This Path</h4>
+          <p>${escHtml(d.rationale || "")}</p>
+        </div>
+        <div class="degree-detail">
+          <h4>Expected Duration</h4>
+          <p>${escHtml(d.duration || "")}</p>
+        </div>
+        <div class="degree-detail">
+          <h4>Funding Outlook</h4>
+          <p>${escHtml(d.fundingOutlook || "")}</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderFields(fields) {
+  if (!Array.isArray(fields) || !fields.length) return;
+  const rows = fields.map(f => `
+    <div class="field-item">
+      <div class="field-name">${escHtml(f.field || "")}</div>
+      <div class="field-why">${escHtml(f.why || "")}</div>
+    </div>`).join("");
+
+  document.getElementById("sectionFields").innerHTML = `
+    <div class="roadmap-section">
+      <div class="roadmap-section-header">
+        <span class="roadmap-section-icon">🔬</span>
+        Best-Fit Fields &amp; Specialisations
+      </div>
+      <div class="roadmap-section-body">
+        <div class="field-list">${rows}</div>
+      </div>
+    </div>`;
+}
+
+function renderTimeline(timeline) {
+  if (!Array.isArray(timeline) || !timeline.length) return;
+  const rows = timeline.map(t => {
+    const items = (t.actions || []).map(a => `<li>${escHtml(a)}</li>`).join("");
+    return `
+      <div class="timeline-row">
+        <div class="timeline-period">${escHtml(t.period || "")}</div>
+        <div class="timeline-actions"><ul>${items}</ul></div>
+      </div>`;
+  }).join("");
+
+  document.getElementById("sectionTimeline").innerHTML = `
+    <div class="roadmap-section">
+      <div class="roadmap-section-header">
+        <span class="roadmap-section-icon">📅</span>
+        Your Timeline
+      </div>
+      <div class="roadmap-section-body" style="padding:0;">
+        <div class="timeline">${rows}</div>
+      </div>
+    </div>`;
+}
+
+function renderSearches(searches) {
+  if (!Array.isArray(searches) || !searches.length) return;
+  const rows = searches.map(s => {
+    const url = "index.html?q=" + encodeURIComponent(s.query || "");
+    return `
+      <div class="suggestion-row">
+        <div class="suggestion-label">
+          <strong>${escHtml(s.label || "")}</strong>
+          <em>${escHtml(s.description || "")}</em>
+        </div>
+        <a class="suggestion-btn" href="${escAttr(url)}">Search →</a>
+      </div>`;
+  }).join("");
+
+  document.getElementById("sectionSearches").innerHTML = `
+    <div class="roadmap-section">
+      <div class="roadmap-section-header">
+        <span class="roadmap-section-icon">🔍</span>
+        Suggested Searches
+      </div>
+      <div class="roadmap-section-body">
+        <p style="margin-bottom:12px; font-size:12px; color:#445533;">
+          These searches are pre-built for your profile. Click any to open GradSearch with results.
+          You can also <a href="index.html" style="color:#0033aa;">search freely</a> at any time.
+        </p>
+        <div class="search-suggestions">${rows}</div>
+      </div>
+    </div>`;
+}
+
+function renderActions(actions) {
+  if (!Array.isArray(actions) || !actions.length) return;
+  const items = actions.map(a => `<li>${escHtml(a)}</li>`).join("");
+
+  document.getElementById("sectionActions").innerHTML = `
+    <div class="roadmap-section">
+      <div class="roadmap-section-header">
+        <span class="roadmap-section-icon">✅</span>
+        Action Items
+      </div>
+      <div class="roadmap-section-body">
+        <ol class="action-list">${items}</ol>
+      </div>
+    </div>`;
+}
+
+/* ── CLAUDE API ── */
+async function callClaude(prompt) {
+  const resp = await fetch("/api/claude", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-5",
+      max_tokens: 4096,
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+  if (!resp.ok) throw new Error("API error " + resp.status);
+  const data = await resp.json();
+  return data.content[0].text;
+}
+
+/* ── UTILS ── */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+function escAttr(str) {
+  return String(str).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+</script>
+</body>
+</html>

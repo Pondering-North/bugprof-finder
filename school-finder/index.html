@@ -389,7 +389,8 @@ body {
   <!-- Left sidebar -->
   <nav class="sidebar">
     <div class="sidebar-label">Navigate</div>
-    <a class="sidebar-item active" href="#">Search Programs</a>
+    <a class="sidebar-item active" href="index.html">Search Programs</a>
+    <a class="sidebar-item" href="roadmap.html">My Roadmap</a>
     <a class="sidebar-item" href="#how-it-works">How It Works</a>
 
     <div class="sidebar-label" style="margin-top:16px;">Quick Searches</div>
@@ -671,6 +672,16 @@ function escHtml(str) {
 function escAttr(str) {
   return String(str).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
+
+/* ── URL PARAM: ?q=... ── */
+window.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get("q");
+  if (q) {
+    document.getElementById("queryInput").value = q;
+    runSearch(q);
+  }
+});
 </script>
 
 </body>

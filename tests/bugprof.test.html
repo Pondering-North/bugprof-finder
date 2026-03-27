@@ -1711,6 +1711,547 @@ describe("16. Minimise / Restore Toggle", it => {
 });
 
 // ═══════════════════════════════════════════════════════════
+//  SUITE 17 — GradSearch ?q= URL Param
+// ═══════════════════════════════════════════════════════════
+describe("17. GradSearch ?q= URL Param", it => {
+
+  function parseQ(search) {
+    const params = new URLSearchParams(search);
+    return params.get("q");
+  }
+
+  it("parses a simple query string", () => {
+    assertEqual(parseQ("?q=chemistry+PhD"), "chemistry PhD");
+  });
+
+  it("returns null when q is absent", () => {
+    assertEqual(parseQ("?other=foo"), null);
+  });
+
+  it("returns empty string for ?q= (no value)", () => {
+    assertEqual(parseQ("?q="), "");
+  });
+
+  it("decodes percent-encoded characters", () => {
+    assertEqual(parseQ("?q=chemical%20ecology"), "chemical ecology");
+  });
+
+  it("decodes quoted query correctly", () => {
+    const raw = encodeURIComponent("best PhD programs in entomology");
+    assertEqual(parseQ("?q=" + raw), "best PhD programs in entomology");
+  });
+
+  it("reads only q from multi-param string", () => {
+    assertEqual(parseQ("?other=bar&q=ecology&x=1"), "ecology");
+  });
+
+  it("encodeURIComponent round-trip is lossless", () => {
+    const original = "top schools for wildlife conservation in Canada";
+    const encoded = encodeURIComponent(original);
+    assertEqual(parseQ("?q=" + encoded), original);
+  });
+
+  it("falsy empty-string q should not trigger search", () => {
+    const q = parseQ("?q=");
+    assert(!q, "Empty q should be falsy and not trigger a search");
+  });
+
+  it("null q should not trigger search", () => {
+    const q = parseQ("?other=x");
+    assert(!q, "Null q should be falsy and not trigger a search");
+  });
+
+  it("suggestion URL format encodes query correctly", () => {
+    const query = "best entomology PhD programs in the US";
+    const url = "index.html?q=" + encodeURIComponent(query);
+    assertContains(url, "index.html?q=");
+    assertEqual(parseQ("?" + url.split("?")[1]), query);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 18 — Roadmap Form Validation & Storage
+// ═══════════════════════════════════════════════════════════
+describe("18. Roadmap Form Validation & Storage", it => {
+
+  // Inline the validation logic from roadmap.html
+  function validateInputs(inputs) {
+    if (!inputs.background || !inputs.background.trim()) return { ok: false, field: "background" };
+    if (!inputs.interests  || !inputs.interests.trim())  return { ok: false, field: "interests"  };
+    if (!inputs.goal       || !inputs.goal.trim())       return { ok: false, field: "goal"       };
+    return { ok: true };
+  }
+
+  // Inline the buildPrompt logic (matches roadmap.html)
+  function buildPrompt(inputs) {
+    return `You are an expert graduate school advisor. A prospective graduate student has submitted the following profile:
+
+BACKGROUND:
+${inputs.background}
+
+INTERESTS:
+${inputs.interests}
+
+CAREER GOAL:
+${inputs.goal}
+
+CONSTRAINTS & PREFERENCES:
+${inputs.constraints || "None specified."}
+
+ADDITIONAL NOTES:
+${inputs.extra || "None."}
+
+Generate a thorough, detailed, personalised graduate school roadmap for this student.
+
+Return ONLY a raw JSON object with these keys: summary, degreeRecommendation, fieldsAndSpecialisations, timeline, suggestedSearches, actionItems.`;
+  }
+
+  // Inline storage helpers using a plain object as mock localStorage
+  const _fakeLS = {};
+  const ROADMAP_KEY = "gradsearch:roadmap";
+
+  function saveSaved(inputs, roadmap) {
+    _fakeLS[ROADMAP_KEY] = JSON.stringify({ inputs, roadmap, savedAt: Date.now() });
+  }
+  function loadSaved() {
+    try {
+      const raw = _fakeLS[ROADMAP_KEY];
+      return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
+  }
+  function clearSaved() {
+    delete _fakeLS[ROADMAP_KEY];
+  }
+
+  // — Validation tests —
+  it("missing background fails validation", () => {
+    const r = validateInputs({ background: "", interests: "insects", goal: "professor" });
+    assert(!r.ok && r.field === "background");
+  });
+
+  it("whitespace-only background fails validation", () => {
+    const r = validateInputs({ background: "   ", interests: "insects", goal: "professor" });
+    assert(!r.ok && r.field === "background");
+  });
+
+  it("missing interests fails validation", () => {
+    const r = validateInputs({ background: "Biology BSc", interests: "", goal: "professor" });
+    assert(!r.ok && r.field === "interests");
+  });
+
+  it("missing goal fails validation", () => {
+    const r = validateInputs({ background: "Biology BSc", interests: "ecology", goal: "" });
+    assert(!r.ok && r.field === "goal");
+  });
+
+  it("all required fields present passes validation", () => {
+    const r = validateInputs({ background: "Biology BSc", interests: "ecology", goal: "researcher" });
+    assert(r.ok);
+  });
+
+  it("optional fields absent still passes validation", () => {
+    const r = validateInputs({ background: "Bio BSc", interests: "insects", goal: "NGO" });
+    assert(r.ok);
+  });
+
+  // — buildPrompt tests —
+  it("buildPrompt includes background text", () => {
+    const p = buildPrompt({ background: "Chemistry undergrad", interests: "beetles", goal: "museum curator" });
+    assertContains(p, "Chemistry undergrad");
+  });
+
+  it("buildPrompt includes interests text", () => {
+    const p = buildPrompt({ background: "Bio BSc", interests: "chemical ecology", goal: "professor" });
+    assertContains(p, "chemical ecology");
+  });
+
+  it("buildPrompt includes career goal text", () => {
+    const p = buildPrompt({ background: "Bio BSc", interests: "insects", goal: "conservation NGO" });
+    assertContains(p, "conservation NGO");
+  });
+
+  it("buildPrompt uses fallback for missing constraints", () => {
+    const p = buildPrompt({ background: "x", interests: "y", goal: "z" });
+    assertContains(p, "None specified.");
+  });
+
+  it("buildPrompt uses fallback for missing extra", () => {
+    const p = buildPrompt({ background: "x", interests: "y", goal: "z" });
+    assertContains(p, "None.");
+  });
+
+  it("buildPrompt includes provided constraints", () => {
+    const p = buildPrompt({ background: "x", interests: "y", goal: "z", constraints: "need stipend" });
+    assertContains(p, "need stipend");
+  });
+
+  it("buildPrompt requests JSON output", () => {
+    const p = buildPrompt({ background: "x", interests: "y", goal: "z" });
+    assertContains(p, "JSON");
+  });
+
+  it("buildPrompt mentions required sections", () => {
+    const p = buildPrompt({ background: "x", interests: "y", goal: "z" });
+    assertContains(p, "fieldsAndSpecialisations");
+    assertContains(p, "suggestedSearches");
+    assertContains(p, "actionItems");
+    assertContains(p, "timeline");
+  });
+
+  // — Storage tests —
+  it("loadSaved returns null when nothing stored", () => {
+    clearSaved();
+    assertEqual(loadSaved(), null);
+  });
+
+  it("saveSaved and loadSaved round-trip correctly", () => {
+    clearSaved();
+    const inputs  = { background: "Bio BSc", interests: "insects", goal: "researcher" };
+    const roadmap = { summary: "Test summary" };
+    saveSaved(inputs, roadmap);
+    const loaded = loadSaved();
+    assert(loaded !== null, "Should return saved data");
+    assertEqual(loaded.roadmap.summary, "Test summary");
+    assertEqual(loaded.inputs.background, "Bio BSc");
+  });
+
+  it("saved object includes savedAt timestamp", () => {
+    clearSaved();
+    const before = Date.now();
+    saveSaved({ background: "x", interests: "y", goal: "z" }, { summary: "s" });
+    const after = Date.now();
+    const loaded = loadSaved();
+    assert(loaded.savedAt >= before && loaded.savedAt <= after, "savedAt should be a recent timestamp");
+  });
+
+  it("clearSaved removes saved roadmap", () => {
+    saveSaved({ background: "x", interests: "y", goal: "z" }, { summary: "s" });
+    clearSaved();
+    assertEqual(loadSaved(), null);
+  });
+
+  it("loadSaved returns null on corrupt JSON", () => {
+    _fakeLS[ROADMAP_KEY] = "{ not valid json {{";
+    assertEqual(loadSaved(), null);
+    clearSaved();
+  });
+
+  it("overwriting saveSaved replaces previous roadmap", () => {
+    clearSaved();
+    saveSaved({ background: "a", interests: "b", goal: "c" }, { summary: "first" });
+    saveSaved({ background: "x", interests: "y", goal: "z" }, { summary: "second" });
+    assertEqual(loadSaved().roadmap.summary, "second");
+    clearSaved();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 19 — Roadmap Render Functions
+// ═══════════════════════════════════════════════════════════
+describe("19. Roadmap Render Functions", it => {
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  // Inline render helpers matching roadmap.html exactly
+  function renderSummary(summary) {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <div class="roadmap-section">
+        <div class="roadmap-section-header"><span class="roadmap-section-icon">👤</span>Your Profile</div>
+        <div class="roadmap-section-body">
+          <div class="profile-summary">${esc(summary)}</div>
+        </div>
+      </div>`;
+    return div;
+  }
+
+  function renderDegree(d) {
+    if (!d) return null;
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <div class="roadmap-section">
+        <div class="roadmap-section-header"><span class="roadmap-section-icon">🎓</span>Recommended Degree Path</div>
+        <div class="roadmap-section-body">
+          <div class="degree-badge">${esc(d.type||"")}</div>
+          <div class="degree-detail"><h4>Why This Path</h4><p>${esc(d.rationale||"")}</p></div>
+          <div class="degree-detail"><h4>Expected Duration</h4><p>${esc(d.duration||"")}</p></div>
+          <div class="degree-detail"><h4>Funding Outlook</h4><p>${esc(d.fundingOutlook||"")}</p></div>
+        </div>
+      </div>`;
+    return div;
+  }
+
+  function renderFields(fields) {
+    if (!Array.isArray(fields) || !fields.length) return null;
+    const rows = fields.map(f => `
+      <div class="field-item">
+        <div class="field-name">${esc(f.field||"")}</div>
+        <div class="field-why">${esc(f.why||"")}</div>
+      </div>`).join("");
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <div class="roadmap-section">
+        <div class="roadmap-section-header">🔬 Best-Fit Fields</div>
+        <div class="roadmap-section-body"><div class="field-list">${rows}</div></div>
+      </div>`;
+    return div;
+  }
+
+  function renderTimeline(timeline) {
+    if (!Array.isArray(timeline) || !timeline.length) return null;
+    const rows = timeline.map(t => {
+      const items = (t.actions||[]).map(a=>`<li>${esc(a)}</li>`).join("");
+      return `<div class="timeline-row">
+        <div class="timeline-period">${esc(t.period||"")}</div>
+        <div class="timeline-actions"><ul>${items}</ul></div>
+      </div>`;
+    }).join("");
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <div class="roadmap-section">
+        <div class="roadmap-section-header">📅 Timeline</div>
+        <div class="roadmap-section-body" style="padding:0;"><div class="timeline">${rows}</div></div>
+      </div>`;
+    return div;
+  }
+
+  function renderSearches(searches) {
+    if (!Array.isArray(searches) || !searches.length) return null;
+    const rows = searches.map(s => {
+      const url = "index.html?q=" + encodeURIComponent(s.query||"");
+      return `<div class="suggestion-row">
+        <div class="suggestion-label"><strong>${esc(s.label||"")}</strong><em>${esc(s.description||"")}</em></div>
+        <a class="suggestion-btn" href="${url.replace(/"/g,'&quot;')}">Search →</a>
+      </div>`;
+    }).join("");
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <div class="roadmap-section">
+        <div class="roadmap-section-header">🔍 Suggested Searches</div>
+        <div class="roadmap-section-body"><div class="search-suggestions">${rows}</div></div>
+      </div>`;
+    return div;
+  }
+
+  function renderActions(actions) {
+    if (!Array.isArray(actions) || !actions.length) return null;
+    const items = actions.map(a=>`<li>${esc(a)}</li>`).join("");
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <div class="roadmap-section">
+        <div class="roadmap-section-header">✅ Action Items</div>
+        <div class="roadmap-section-body"><ol class="action-list">${items}</ol></div>
+      </div>`;
+    return div;
+  }
+
+  // — renderSummary —
+  it("renderSummary produces a .roadmap-section element", () => {
+    const el = renderSummary("Test summary text.");
+    assert(el.querySelector(".roadmap-section") !== null, "Missing .roadmap-section");
+  });
+
+  it("renderSummary contains summary text", () => {
+    const el = renderSummary("My unique summary text.");
+    assertContains(el.textContent, "My unique summary text.");
+  });
+
+  it("renderSummary escapes HTML in summary", () => {
+    const el = renderSummary("<b>injected bold</b>");
+    assertNotContains(el.innerHTML, "<b>injected");
+    assertContains(el.innerHTML, "&lt;b&gt;");
+  });
+
+  it("renderSummary shows 👤 icon in header", () => {
+    const el = renderSummary("s");
+    assertContains(el.querySelector(".roadmap-section-header").textContent, "👤");
+  });
+
+  // — renderDegree —
+  it("renderDegree returns null for falsy input", () => {
+    assertEqual(renderDegree(null), null);
+  });
+
+  it("renderDegree shows degree type in badge", () => {
+    const el = renderDegree({ type: "PhD", rationale: "r", duration: "5 yrs", fundingOutlook: "f" });
+    assertContains(el.querySelector(".degree-badge").textContent, "PhD");
+  });
+
+  it("renderDegree shows rationale text", () => {
+    const el = renderDegree({ type: "MS", rationale: "Good for your goals.", duration: "2yr", fundingOutlook: "TA" });
+    assertContains(el.textContent, "Good for your goals.");
+  });
+
+  it("renderDegree shows duration text", () => {
+    const el = renderDegree({ type: "MS", rationale: "r", duration: "2 years", fundingOutlook: "f" });
+    assertContains(el.textContent, "2 years");
+  });
+
+  it("renderDegree shows funding outlook", () => {
+    const el = renderDegree({ type: "PhD", rationale: "r", duration: "5yr", fundingOutlook: "NSF GRFP available" });
+    assertContains(el.textContent, "NSF GRFP available");
+  });
+
+  it("renderDegree escapes HTML in type", () => {
+    const el = renderDegree({ type: "<b>PhD</b>", rationale: "r", duration: "d", fundingOutlook: "f" });
+    assertNotContains(el.innerHTML, "<b>PhD</b>");
+    assertContains(el.innerHTML, "&lt;b&gt;PhD&lt;/b&gt;");
+  });
+
+  // — renderFields —
+  it("renderFields returns null for empty array", () => {
+    assertEqual(renderFields([]), null);
+  });
+
+  it("renderFields returns null for non-array", () => {
+    assertEqual(renderFields(null), null);
+  });
+
+  it("renderFields shows field names", () => {
+    const el = renderFields([{ field: "Chemical Ecology", why: "Matches your interests." }]);
+    assertContains(el.querySelector(".field-name").textContent, "Chemical Ecology");
+  });
+
+  it("renderFields shows why text", () => {
+    const el = renderFields([{ field: "Entomology", why: "Perfect for insect lovers." }]);
+    assertContains(el.querySelector(".field-why").textContent, "Perfect for insect lovers.");
+  });
+
+  it("renderFields renders multiple fields", () => {
+    const el = renderFields([
+      { field: "Ecology", why: "w1" },
+      { field: "Toxicology", why: "w2" }
+    ]);
+    assertEqual(el.querySelectorAll(".field-item").length, 2);
+  });
+
+  it("renderFields escapes HTML in field name", () => {
+    const el = renderFields([{ field: "<img src=x>", why: "w" }]);
+    assertNotContains(el.innerHTML, "<img src=x>");
+    assertContains(el.innerHTML, "&lt;img");
+  });
+
+  // — renderTimeline —
+  it("renderTimeline returns null for empty array", () => {
+    assertEqual(renderTimeline([]), null);
+  });
+
+  it("renderTimeline shows period label", () => {
+    const el = renderTimeline([{ period: "Now – 3 months", actions: ["Apply for GRE"] }]);
+    assertContains(el.querySelector(".timeline-period").textContent, "Now – 3 months");
+  });
+
+  it("renderTimeline shows action items as list items", () => {
+    const el = renderTimeline([{ period: "Year 1", actions: ["Action A", "Action B", "Action C"] }]);
+    assertEqual(el.querySelectorAll("li").length, 3);
+  });
+
+  it("renderTimeline renders multiple periods", () => {
+    const el = renderTimeline([
+      { period: "P1", actions: ["a"] },
+      { period: "P2", actions: ["b"] },
+      { period: "P3", actions: ["c"] }
+    ]);
+    assertEqual(el.querySelectorAll(".timeline-row").length, 3);
+  });
+
+  it("renderTimeline handles empty actions array", () => {
+    const el = renderTimeline([{ period: "P1", actions: [] }]);
+    assert(el !== null, "Should render even with empty actions");
+    assertEqual(el.querySelectorAll("li").length, 0);
+  });
+
+  it("renderTimeline escapes HTML in period label", () => {
+    const el = renderTimeline([{ period: "<b>Now</b>", actions: [] }]);
+    assertNotContains(el.innerHTML, "<b>Now</b>");
+  });
+
+  // — renderSearches —
+  it("renderSearches returns null for empty array", () => {
+    assertEqual(renderSearches([]), null);
+  });
+
+  it("renderSearches produces suggestion rows", () => {
+    const el = renderSearches([
+      { label: "Entomology PhD", description: "Great fit.", query: "best entomology PhD programs" }
+    ]);
+    assertEqual(el.querySelectorAll(".suggestion-row").length, 1);
+  });
+
+  it("renderSearches link href contains index.html?q=", () => {
+    const el = renderSearches([
+      { label: "L", description: "D", query: "ecology programs Canada" }
+    ]);
+    const link = el.querySelector("a.suggestion-btn");
+    assert(link !== null, "Missing suggestion link");
+    assertContains(link.getAttribute("href"), "index.html?q=");
+  });
+
+  it("renderSearches encodes query in URL", () => {
+    const el = renderSearches([
+      { label: "L", description: "D", query: "best PhD programs in chemical ecology" }
+    ]);
+    const href = el.querySelector("a.suggestion-btn").getAttribute("href");
+    assertContains(href, encodeURIComponent("best PhD programs in chemical ecology"));
+  });
+
+  it("renderSearches shows label text", () => {
+    const el = renderSearches([{ label: "Marine Biology Search", description: "d", query: "q" }]);
+    assertContains(el.textContent, "Marine Biology Search");
+  });
+
+  it("renderSearches renders 5 searches correctly", () => {
+    const searches = Array.from({ length: 5 }, (_, i) => ({
+      label: `Search ${i}`, description: "d", query: `query ${i}`
+    }));
+    const el = renderSearches(searches);
+    assertEqual(el.querySelectorAll(".suggestion-row").length, 5);
+  });
+
+  it("renderSearches escapes label HTML", () => {
+    const el = renderSearches([{ label: "<img src=x onerror=alert(1)>", description: "d", query: "q" }]);
+    assertNotContains(el.innerHTML, "<img src=x");
+    assertContains(el.innerHTML, "&lt;img");
+  });
+
+  // — renderActions —
+  it("renderActions returns null for empty array", () => {
+    assertEqual(renderActions([]), null);
+  });
+
+  it("renderActions shows action text", () => {
+    const el = renderActions(["Register for GRE by October deadline."]);
+    assertContains(el.textContent, "Register for GRE by October deadline.");
+  });
+
+  it("renderActions renders correct number of items", () => {
+    const el = renderActions(["A1", "A2", "A3", "A4", "A5"]);
+    assertEqual(el.querySelectorAll("li").length, 5);
+  });
+
+  it("renderActions uses an ordered list", () => {
+    const el = renderActions(["A1", "A2"]);
+    assert(el.querySelector("ol.action-list") !== null, "Expected <ol class='action-list'>");
+  });
+
+  it("renderActions escapes HTML in action text", () => {
+    const el = renderActions(["<img src=x onerror=alert(1)>"]);
+    assertNotContains(el.innerHTML, "<img src=x");
+    assertContains(el.innerHTML, "&lt;img");
+  });
+
+  it("renderActions handles 10+ items", () => {
+    const actions = Array.from({ length: 10 }, (_, i) => `Action ${i + 1}`);
+    const el = renderActions(actions);
+    assertEqual(el.querySelectorAll("li").length, 10);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
 //  AUTO-RUN on load
 // ═══════════════════════════════════════════════════════════
 window.addEventListener("DOMContentLoaded", () => {
