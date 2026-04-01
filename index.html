@@ -265,6 +265,13 @@
     background: #fffbe6; border: 2px solid #888;
     padding: 4px 8px; color: #333; margin-top: 4px;
   }
+  .col-select { width: 26px; text-align: center; padding: 2px 4px !important; }
+  .prof-select { cursor: pointer; width: 14px; height: 14px; accent-color: var(--navy); }
+  .export-sep { border: none; border-top: 1px solid #888; margin: 2px 0; }
+  #exportMenu .sel-count {
+    font-family: 'VT323', monospace; font-size: 13px; color: #555;
+    padding: 2px 12px; display: block; cursor: default;
+  }
   .tag-research {
     display: inline-block;
     background: #e8e8ff; border: 2px solid #000080;
@@ -458,6 +465,13 @@
         <button onclick="exportJSON(); closeExportMenu()">JSON</button>
         <button onclick="exportHTML(); closeExportMenu()">HTML Table</button>
         <button onclick="exportVCard();closeExportMenu()">vCard (.vcf)</button>
+        <hr class="export-sep">
+        <span class="sel-count" id="selCountLabel">0 selected</span>
+        <button onclick="exportCSV(true);  closeExportMenu()">Selected → CSV</button>
+        <button onclick="exportTSV(true);  closeExportMenu()">Selected → TSV</button>
+        <button onclick="exportJSON(true); closeExportMenu()">Selected → JSON</button>
+        <button onclick="exportHTML(true); closeExportMenu()">Selected → HTML</button>
+        <button onclick="exportVCard(true);closeExportMenu()">Selected → vCard</button>
       </div>
     </div>
     <div class="toolbar-sep"></div>
@@ -1061,6 +1075,7 @@ let SCHOOLS = [
 //  STATE
 // ═══════════════════════════════════════════
 let isRunning = false;
+const selectedProfs = new Set(); // keys: "schoolName__rowIndex"
 
 // ═══════════════════════════════════════════
 //  STORAGE HELPERS
@@ -1184,6 +1199,7 @@ function renderSchoolCard(school, data) {
   const sn = school.name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   const old = document.getElementById(id);
   if (old) old.remove();
+  clearSchoolSelections(school.name);
 
   let badge = "badge-idle", badgeText = "⬜ Not Searched";
   let bodyHTML = "";
@@ -1199,7 +1215,7 @@ function renderSchoolCard(school, data) {
     } else {
       badge = "badge-cached";
       badgeText = `${IMG_CHECK} ${(data.professors || []).length} profs (cached)`;
-      bodyHTML = buildProfTable(data.professors || []);
+      bodyHTML = buildProfTable(data.professors || [], school.name);
     }
   }
 
@@ -1240,16 +1256,20 @@ function safeUrl(url) {
   return url;
 }
 
-function buildProfTable(profs) {
+function buildProfTable(profs, schoolName) {
   if (!profs || profs.length === 0) {
     return `<div class="no-results">${IMG_CONE} No faculty data found. The faculty page may load via JavaScript (try scraping again), or the URL may need updating.</div>`;
   }
-  const rows = profs.map(p => {
+  const sn = (schoolName || "").replace(/'/g, "\\'");
+  const rows = profs.map((p, i) => {
+    const key = `${schoolName}__${i}`;
     const research = Array.isArray(p.research) ? p.research : [];
     const email = p.email ? `<a href="mailto:${escapeHtml(p.email)}">${escapeHtml(p.email)}</a>` : "—";
     const cleanUrl = safeUrl(p.profileUrl);
     const profile = cleanUrl ? `<a href="${escapeHtml(cleanUrl)}" target="_blank" rel="noopener">🔗 Profile</a>` : "—";
+    const checked = selectedProfs.has(key) ? "checked" : "";
     return `<tr>
+      <td class="col-select"><input type="checkbox" class="prof-select" data-key="${escapeHtml(key)}" ${checked} onchange="onProfCheck(this)"></td>
       <td><b>${escapeHtml(p.name || "—")}</b></td>
       <td>${escapeHtml(p.title || "—")}</td>
       <td>${research.map(r => `<span class="tag-research">${escapeHtml(r)}</span>`).join(" ") || "—"}</td>
@@ -1262,6 +1282,7 @@ function buildProfTable(profs) {
   return `<div class="prof-table-wrap">
     <table>
       <thead><tr>
+        <th class="col-select"><input type="checkbox" class="prof-select" title="Select all" onchange="selectAllInTable(this)"></th>
         <th>Name</th><th>Title</th><th>Research Areas</th>
         <th>Email</th><th>Phone</th><th>Profile</th>
       </tr></thead>
@@ -1284,6 +1305,38 @@ async function updateHitCounter() {
   const total = counts.reduce((a, b) => a + b, 0);
   const el = document.getElementById("hitCounter");
   if (el) el.textContent = String(total).padStart(4, "0");
+}
+
+// ═══════════════════════════════════════════
+//  SELECTION — per-row checkboxes for targeted export
+// ═══════════════════════════════════════════
+function onProfCheck(cb) {
+  if (cb.checked) selectedProfs.add(cb.dataset.key);
+  else selectedProfs.delete(cb.dataset.key);
+  updateSelectionUI();
+}
+
+function selectAllInTable(headerCb) {
+  const table = headerCb.closest("table");
+  table.querySelectorAll(".prof-select").forEach(cb => {
+    cb.checked = headerCb.checked;
+    if (headerCb.checked) selectedProfs.add(cb.dataset.key);
+    else selectedProfs.delete(cb.dataset.key);
+  });
+  updateSelectionUI();
+}
+
+function updateSelectionUI() {
+  const count = selectedProfs.size;
+  const label = document.getElementById("selCountLabel");
+  if (label) label.textContent = count === 0 ? "0 selected" : `${count} selected`;
+}
+
+function clearSchoolSelections(schoolName) {
+  for (const key of [...selectedProfs]) {
+    if (key.startsWith(schoolName + "__")) selectedProfs.delete(key);
+  }
+  updateSelectionUI();
 }
 
 // ═══════════════════════════════════════════
@@ -1543,18 +1596,24 @@ async function clearAllCache() {
 //  EXPORT — FIX: use File System Access API when available,
 //  fall back to anchor-download on older browsers
 // ═══════════════════════════════════════════
-async function gatherExportData() {
+async function gatherExportData(selectedOnly = false) {
   const out = [];
   for (const school of SCHOOLS) {
     const d = await loadSchool(school);
-    out.push({ school: school.name, url: school.url, data: d });
+    if (selectedOnly && d && d.professors) {
+      const filtered = d.professors.filter((_, i) => selectedProfs.has(`${school.name}__${i}`));
+      out.push({ school: school.name, url: school.url, data: filtered.length ? { ...d, professors: filtered } : null });
+    } else {
+      out.push({ school: school.name, url: school.url, data: d });
+    }
   }
   return out;
 }
 
-async function exportCSV() {
+async function exportCSV(selectedOnly = false) {
+  if (selectedOnly && selectedProfs.size === 0) { alert("No professors selected. Check some rows first."); return; }
   const rows = [["School","Name","Title","Research Areas","Email","Phone","Profile URL"]];
-  const exportData = await gatherExportData();
+  const exportData = await gatherExportData(selectedOnly);
   for (const { school, data } of exportData) {
     if (!data || data.status === "error" || !data.professors) continue;
     for (const p of data.professors) {
@@ -1572,20 +1631,24 @@ async function exportCSV() {
   const csv = rows.map(r =>
     r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")
   ).join("\n");
-  await saveFile(csv, "entoprofesso_export.csv", "text/csv");
-  log("CSV exported: entoprofesso_export.csv");
+  const fname = selectedOnly ? "entoprofesso_selected.csv" : "entoprofesso_export.csv";
+  await saveFile(csv, fname, "text/csv");
+  log("CSV exported: " + fname);
 }
 
-async function exportJSON() {
-  const exportData = await gatherExportData();
+async function exportJSON(selectedOnly = false) {
+  if (selectedOnly && selectedProfs.size === 0) { alert("No professors selected. Check some rows first."); return; }
+  const exportData = await gatherExportData(selectedOnly);
   const json = JSON.stringify(exportData, null, 2);
-  await saveFile(json, "entoprofesso_export.json", "application/json");
-  log("JSON exported: entoprofesso_export.json");
+  const fname = selectedOnly ? "entoprofesso_selected.json" : "entoprofesso_export.json";
+  await saveFile(json, fname, "application/json");
+  log("JSON exported: " + fname);
 }
 
-async function exportTSV() {
+async function exportTSV(selectedOnly = false) {
+  if (selectedOnly && selectedProfs.size === 0) { alert("No professors selected. Check some rows first."); return; }
   const rows = [["School","Name","Title","Research Areas","Email","Phone","Profile URL"]];
-  const exportData = await gatherExportData();
+  const exportData = await gatherExportData(selectedOnly);
   for (const { school, data } of exportData) {
     if (!data || data.status === "error" || !data.professors) continue;
     for (const p of data.professors) {
@@ -1597,12 +1660,14 @@ async function exportTSV() {
     }
   }
   const tsv = rows.map(r => r.map(c => String(c).replace(/\t/g, " ")).join("\t")).join("\n");
-  await saveFile(tsv, "entoprofesso_export.tsv", "text/tab-separated-values");
-  log("TSV exported: entoprofesso_export.tsv");
+  const fname = selectedOnly ? "entoprofesso_selected.tsv" : "entoprofesso_export.tsv";
+  await saveFile(tsv, fname, "text/tab-separated-values");
+  log("TSV exported: " + fname);
 }
 
-async function exportHTML() {
-  const exportData = await gatherExportData();
+async function exportHTML(selectedOnly = false) {
+  if (selectedOnly && selectedProfs.size === 0) { alert("No professors selected. Check some rows first."); return; }
+  const exportData = await gatherExportData(selectedOnly);
   const cols = ["Name","Title","Research Areas","Email","Phone","Profile URL"];
   let html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>Ento-Professo Export</title>
@@ -1624,12 +1689,14 @@ h2{margin-top:24px;border-bottom:2px solid #000}</style></head><body>
     html += `</tbody></table>\n`;
   }
   html += `</body></html>`;
-  await saveFile(html, "entoprofesso_export.html", "text/html");
-  log("HTML exported: entoprofesso_export.html");
+  const fname = selectedOnly ? "entoprofesso_selected.html" : "entoprofesso_export.html";
+  await saveFile(html, fname, "text/html");
+  log("HTML exported: " + fname);
 }
 
-async function exportVCard() {
-  const exportData = await gatherExportData();
+async function exportVCard(selectedOnly = false) {
+  if (selectedOnly && selectedProfs.size === 0) { alert("No professors selected. Check some rows first."); return; }
+  const exportData = await gatherExportData(selectedOnly);
   let vcf = "";
   for (const { school, data } of exportData) {
     if (!data || data.status === "error" || !data.professors) continue;
@@ -1649,8 +1716,9 @@ async function exportVCard() {
       vcf += `END:VCARD\r\n`;
     }
   }
-  await saveFile(vcf, "entoprofesso_export.vcf", "text/vcard");
-  log("vCard exported: entoprofesso_export.vcf");
+  const fname = selectedOnly ? "entoprofesso_selected.vcf" : "entoprofesso_export.vcf";
+  await saveFile(vcf, fname, "text/vcard");
+  log("vCard exported: " + fname);
 }
 
 function toggleExportMenu(e) {

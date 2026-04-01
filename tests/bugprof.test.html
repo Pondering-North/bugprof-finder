@@ -315,16 +315,19 @@ function safeUrl(url) {
   return url;
 }
 
-function buildProfTable(profs) {
+function buildProfTable(profs, schoolName) {
   if (!profs || profs.length === 0) {
     return '<div class="no-results">⚠ No faculty data found for this school.</div>';
   }
-  const rows = profs.map(p => {
+  const rows = profs.map((p, i) => {
+    const key = `${schoolName}__${i}`;
     const research = Array.isArray(p.research) ? p.research : [];
     const email = p.email ? `<a href="mailto:${escapeHtml(p.email)}">${escapeHtml(p.email)}</a>` : "—";
     const cleanUrl = safeUrl(p.profileUrl);
     const profile = cleanUrl ? `<a href="${escapeHtml(cleanUrl)}" target="_blank" rel="noopener">🔗 Profile</a>` : "—";
+    const checked = selectedProfs.has(key) ? "checked" : "";
     return `<tr>
+      <td class="col-select"><input type="checkbox" class="prof-select" data-key="${escapeHtml(key)}" ${checked} onchange="onProfCheck(this)"></td>
       <td><b>${escapeHtml(p.name||"—")}</b></td>
       <td>${escapeHtml(p.title||"—")}</td>
       <td>${research.map(r=>`<span class="tag-research">${escapeHtml(r)}</span>`).join(" ")||"—"}</td>
@@ -334,9 +337,76 @@ function buildProfTable(profs) {
     </tr>`;
   }).join("");
   return `<div class="prof-table-wrap"><table>
-    <thead><tr><th>Name</th><th>Title</th><th>Research Areas</th><th>Email</th><th>Phone</th><th>Profile</th></tr></thead>
+    <thead><tr>
+      <th class="col-select"><input type="checkbox" class="prof-select" title="Select all" onchange="selectAllInTable(this)"></th>
+      <th>Name</th><th>Title</th><th>Research Areas</th><th>Email</th><th>Phone</th><th>Profile</th>
+    </tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
+}
+
+// ── Selection state & helpers (mirrors index.html) ──────────────────────────
+const selectedProfs = new Set();
+
+function onProfCheck(cb) {
+  if (cb.checked) selectedProfs.add(cb.dataset.key);
+  else selectedProfs.delete(cb.dataset.key);
+}
+
+function selectAllInTable(headerCb) {
+  const table = headerCb.closest("table");
+  table.querySelectorAll(".prof-select").forEach(cb => {
+    cb.checked = headerCb.checked;
+    if (headerCb.checked) selectedProfs.add(cb.dataset.key);
+    else selectedProfs.delete(cb.dataset.key);
+  });
+}
+
+function updateSelectionUI() { /* no-op in harness — no live DOM labels */ }
+
+function clearSchoolSelections(schoolName) {
+  for (const key of [...selectedProfs]) {
+    if (key.startsWith(schoolName + "__")) selectedProfs.delete(key);
+  }
+}
+
+// ── Storage helpers matching index.html window.storage ───────────────────────
+window.storage = {
+  async get(key) {
+    try {
+      const val = localStorage.getItem("entoprofesso:" + key);
+      return val !== null ? { value: val } : null;
+    } catch { return null; }
+  },
+  async set(key, value) {
+    try { localStorage.setItem("entoprofesso:" + key, value); } catch {}
+  },
+  async delete(key) {
+    try { localStorage.removeItem("entoprofesso:" + key); } catch {}
+  }
+};
+
+function storageKey(school) { return "school:" + school.name; }
+
+async function loadSchool(school) {
+  try {
+    const r = await window.storage.get(storageKey(school));
+    return r ? JSON.parse(r.value) : null;
+  } catch { return null; }
+}
+
+async function gatherExportData(selectedOnly = false) {
+  const out = [];
+  for (const school of SCHOOLS) {
+    const d = await loadSchool(school);
+    if (selectedOnly && d && d.professors) {
+      const filtered = d.professors.filter((_, i) => selectedProfs.has(`${school.name}__${i}`));
+      out.push({ school: school.name, url: school.url, data: filtered.length ? { ...d, professors: filtered } : null });
+    } else {
+      out.push({ school: school.name, url: school.url, data: d });
+    }
+  }
+  return out;
 }
 
 function buildCSV(schools, exportData) {
@@ -2248,6 +2318,183 @@ describe("19. Roadmap Render Functions", it => {
     const actions = Array.from({ length: 10 }, (_, i) => `Action ${i + 1}`);
     const el = renderActions(actions);
     assertEqual(el.querySelectorAll("li").length, 10);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SUITE 20 — Professor Selection & Selective Export
+// ═══════════════════════════════════════════════════════════
+describe("20. Professor Selection & Selective Export", it => {
+  const SAMPLE_SCHOOL = "University of Arizona";
+  const SAMPLE_PROFS = [
+    { name: "Dr. Alice Test", title: "Professor",           research: ["entomology","ecology"], email: "a@test.edu", phone: null,      profileUrl: null },
+    { name: "Dr. Bob Mock",   title: "Associate Professor", research: ["toxicology"],           email: "b@test.edu", phone: "555-1234", profileUrl: "https://example.com/bob" },
+    { name: "Dr. Carol Run",  title: "Assistant Professor", research: ["genomics"],             email: null,         phone: null,      profileUrl: null },
+  ];
+
+  // ── buildProfTable (checkbox column) ─────────────────────
+  it("buildProfTable with schoolName adds col-select header", () => {
+    const html = buildProfTable(SAMPLE_PROFS, SAMPLE_SCHOOL);
+    assertContains(html, 'class="col-select"');
+  });
+
+  it("buildProfTable header contains select-all checkbox", () => {
+    assertContains(buildProfTable(SAMPLE_PROFS, SAMPLE_SCHOOL), "selectAllInTable(this)");
+  });
+
+  it("buildProfTable renders one checkbox per professor row", () => {
+    const div = document.createElement("div");
+    div.innerHTML = buildProfTable(SAMPLE_PROFS, SAMPLE_SCHOOL);
+    assertEqual(div.querySelectorAll("tbody .prof-select").length, SAMPLE_PROFS.length);
+  });
+
+  it("buildProfTable data-key format is schoolName__rowIndex", () => {
+    const div = document.createElement("div");
+    div.innerHTML = buildProfTable(SAMPLE_PROFS, SAMPLE_SCHOOL);
+    const cbs = [...div.querySelectorAll("tbody .prof-select")];
+    assertEqual(cbs[0].dataset.key, `${SAMPLE_SCHOOL}__0`);
+    assertEqual(cbs[1].dataset.key, `${SAMPLE_SCHOOL}__1`);
+    assertEqual(cbs[2].dataset.key, `${SAMPLE_SCHOOL}__2`);
+  });
+
+  it("buildProfTable renders 7 header columns", () => {
+    const div = document.createElement("div");
+    div.innerHTML = buildProfTable(SAMPLE_PROFS, SAMPLE_SCHOOL);
+    assertEqual(div.querySelectorAll("thead th").length, 7);
+  });
+
+  it("buildProfTable empty profs returns no-results, no checkboxes", () => {
+    const html = buildProfTable([], SAMPLE_SCHOOL);
+    assertContains(html, "no-results");
+    assertNotContains(html, "prof-select");
+  });
+
+  it("buildProfTable without schoolName still renders checkboxes", () => {
+    assertContains(buildProfTable(SAMPLE_PROFS), "prof-select");
+  });
+
+  // ── selectedProfs Set management ─────────────────────────
+  it("selectedProfs is a Set", () => {
+    assert(selectedProfs instanceof Set);
+  });
+
+  it("onProfCheck adds key when checked", () => {
+    selectedProfs.clear();
+    onProfCheck({ checked: true, dataset: { key: "__t__0" } });
+    assert(selectedProfs.has("__t__0"));
+    selectedProfs.clear();
+  });
+
+  it("onProfCheck removes key when unchecked", () => {
+    selectedProfs.add("__t__1");
+    onProfCheck({ checked: false, dataset: { key: "__t__1" } });
+    assert(!selectedProfs.has("__t__1"));
+  });
+
+  it("clearSchoolSelections removes only that school keys", () => {
+    selectedProfs.add("School A__0");
+    selectedProfs.add("School A__1");
+    selectedProfs.add("School B__0");
+    clearSchoolSelections("School A");
+    assert(!selectedProfs.has("School A__0"));
+    assert(!selectedProfs.has("School A__1"));
+    assert(selectedProfs.has("School B__0"));
+    selectedProfs.clear();
+  });
+
+  it("clearSchoolSelections on unknown school is a no-op", () => {
+    selectedProfs.clear();
+    clearSchoolSelections("Nonexistent");
+    assertEqual(selectedProfs.size, 0);
+  });
+
+  it("clearSchoolSelections leaves other schools intact", () => {
+    selectedProfs.add("Alpha__0");
+    selectedProfs.add("Beta__0");
+    clearSchoolSelections("Alpha");
+    assert(selectedProfs.has("Beta__0"));
+    selectedProfs.clear();
+  });
+
+  // ── gatherExportData(false) ───────────────────────────────
+  it("gatherExportData(false) returns all professors", async () => {
+    const lsKey = "entoprofesso:school:University of Arizona";
+    localStorage.setItem(lsKey, JSON.stringify({ status: "ok", scrapedAt: "now", professors: SAMPLE_PROFS }));
+    const out = await gatherExportData(false);
+    const az = out.find(o => o.school === SAMPLE_SCHOOL);
+    assertEqual(az.data.professors.length, SAMPLE_PROFS.length);
+    localStorage.removeItem(lsKey);
+  });
+
+  it("gatherExportData(false) null for uncached school", async () => {
+    localStorage.removeItem("entoprofesso:school:Kansas State University");
+    const out = await gatherExportData(false);
+    const ksu = out.find(o => o.school === "Kansas State University");
+    assert(ksu !== undefined);
+    assert(ksu.data === null);
+  });
+
+  // ── gatherExportData(true) — selectedOnly ────────────────
+  it("gatherExportData(true) with 0 selected returns null data", async () => {
+    selectedProfs.clear();
+    const lsKey = "entoprofesso:school:University of Arizona";
+    localStorage.setItem(lsKey, JSON.stringify({ status: "ok", scrapedAt: "now", professors: SAMPLE_PROFS }));
+    const out = await gatherExportData(true);
+    const az = out.find(o => o.school === SAMPLE_SCHOOL);
+    assert(az.data === null);
+    localStorage.removeItem(lsKey);
+  });
+
+  it("gatherExportData(true) returns only 2 selected professors", async () => {
+    selectedProfs.clear();
+    selectedProfs.add(`${SAMPLE_SCHOOL}__0`);
+    selectedProfs.add(`${SAMPLE_SCHOOL}__2`);
+    const lsKey = "entoprofesso:school:University of Arizona";
+    localStorage.setItem(lsKey, JSON.stringify({ status: "ok", scrapedAt: "now", professors: SAMPLE_PROFS }));
+    const out = await gatherExportData(true);
+    const az = out.find(o => o.school === SAMPLE_SCHOOL);
+    assertEqual(az.data.professors.length, 2);
+    assertEqual(az.data.professors[0].name, "Dr. Alice Test");
+    assertEqual(az.data.professors[1].name, "Dr. Carol Run");
+    selectedProfs.clear();
+    localStorage.removeItem(lsKey);
+  });
+
+  it("gatherExportData(true) selecting 1 of 3 returns 1 prof", async () => {
+    selectedProfs.clear();
+    selectedProfs.add(`${SAMPLE_SCHOOL}__1`);
+    const lsKey = "entoprofesso:school:University of Arizona";
+    localStorage.setItem(lsKey, JSON.stringify({ status: "ok", scrapedAt: "now", professors: SAMPLE_PROFS }));
+    const out = await gatherExportData(true);
+    const az = out.find(o => o.school === SAMPLE_SCHOOL);
+    assertEqual(az.data.professors.length, 1);
+    assertEqual(az.data.professors[0].name, "Dr. Bob Mock");
+    selectedProfs.clear();
+    localStorage.removeItem(lsKey);
+  });
+
+  it("gatherExportData(true) selecting all 3 returns all 3", async () => {
+    selectedProfs.clear();
+    SAMPLE_PROFS.forEach((_, i) => selectedProfs.add(`${SAMPLE_SCHOOL}__${i}`));
+    const lsKey = "entoprofesso:school:University of Arizona";
+    localStorage.setItem(lsKey, JSON.stringify({ status: "ok", scrapedAt: "now", professors: SAMPLE_PROFS }));
+    const out = await gatherExportData(true);
+    const az = out.find(o => o.school === SAMPLE_SCHOOL);
+    assertEqual(az.data.professors.length, 3);
+    selectedProfs.clear();
+    localStorage.removeItem(lsKey);
+  });
+
+  it("gatherExportData output has all SCHOOLS entries", async () => {
+    const out = await gatherExportData(false);
+    assertEqual(out.length, SCHOOLS.length);
+  });
+
+  it("gatherExportData output entries have school/url/data keys", async () => {
+    const out = await gatherExportData(false);
+    for (const entry of out) {
+      assert("school" in entry && "url" in entry && "data" in entry);
+    }
   });
 });
 
