@@ -1677,7 +1677,7 @@ async function saveFile(content, suggestedName, mimeType) {
       const writable = await handle.createWritable();
       await writable.write(new Blob([content], { type: mimeType }));
       await writable.close();
-      log(`✅ File saved via system dialog.`);
+      log(`File saved via system dialog.`);
       return;
     } catch(e) {
       if (e.name === "AbortError") { log("💾 Save cancelled."); return; }
